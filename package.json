@@ -7,24 +7,24 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs"
     },
     "./client": {
+      "types": "./dist/client/index.d.ts",
       "require": "./dist/client/index.js",
-      "import": "./dist/client/index.mjs",
-      "types": "./dist/client/index.d.ts"
+      "import": "./dist/client/index.mjs"
     },
     "./server": {
+      "types": "./dist/server/index.d.ts",
       "require": "./dist/server/index.js",
-      "import": "./dist/server/index.mjs",
-      "types": "./dist/server/index.d.ts"
+      "import": "./dist/server/index.mjs"
     },
     "./mdx": {
+      "types": "./dist/mdx.d.ts",
       "require": "./dist/mdx.js",
-      "import": "./dist/mdx.mjs",
-      "types": "./dist/mdx.d.ts"
+      "import": "./dist/mdx.mjs"
     },
     "./dist/*.css": {
       "import": "./dist/*.css",
@@ -97,5 +97,6 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.11.0"
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
