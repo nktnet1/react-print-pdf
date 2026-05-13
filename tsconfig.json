@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "esnext",
     "module": "commonjs",
     "lib": [
       "dom",
@@ -16,10 +16,9 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@components/*": [
-        "src/*"
+        "./src/*"
       ]
     },
-    "baseUrl": ".",
   },
   "include": [
     "src"
