@@ -8,3 +8,5 @@ allowBuilds:
   puppeteer: true
   sharp: false
   spawn-sync: false
+overrides:
+  react: ^18.3.1
