@@ -95,15 +95,44 @@
     {
       "group": "Components",
       "pages": [
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined",
-        "/react-print/components/undefined"
+        "components/compile/compile",
+        {
+          "group": "CSS",
+          "pages": [
+            "components/css/css",
+            "components/css/font",
+            "components/css/margins"
+          ]
+        },
+        "components/footnote/footnote",
+        "components/latex/latex",
+        "components/markdown/markdown",
+        {
+          "group": "Shell",
+          "pages": [
+            "components/shell/currentpagetop",
+            "components/shell/floatbottom",
+            "components/shell/nobreak",
+            "components/shell/pagebottom",
+            "components/shell/pagebreak",
+            "components/shell/pagetop"
+          ]
+        },
+        "components/signature/field",
+        "components/tailwind/tailwind",
+        {
+          "group": "Variables",
+          "pages": [
+            "components/variables/pagenumber",
+            "components/variables/pagesnumber",
+            "components/variables/runningh1",
+            "components/variables/runningh2",
+            "components/variables/runningh3",
+            "components/variables/runningh4",
+            "components/variables/runningh5",
+            "components/variables/runningh6"
+          ]
+        }
       ]
     },
     {
