@@ -3,7 +3,6 @@ import * as path from "path";
 import * as fs from "fs";
 import { build } from "tsup";
 import * as docgen from "react-docgen-typescript";
-import * as yaml from "js-yaml";
 import { DocConfig } from "./types";
 import {
   formatCamelCaseToTitle,
@@ -13,9 +12,6 @@ import {
 import { buildFileMarkdown } from "./buildFileMarkdown";
 import { buildTemplateList, buildTemplates } from "./buildTemplates";
 import { RawPlugin } from "../build/raw";
-import { TabPanel } from "@chakra-ui/react";
-import { Component } from "react";
-import { check, doc } from "prettier";
 import { replaceInFile } from "./pageBuilder/buildIntroduction";
 
 const tmpDir = path.join(__dirname, "../.tmp");
@@ -158,7 +154,7 @@ const process = async () => {
   }
 
   checkDirectorySync(docsPath);
-  
+
   const sortedDocs = docs.sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
@@ -281,7 +277,7 @@ const process = async () => {
 
   replaceInFile(introductionPath, /<Cards>[\s\S]*?<\/Cards>/, snippet); //TODO: fix the relative component import in Fern to avoid this
 
-  
+
 };
 
 process();
