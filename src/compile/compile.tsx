@@ -1,128 +1,128 @@
-import { DocConfig } from "docgen/types";
-import React from "react";
 import { Button, ChakraProvider } from "@chakra-ui/react";
+import type { DocConfig } from "docgen/types";
+import type React from "react";
 
-// @ts-ignore
+// @ts-expect-error
 import onedocStyles from "../../dist/index.css?raw";
 
 import { CSS } from "../css/css";
 import { Tailwind } from "../tailwind/tailwind";
 
 export interface CompileOptions {
-  /**
-   * Whether to use Emotion CSS.
-   */
-  emotion?: boolean;
+	/**
+	 * Whether to use Emotion CSS.
+	 */
+	emotion?: boolean;
 }
 
 export const compile = async (
-  node: React.ReactElement,
-  options?: CompileOptions
+	node: React.ReactElement,
+	options?: CompileOptions,
 ) => {
-  const { emotion } = Object.assign(
-    {
-      emotion: false,
-    },
-    options || {}
-  );
+	const { emotion } = Object.assign(
+		{
+			emotion: false,
+		},
+		options || {},
+	);
 
-  const ReactDOMServer = await import("react-dom/server");
+	const ReactDOMServer = await import("react-dom/server");
 
-  let Element = (
-    <>
-      <CSS>{onedocStyles}</CSS>
-      {node}
-    </>
-  );
+	let Element = (
+		<>
+			<CSS>{onedocStyles}</CSS>
+			{node}
+		</>
+	);
 
-  if (!emotion) {
-    return ReactDOMServer.renderToString(Element);
-  }
+	if (!emotion) {
+		return ReactDOMServer.renderToString(Element);
+	}
 
-  const { CacheProvider } = await import("@emotion/react");
-  const { default: createCache } = await import("@emotion/cache");
-  const { default: createEmotionServer } = await import(
-    "@emotion/server/create-instance"
-  );
+	const { CacheProvider } = await import("@emotion/react");
+	const { default: createCache } = await import("@emotion/cache");
+	const { default: createEmotionServer } = await import(
+		"@emotion/server/create-instance"
+	);
 
-  const cache = createCache({ key: "css" });
-  const { extractCriticalToChunks, constructStyleTagsFromChunks } =
-    createEmotionServer(cache);
+	const cache = createCache({ key: "css" });
+	const { extractCriticalToChunks, constructStyleTagsFromChunks } =
+		createEmotionServer(cache);
 
-  Element = <CacheProvider value={cache}>{Element}</CacheProvider>;
+	Element = <CacheProvider value={cache}>{Element}</CacheProvider>;
 
-  const html = ReactDOMServer.renderToString(Element);
+	const html = ReactDOMServer.renderToString(Element);
 
-  const chunks = extractCriticalToChunks(html);
-  const styles = constructStyleTagsFromChunks(chunks);
-  const mergedStylesheet = styles.replace(
-    /<\/?style( data-emotion="[a-z0-9- ]+")?>/gm,
-    ""
-  );
+	const chunks = extractCriticalToChunks(html);
+	const styles = constructStyleTagsFromChunks(chunks);
+	const mergedStylesheet = styles.replace(
+		/<\/?style( data-emotion="[a-z0-9- ]+")?>/gm,
+		"",
+	);
 
-  const { default: postcss } = await import("postcss");
-  const { default: cssvariables } = await import("postcss-css-variables");
-  const { default: isPseudoClass } = await import(
-    // @ts-ignore
-    "@csstools/postcss-is-pseudo-class"
-  );
-  // @ts-ignore
-  const { default: logical } = await import("postcss-logical");
+	const { default: postcss } = await import("postcss");
+	const { default: cssvariables } = await import("postcss-css-variables");
+	const { default: isPseudoClass } = await import(
+		// @ts-expect-error
+		"@csstools/postcss-is-pseudo-class"
+	);
+	// @ts-expect-error
+	const { default: logical } = await import("postcss-logical");
 
-  const result = await postcss([
-    cssvariables(),
-    logical(),
-    isPseudoClass(),
-  ]).process(mergedStylesheet, {
-    from: undefined,
-  });
+	const result = await postcss([
+		cssvariables(),
+		logical(),
+		isPseudoClass(),
+	]).process(mergedStylesheet, {
+		from: undefined,
+	});
 
-  return `<style>${result.css}</style>${html}`;
+	return `<style>${result.css}</style>${html}`;
 };
 
 export const __docConfig: DocConfig = {
-  name: "compile",
-  icon: "fa-solid fa-code",
-  description:
-    "Compile a React component to a string with the Onedoc print styles.",
-  components: {
-    compile: {
-      server: true,
-      client: true,
-      examples: {
-        default: {
-          description: `A simple function to compile a React component to an HTML string with the Onedoc print styles.
+	name: "compile",
+	icon: "fa-solid fa-code",
+	description:
+		"Compile a React component to a string with the Onedoc print styles.",
+	components: {
+		compile: {
+			server: true,
+			client: true,
+			examples: {
+				default: {
+					description: `A simple function to compile a React component to an HTML string with the Onedoc print styles.
           \`\`\`jsx
           const html = await compile(<Component />);
           \`\`\``,
-          template: (
-            <Tailwind>
-              <div className="bg-red-400">Hello World!</div>
-            </Tailwind>
-          ),
-        },
-        emotion: {
-          description: `Pass \`{ emotion: true }\` as the second compile option to merge and extract critical CSS using Emotion. Some libraries such as Chakra UI require this option to work correctly.
+					template: (
+						<Tailwind>
+							<div className="bg-red-400">Hello World!</div>
+						</Tailwind>
+					),
+				},
+				emotion: {
+					description: `Pass \`{ emotion: true }\` as the second compile option to merge and extract critical CSS using Emotion. Some libraries such as Chakra UI require this option to work correctly.
 
 \`\`\`jsx
 const html = await compile(<Component />, { emotion: true });
 \`\`\``,
-          template: (
-            <>
-              <ChakraProvider>
-                <Button colorScheme="blue">Hello</Button>
-              </ChakraProvider>
-            </>
-          ),
-          name: "Emotion CSS",
-          compileOptions: {
-            emotion: true,
-          },
-          externalImports: [
-            `import { Button, ChakraProvider, extendTheme } from "@chakra-ui/react";`,
-          ],
-        },
-      },
-    },
-  },
+					template: (
+						<>
+							<ChakraProvider>
+								<Button colorScheme="blue">Hello</Button>
+							</ChakraProvider>
+						</>
+					),
+					name: "Emotion CSS",
+					compileOptions: {
+						emotion: true,
+					},
+					externalImports: [
+						`import { Button, ChakraProvider, extendTheme } from "@chakra-ui/react";`,
+					],
+				},
+			},
+		},
+	},
 };

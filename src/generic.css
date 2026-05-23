@@ -1,8 +1,8 @@
 .hyphenate {
-  hyphens: auto;
+	hyphens: auto;
 }
 
 input,
 select option {
-  -prince-pdf-form: enable;
+	-prince-pdf-form: enable;
 }

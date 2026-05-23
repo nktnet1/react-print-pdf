@@ -1,26 +1,19 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "lib": [
-      "dom",
-      "esnext"
-    ],
-    "allowJs": true,
-    "jsx": "react",
-    "outDir": "./dist",
-    "rootDir": "./",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "paths": {
-      "@components/*": [
-        "./src/*"
-      ]
-    },
-  },
-  "include": [
-    "src"
-  ]
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "commonjs",
+		"lib": ["dom", "esnext"],
+		"allowJs": true,
+		"jsx": "react",
+		"outDir": "./dist",
+		"rootDir": "./",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"paths": {
+			"@components/*": ["./src/*"]
+		}
+	},
+	"include": ["src"]
 }

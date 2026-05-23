@@ -10,8 +10,8 @@ import * as React from "react";
 import { renderToString } from "react-dom/server";
 
 const propToAttributeString = (propValue: string | object) => {
-  if (typeof propValue === "string") return propValue;
-  else if (typeof propValue === "object") return JSON.stringify(propValue);
+	if (typeof propValue === "string") return propValue;
+	else if (typeof propValue === "object") return JSON.stringify(propValue);
 };
 
 /**
@@ -25,50 +25,50 @@ const propToAttributeString = (propValue: string | object) => {
  * to compute the rest of the HTML markup tree.
  */
 export const quickSafeRenderToString = (element: React.ReactNode): string => {
-  if (typeof element === "string" || typeof element === "number") {
-    return String(element);
-  }
+	if (typeof element === "string" || typeof element === "number") {
+		return String(element);
+	}
 
-  if (Array.isArray(element)) {
-    return element.map(quickSafeRenderToString).join("");
-  }
+	if (Array.isArray(element)) {
+		return element.map(quickSafeRenderToString).join("");
+	}
 
-  if (React.isValidElement(element)) {
-    const { type, props } = element;
+	if (React.isValidElement(element)) {
+		const { type, props } = element;
 
-    if (typeof type === "function") {
-      const isClass = type.prototype && type.prototype.isReactComponent;
+		if (typeof type === "function") {
+			const isClass = type.prototype?.isReactComponent;
 
-      if (isClass) {
-        // If the element is a class component, render it
-        const classComponent = type as React.ComponentClass;
-        const componentInstance = renderToString(
-          React.createElement(classComponent, props)
-        );
+			if (isClass) {
+				// If the element is a class component, render it
+				const classComponent = type as React.ComponentClass;
+				const componentInstance = renderToString(
+					React.createElement(classComponent, props),
+				);
 
-        return componentInstance;
-      }
+				return componentInstance;
+			}
 
-      const functionComponent = type as React.FC;
-      // If the element is a component (function component), render it
-      const componentRenderingResults = functionComponent(props);
-      return quickSafeRenderToString(componentRenderingResults);
-    }
+			const functionComponent = type as React.FC;
+			// If the element is a component (function component), render it
+			const componentRenderingResults = functionComponent(props);
+			return quickSafeRenderToString(componentRenderingResults);
+		}
 
-    // Regular HTML-like element
-    let elementAttributes = Object.keys(props || {})
-      .filter((propName) => propName !== "children")
-      .map((prop) => `${prop}="${propToAttributeString(props[prop])}"`)
-      .join(" ");
-    elementAttributes =
-      elementAttributes.trim().length > 0 ? ` ${elementAttributes}` : "";
-    const children = props && "children" in props ? props.children : "";
-    const renderedChildren = children ? quickSafeRenderToString(children) : "";
-    return typeof element.type === "symbol"
-      ? renderedChildren
-      : `<${element.type.toString()}${elementAttributes}>${renderedChildren}</${element.type.toString()}>`;
-  }
+		// Regular HTML-like element
+		let elementAttributes = Object.keys(props || {})
+			.filter((propName) => propName !== "children")
+			.map((prop) => `${prop}="${propToAttributeString(props[prop])}"`)
+			.join(" ");
+		elementAttributes =
+			elementAttributes.trim().length > 0 ? ` ${elementAttributes}` : "";
+		const children = props && "children" in props ? props.children : "";
+		const renderedChildren = children ? quickSafeRenderToString(children) : "";
+		return typeof element.type === "symbol"
+			? renderedChildren
+			: `<${element.type.toString()}${elementAttributes}>${renderedChildren}</${element.type.toString()}>`;
+	}
 
-  // Unhandled case, return an empty string
-  return "";
+	// Unhandled case, return an empty string
+	return "";
 };

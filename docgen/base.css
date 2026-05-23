@@ -2,10 +2,10 @@
 
 html,
 body {
-  font-size: 28px;
-  font-family: "Inter", sans-serif;
+	font-size: 28px;
+	font-family: "Inter", sans-serif;
 }
 
 @page {
-  size: A4;
+	size: A4;
 }

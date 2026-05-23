@@ -3,175 +3,171 @@
  * Credits to the original author.
  */
 
-import { DocConfig } from "docgen/types";
-import React from "react";
+// @ts-expect-error
+import isPseudoClass from "@csstools/postcss-is-pseudo-class";
+import { createTailwindcssPlugin } from "@mhsdesign/jit-browser-tailwindcss";
+import type { DocConfig } from "docgen/types";
 import postcss from "postcss";
 // import type { Config as TailwindConfig } from "tailwindcss";
-// @ts-ignore
+// @ts-expect-error
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
-
+import type React from "react";
+import { renderToString } from "react-dom/server";
 import type { CorePluginsConfig } from "tailwindcss/types/config";
-
+// @ts-expect-error
+import preflightCss from "../../node_modules/tailwindcss/lib/css/preflight.css?raw";
 import { CSS } from "../css/css";
 
-// @ts-ignore
-import preflightCss from "../../node_modules/tailwindcss/lib/css/preflight.css?raw";
-import { createTailwindcssPlugin } from "@mhsdesign/jit-browser-tailwindcss";
-
-// @ts-ignore
-import isPseudoClass from "@csstools/postcss-is-pseudo-class";
-import { renderToString } from "react-dom/server";
-
 export const Tailwind = ({
-  children,
-  config,
+	children,
+	config,
 }: {
-  /**
-   * The children of the Tailwind component. Components will have access to the Tailwind CSS classes.
-   */
-  children: React.ReactNode;
-  /**
-   * A custom Tailwind config to use for this component.
-   * See all available options at https://tailwindcss.com/docs/configuration
-   *
-   * NB: The `content` option is automatically set to the children of the Tailwind component.
-   */
-  config?: any; // Omit<TailwindConfig, "content">;
+	/**
+	 * The children of the Tailwind component. Components will have access to the Tailwind CSS classes.
+	 */
+	children: React.ReactNode;
+	/**
+	 * A custom Tailwind config to use for this component.
+	 * See all available options at https://tailwindcss.com/docs/configuration
+	 *
+	 * NB: The `content` option is automatically set to the children of the Tailwind component.
+	 */
+	config?: any; // Omit<TailwindConfig, "content">;
 }) => {
-  const markup = renderToString(<>{children}</>);
+	const markup = renderToString(children);
 
-  const classNamesList = (markup.match(/class="([^"]*)"/g) || [])
-    .map((match) => {
-      return match.substring(7, match.length - 1).split(" ");
-    })
-    .flat();
+	const classNamesList = (markup.match(/class="([^"]*)"/g) || []).flatMap(
+		(match) => {
+			return match.substring(7, match.length - 1).split(" ");
+		},
+	);
 
-  const classNamesSet = new Set(classNamesList);
+	const classNamesSet = new Set(classNamesList);
 
-  const corePlugins = config?.corePlugins as CorePluginsConfig;
+	const corePlugins = config?.corePlugins as CorePluginsConfig;
 
-  const tailwindConfig = {
-    ...config,
-    corePlugins: {
-      ...corePlugins,
-      preflight: false,
-    },
-  };
+	const tailwindConfig = {
+		...config,
+		corePlugins: {
+			...corePlugins,
+			preflight: false,
+		},
+	};
 
-  let showPreflight = true;
+	let showPreflight = true;
 
-  if (corePlugins && Array.isArray(corePlugins)) {
-    showPreflight = corePlugins.includes("preflight");
-  } else if (corePlugins && typeof corePlugins === "object") {
-    showPreflight = corePlugins.preflight === false ? false : true;
-  }
+	if (corePlugins && Array.isArray(corePlugins)) {
+		showPreflight = corePlugins.includes("preflight");
+	} else if (corePlugins && typeof corePlugins === "object") {
+		showPreflight = corePlugins.preflight !== false;
+	}
 
-  const { css } = postcss([
-    createTailwindcssPlugin({
-      tailwindConfig,
-      content: [
-        {
-          content: `<div class="${Array.from(classNamesSet).join(" ")}"
+	const { css } = postcss([
+		createTailwindcssPlugin({
+			tailwindConfig,
+			content: [
+				{
+					content: `<div class="${Array.from(classNamesSet).join(" ")}"
         }"></div>`,
-          extension: "html",
-        },
-      ],
-    }),
-    // postcssCssVariables,
-    isPseudoClass(),
-    postcssColorFunctionalNotation,
-  ]).process(
-    String.raw`
+					extension: "html",
+				},
+			],
+		}),
+		// postcssCssVariables,
+		isPseudoClass(),
+		postcssColorFunctionalNotation,
+	]).process(
+		String.raw`
         @tailwind base;
         @tailwind components;
         @tailwind utilities;
 
         ${showPreflight ? preflightCss : ""}
       `,
-    {
-      from: undefined,
-    }
-  );
+		{
+			from: undefined,
+		},
+	);
 
-  return (
-    <>
-      <CSS>{css}</CSS>
-      {children}
-    </>
-  );
+	return (
+		<>
+			<CSS>{css}</CSS>
+			{children}
+		</>
+	);
 };
 
 export const __docConfig: DocConfig = {
-  name: "Tailwind",
-  icon: "fa-solid fa-wind",
-  description: `A simple, drop-in way to use Tailwind CSS in your components.
+	name: "Tailwind",
+	icon: "fa-solid fa-wind",
+	description: `A simple, drop-in way to use Tailwind CSS in your components.
 
 <Warning>
 The supported Tailwind version is 3.3.2 due to changes in the PostCSS plugin synchronicity.
 </Warning>`,
-  components: {
-    Tailwind: {
-      client: true,
-      server: true,
-      examples: {
-        default: {
-          description:
-            "Use a simple Tailwind tag to support Tailwind in your document.",
-          template: (
-            <Tailwind>
-              <div className="bg-gradient-to-tr from-blue-500 to-blue-700 rounded-2xl p-12"></div>
-              <p className="py-12 text-slate-800">
-                This is a Tailwind component. All children of this component
-                will have access to the Tailwind CSS classes.
-              </p>
-            </Tailwind>
-          ),
-        },
-        config: {
-          name: "Custom Tailwind config",
-          description:
-            "You can also pass a custom Tailwind config to the Tailwind component.",
-          template: (
-            <Tailwind
-              config={{
-                theme: {
-                  extend: {
-                    colors: {
-                      primary: "#6484cf",
-                    },
-                  },
-                },
-              }}
-            >
-              <div className="bg-primary p-12 rounded-2xl"></div>
-              <p className="py-12 text-slate-800">
-                This is a Tailwind component. All children of this component
-                will have access to the Tailwind CSS classes.
-              </p>
-            </Tailwind>
-          ),
-        },
-        preflight: {
-          name: "Disable Preflight",
-          description: "You can disable the Tailwind Preflight CSS.",
-          template: (
-            <Tailwind
-              config={{
-                corePlugins: {
-                  preflight: false,
-                },
-              }}
-            >
-              <div className="bg-primary p-12 rounded-2xl"></div>
-              <h1>Level 1 Header</h1>
-              <p className="text-slate-800">
-                This is a Tailwind component. All children of this component
-                will have access to the Tailwind CSS classes.
-              </p>
-            </Tailwind>
-          ),
-        },
-      },
-    },
-  },
+	components: {
+		Tailwind: {
+			client: true,
+			server: true,
+			examples: {
+				default: {
+					description:
+						"Use a simple Tailwind tag to support Tailwind in your document.",
+					template: (
+						<Tailwind>
+							<div className="bg-gradient-to-tr from-blue-500 to-blue-700 rounded-2xl p-12"></div>
+							<p className="py-12 text-slate-800">
+								This is a Tailwind component. All children of this component
+								will have access to the Tailwind CSS classes.
+							</p>
+						</Tailwind>
+					),
+				},
+				config: {
+					name: "Custom Tailwind config",
+					description:
+						"You can also pass a custom Tailwind config to the Tailwind component.",
+					template: (
+						<Tailwind
+							config={{
+								theme: {
+									extend: {
+										colors: {
+											primary: "#6484cf",
+										},
+									},
+								},
+							}}
+						>
+							<div className="bg-primary p-12 rounded-2xl"></div>
+							<p className="py-12 text-slate-800">
+								This is a Tailwind component. All children of this component
+								will have access to the Tailwind CSS classes.
+							</p>
+						</Tailwind>
+					),
+				},
+				preflight: {
+					name: "Disable Preflight",
+					description: "You can disable the Tailwind Preflight CSS.",
+					template: (
+						<Tailwind
+							config={{
+								corePlugins: {
+									preflight: false,
+								},
+							}}
+						>
+							<div className="bg-primary p-12 rounded-2xl"></div>
+							<h1>Level 1 Header</h1>
+							<p className="text-slate-800">
+								This is a Tailwind component. All children of this component
+								will have access to the Tailwind CSS classes.
+							</p>
+						</Tailwind>
+					),
+				},
+			},
+		},
+	},
 };

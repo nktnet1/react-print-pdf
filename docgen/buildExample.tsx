@@ -1,42 +1,42 @@
-import { EnrichedExample } from "./types";
-import { formatSnippet } from "./utils";
-import { renderPreview, baseCss } from "./renderPreview";
 import type { CompileOptions } from "../src/compile/compile";
+import { baseCss, renderPreview } from "./renderPreview";
+import type { EnrichedExample } from "./types";
+import { formatSnippet } from "./utils";
 
 export const buildExample = async (
-  example: EnrichedExample,
-  component: string,
-  outputPath: string,
-  compileOptions?: CompileOptions
+	example: EnrichedExample,
+	component: string,
+	outputPath: string,
+	compileOptions?: CompileOptions,
 ) => {
-  let markdown = ``;
+	let markdown = ``;
 
-  const snippet = await formatSnippet(example.templateString);
+	const snippet = await formatSnippet(example.templateString);
 
-  const paths = await renderPreview(
-    example.template,
-    component,
-    outputPath,
-    true,
-    compileOptions
-  );
+	const paths = await renderPreview(
+		example.template,
+		component,
+		outputPath,
+		true,
+		compileOptions,
+	);
 
-  if (example.description) {
-    markdown += `${example.description}\n\n`;
-  }
+	if (example.description) {
+		markdown += `${example.description}\n\n`;
+	}
 
-  markdown += `<Frame background="subtle"><img src="${paths.imagePath}" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>\n\n`;
+	markdown += `<Frame background="subtle"><img src="${paths.imagePath}" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>\n\n`;
 
-  // Check if the folder docs/previews contain the image
+	// Check if the folder docs/previews contain the image
 
-  markdown += `<div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
+	markdown += `<div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
 \`\`\`jsx
 import { ${component}${
-    example.imports ? `, ${example.imports.join(", ")}` : ""
-  } } from "@fileforge/react-print";${
-    example.externalImports ? `\n${example.externalImports.join("\n")}` : ""
-  }
+		example.imports ? `, ${example.imports.join(", ")}` : ""
+	} } from "@fileforge/react-print";${
+		example.externalImports ? `\n${example.externalImports.join("\n")}` : ""
+	}
 
 ${snippet}
 \`\`\`
@@ -48,9 +48,9 @@ ${baseCss}
 </CodeBlock>
 </CodeBlocks></div>\n\n`;
 
-  // markdown += `<a href="${pdfPath}">Download the PDF example ↓</a>\n\n`;
+	// markdown += `<a href="${pdfPath}">Download the PDF example ↓</a>\n\n`;
 
-  return {
-    markdown,
-  };
+	return {
+		markdown,
+	};
 };

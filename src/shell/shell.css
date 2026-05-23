@@ -1,41 +1,41 @@
 @page {
-  @top-left {
-    content: flow(FileforgePageTop);
-    content: element(FileforgePageTop);
-    position: relative;
-  }
+	@top-left {
+		content: flow(FileforgePageTop);
+		content: element(FileforgePageTop);
+		position: relative;
+	}
 
-  @bottom-left {
-    content: flow(FileforgePageBottom);
-    content: element(FileforgePageBottom);
-    position: relative;
-  }
+	@bottom-left {
+		content: flow(FileforgePageBottom);
+		content: element(FileforgePageBottom);
+		position: relative;
+	}
 }
 
 .onedoc-page-top {
-  position: running(FileforgePageTop) !important;
-  -prince-flow: static(FileforgePageTop);
-  width: 100%;
-  height: 100%;
+	position: running(FileforgePageTop) !important;
+	-prince-flow: static(FileforgePageTop);
+	width: 100%;
+	height: 100%;
 }
 
 .onedoc-current-page-top {
-  position: FileforgePageTop;
-  width: 100%;
-  height: 100%;
+	position: FileforgePageTop;
+	width: 100%;
+	height: 100%;
 }
 
 .onedoc-page-bottom {
-  position: running(FileforgePageBottom) !important;
-  -prince-flow: static(FileforgePageBottom);
-  width: 100%;
-  height: 100%;
+	position: running(FileforgePageBottom) !important;
+	-prince-flow: static(FileforgePageBottom);
+	width: 100%;
+	height: 100%;
 }
 
 .onedoc-page-break {
-  page-break-after: always;
+	page-break-after: always;
 }
 
 .onedoc-no-break {
-  page-break-inside: avoid;
+	page-break-inside: avoid;
 }

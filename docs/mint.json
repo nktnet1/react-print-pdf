@@ -1,182 +1,166 @@
 {
-  "name": "React Print",
-  "schema": "schema.json",
-  "logo": {
-    "dark": "/logo/react-print-trim.png",
-    "light": "/logo/react-print-trim.png",
-    "href": "https://www.onedoclabs.com/"
-  },
-  "favicon": "/favicon.svg",
-  "colors": {
-    "primary": "#ffffff",
-    "light": "#ffffff",
-    "background": {
-      "light": "#FFFFFF",
-      "dark": "#000000"
-    },
-    "anchors": {
-      "from": "#101010",
-      "to": "#606060"
-    }
-  },
-  "redirects": [
-    {
-      "source": "/:slug*",
-      "destination": "https://docs.fileforge.com/react-print/:slug*"
-    }
-  ],
-  "seo": {
-    "indexHiddenPages": true
-  },
-  "analytics": {
-    "posthog": {
-      "apiKey": "phc_jHjWg3U3A39knTK6ChWEUHIXMFYZ7rATZOLzhK39dv9",
-      "apiHost": "https://eu.posthog.com"
-    },
-    "ga4": {
-      "measurementId": "G-KD443H3TZ3"
-    }
-  },
-  "modeToggle": {
-    "default": "dark",
-    "isHidden": true
-  },
-  "feedback": {
-    "thumbsRating": true
-  },
-  "topbarLinks": [],
-  "topbarCtaButton": {
-    "type": "github",
-    "url": "https://github.com/OnedocLabs/react-print"
-  },
-  "tabs": [],
-  "anchors": [
-    {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://react.onedoclabs.com/introduction"
-    },
-    {
-      "name": "Discord",
-      "icon": "discord",
-      "url": "https://discord.gg/uRJE6e2rgr"
-    },
-    {
-      "name": "Github",
-      "icon": "github",
-      "url": "https://github.com/OnedocLabs/react-print"
-    },
-    {
-      "name": "Onedoc",
-      "icon": "globe",
-      "url": "https://www.onedoclabs.com/"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "Overview",
-      "pages": [
-        "introduction",
-        "contributing"
-      ]
-    },
-    {
-      "group": "Getting Started",
-      "pages": [
-        "getting-started/setup"
-      ]
-    },
-    {
-      "group": "Integrations",
-      "pages": [
-        "integrations/onedoc"
-      ]
-    },
-    {
-      "group": "Components",
-      "pages": [
-        "components/compile/compile",
-        {
-          "group": "CSS",
-          "pages": [
-            "components/css/css",
-            "components/css/font",
-            "components/css/margins"
-          ]
-        },
-        "components/footnote/footnote",
-        "components/latex/latex",
-        "components/markdown/markdown",
-        {
-          "group": "Shell",
-          "pages": [
-            "components/shell/currentpagetop",
-            "components/shell/floatbottom",
-            "components/shell/nobreak",
-            "components/shell/pagebottom",
-            "components/shell/pagebreak",
-            "components/shell/pagetop"
-          ]
-        },
-        "components/signature/field",
-        "components/tailwind/tailwind",
-        {
-          "group": "Variables",
-          "pages": [
-            "components/variables/pagenumber",
-            "components/variables/pagesnumber",
-            "components/variables/runningh1",
-            "components/variables/runningh2",
-            "components/variables/runningh3",
-            "components/variables/runningh4",
-            "components/variables/runningh5",
-            "components/variables/runningh6"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Templates",
-      "pages": [
-        "ui/templates",
-        {
-          "group": "Reports",
-          "pages": [
-            "ui/templates/scientific-report",
-            "ui/templates/report-charts"
-          ]
-        },
-        {
-          "group": "Receipts",
-          "pages": [
-            "ui/templates/receipt"
-          ]
-        },
-        {
-          "group": "NDA",
-          "pages": [
-            "ui/templates/nda-markdown"
-          ]
-        },
-        {
-          "group": "Invoices",
-          "pages": [
-            "ui/templates/invoice",
-            "ui/templates/invoice-advanced"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Troubleshooting",
-      "pages": [
-        "troubleshooting/faq"
-      ]
-    }
-  ],
-  "footerSocials": {
-    "twitter": "https://twitter.com/Onedoclabs",
-    "github": "https://github.com/OnedocLabs/onedoc",
-    "linkedin": "https://www.linkedin.com/company/onedoclabs"
-  }
+	"name": "React Print",
+	"schema": "schema.json",
+	"logo": {
+		"dark": "/logo/react-print-trim.png",
+		"light": "/logo/react-print-trim.png",
+		"href": "https://www.onedoclabs.com/"
+	},
+	"favicon": "/favicon.svg",
+	"colors": {
+		"primary": "#ffffff",
+		"light": "#ffffff",
+		"background": {
+			"light": "#FFFFFF",
+			"dark": "#000000"
+		},
+		"anchors": {
+			"from": "#101010",
+			"to": "#606060"
+		}
+	},
+	"redirects": [
+		{
+			"source": "/:slug*",
+			"destination": "https://docs.fileforge.com/react-print/:slug*"
+		}
+	],
+	"seo": {
+		"indexHiddenPages": true
+	},
+	"analytics": {
+		"posthog": {
+			"apiKey": "phc_jHjWg3U3A39knTK6ChWEUHIXMFYZ7rATZOLzhK39dv9",
+			"apiHost": "https://eu.posthog.com"
+		},
+		"ga4": {
+			"measurementId": "G-KD443H3TZ3"
+		}
+	},
+	"modeToggle": {
+		"default": "dark",
+		"isHidden": true
+	},
+	"feedback": {
+		"thumbsRating": true
+	},
+	"topbarLinks": [],
+	"topbarCtaButton": {
+		"type": "github",
+		"url": "https://github.com/OnedocLabs/react-print"
+	},
+	"tabs": [],
+	"anchors": [
+		{
+			"name": "Documentation",
+			"icon": "book-open-cover",
+			"url": "https://react.onedoclabs.com/introduction"
+		},
+		{
+			"name": "Discord",
+			"icon": "discord",
+			"url": "https://discord.gg/uRJE6e2rgr"
+		},
+		{
+			"name": "Github",
+			"icon": "github",
+			"url": "https://github.com/OnedocLabs/react-print"
+		},
+		{
+			"name": "Onedoc",
+			"icon": "globe",
+			"url": "https://www.onedoclabs.com/"
+		}
+	],
+	"navigation": [
+		{
+			"group": "Overview",
+			"pages": ["introduction", "contributing"]
+		},
+		{
+			"group": "Getting Started",
+			"pages": ["getting-started/setup"]
+		},
+		{
+			"group": "Integrations",
+			"pages": ["integrations/onedoc"]
+		},
+		{
+			"group": "Components",
+			"pages": [
+				"components/compile/compile",
+				{
+					"group": "CSS",
+					"pages": [
+						"components/css/css",
+						"components/css/font",
+						"components/css/margins"
+					]
+				},
+				"components/footnote/footnote",
+				"components/latex/latex",
+				"components/markdown/markdown",
+				{
+					"group": "Shell",
+					"pages": [
+						"components/shell/currentpagetop",
+						"components/shell/floatbottom",
+						"components/shell/nobreak",
+						"components/shell/pagebottom",
+						"components/shell/pagebreak",
+						"components/shell/pagetop"
+					]
+				},
+				"components/signature/field",
+				"components/tailwind/tailwind",
+				{
+					"group": "Variables",
+					"pages": [
+						"components/variables/pagenumber",
+						"components/variables/pagesnumber",
+						"components/variables/runningh1",
+						"components/variables/runningh2",
+						"components/variables/runningh3",
+						"components/variables/runningh4",
+						"components/variables/runningh5",
+						"components/variables/runningh6"
+					]
+				}
+			]
+		},
+		{
+			"group": "Templates",
+			"pages": [
+				"ui/templates",
+				{
+					"group": "Reports",
+					"pages": [
+						"ui/templates/scientific-report",
+						"ui/templates/report-charts"
+					]
+				},
+				{
+					"group": "Receipts",
+					"pages": ["ui/templates/receipt"]
+				},
+				{
+					"group": "NDA",
+					"pages": ["ui/templates/nda-markdown"]
+				},
+				{
+					"group": "Invoices",
+					"pages": ["ui/templates/invoice", "ui/templates/invoice-advanced"]
+				}
+			]
+		},
+		{
+			"group": "Troubleshooting",
+			"pages": ["troubleshooting/faq"]
+		}
+	],
+	"footerSocials": {
+		"twitter": "https://twitter.com/Onedoclabs",
+		"github": "https://github.com/OnedocLabs/onedoc",
+		"linkedin": "https://www.linkedin.com/company/onedoclabs"
+	}
 }
