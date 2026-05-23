@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
-import { Tailwind, compile } from "../dist/index.mjs";
-import React from "react";
+import { compile, Tailwind } from "../dist/index.mjs";
 
 test("loads in frontend app", async () => {
   expect(compile).toBeDefined();

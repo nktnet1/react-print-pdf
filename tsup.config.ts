@@ -1,8 +1,8 @@
-import { defineConfig } from "tsup";
-import { RawPlugin } from "./build/raw";
+import stdLibBrowser from "node-stdlib-browser";
 // @ts-expect-error
 import plugin from "node-stdlib-browser/helpers/esbuild/plugin";
-import stdLibBrowser from "node-stdlib-browser";
+import { defineConfig } from "tsup";
+import { RawPlugin } from "./build/raw";
 
 export default defineConfig({
   entry: ["src/index.ts", "src/mdx.ts", "src/server.ts", "src/client.ts"],

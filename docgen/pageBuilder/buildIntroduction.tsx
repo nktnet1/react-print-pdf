@@ -1,8 +1,11 @@
-import fs from 'fs';
+import fs from "fs";
 
-export const replaceInFile = (filePath: string, search: RegExp, replace: string) => {
-
-  let fileContents = fs.readFileSync(filePath, 'utf8');
+export const replaceInFile = (
+  filePath: string,
+  search: RegExp,
+  replace: string,
+) => {
+  let fileContents = fs.readFileSync(filePath, "utf8");
 
   if (search.test(fileContents)) {
     // Replace the pattern with the new content
@@ -10,9 +13,8 @@ export const replaceInFile = (filePath: string, search: RegExp, replace: string)
 
     // Write the updated content back to the file
     fs.writeFileSync(filePath, fileContents);
-    console.log('Replacement successful');
+    console.log("Replacement successful");
   } else {
-    console.log('Pattern not found');
+    console.log("Pattern not found");
   }
-
-}
+};

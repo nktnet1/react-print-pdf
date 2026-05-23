@@ -1,5 +1,4 @@
-import { DocConfig } from "docgen/types";
-import React from "react";
+import type { DocConfig } from "docgen/types";
 import katex from "katex";
 
 export const Latex = ({ children }: { children: string }) => {
@@ -38,7 +37,8 @@ LaTeX rendering is still in beta. Please report any issues you encounter on our 
       client: true,
       examples: {
         default: {
-          description: "Use a simple Latex tag to support Latex in your document.",
+          description:
+            "Use a simple Latex tag to support Latex in your document.",
           template: <Latex>{String.raw`\frac{1}{2}`}</Latex>,
         },
         complex: {

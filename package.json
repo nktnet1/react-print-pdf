@@ -37,7 +37,10 @@
     "dev": "(cd ./docs && mintlify dev --watch)",
     "build-components": "npm run build && tsx ./docgen/index.ts",
     "prune-docs": "tsx ./docgen/prune.ts",
-    "build-components-commit": "npm run build-components && npm run prune-docs"
+    "build-components-commit": "npm run build-components && npm run prune-docs",
+    "lint": "biome lint",
+    "format": "biome format",
+    "check": "biome check"
   },
   "pre-commit": [
     "build-components-commit"
@@ -45,6 +48,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "2.4.15",
     "@chakra-ui/react": "^2.10.9",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@heroicons/react": "^2.2.0",

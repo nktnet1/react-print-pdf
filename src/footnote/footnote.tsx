@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import "./footnote.css";
 import type { DocConfig } from "../../docgen/types";
 

@@ -1,25 +1,24 @@
-import { config } from "dotenv";
-
 import { FileforgeClient } from "@fileforge/client";
 import * as crypto from "crypto";
-import * as path from "path";
+import { config } from "dotenv";
 import * as fs from "fs";
-import { fromBuffer } from "pdf2pic";
 import { glob } from "glob";
-import { compile, CompileOptions } from "../dist";
-import React from "react";
+import * as path from "path";
+import { fromBuffer } from "pdf2pic";
+import type React from "react";
 import { pipeline } from "stream/promises";
+import { type CompileOptions, compile } from "../dist";
 
 config({ path: ".env.local" });
 config();
 
 const ff = new FileforgeClient({
-  apiKey: process.env.ONEDOC_API_KEY!,
+  apiKey: process.env.ONEDOC_API_KEY,
 });
 
 export const baseCss = fs.readFileSync(path.join(__dirname, "./base.css"));
 export const indexCss = fs.readFileSync(
-  path.join(__dirname, "../dist/index.css")
+  path.join(__dirname, "../dist/index.css"),
 );
 
 export async function renderPreview(
@@ -27,7 +26,7 @@ export async function renderPreview(
   componentName: string,
   outputPath: string,
   useBaseCss: boolean = true,
-  compileOptions?: CompileOptions
+  compileOptions?: CompileOptions,
 ) {
   const Component = component;
   const Element = <>{Component}</>;
@@ -41,7 +40,7 @@ export async function renderPreview(
   hash.update(html);
 
   let id = hash.digest("hex");
-  id = componentName.replace(/ /g, "-").toLowerCase() + "-" + id.slice(0, 8);
+  id = `${componentName.replace(/ /g, "-").toLowerCase()}-${id.slice(0, 8)}`;
 
   const targetFolder = path.join(__dirname, `../docs/images/previews/${id}/`);
 
@@ -60,7 +59,7 @@ export async function renderPreview(
           host: false,
           test: false,
         },
-      }
+      },
     );
 
     // Create the directory
@@ -71,7 +70,7 @@ export async function renderPreview(
 
     await pipeline(
       file,
-      fs.createWriteStream(path.join(targetFolder, "document.pdf"))
+      fs.createWriteStream(path.join(targetFolder, "document.pdf")),
     );
 
     const buffer = fs.readFileSync(path.join(targetFolder, "document.pdf"));
@@ -90,7 +89,7 @@ export async function renderPreview(
     while (true) {
       try {
         await pdf2pic(currentPage);
-      } catch (e) {
+      } catch (_e) {
         break;
       }
 

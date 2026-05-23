@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import type { CompileOptions } from "../src/compile/compile";
 
 export interface Example {

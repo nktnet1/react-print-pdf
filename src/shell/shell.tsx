@@ -1,6 +1,6 @@
-import React from "react";
+import type React from "react";
 import "./shell.css";
-import { DocConfig } from "../../docgen/types";
+import type { DocConfig } from "../../docgen/types";
 
 /**
  * Displays content in the top of all the pages.

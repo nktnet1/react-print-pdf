@@ -1,10 +1,11 @@
-import { DocConfig } from "docgen/types";
-import { MarkdownToJSX, compiler } from "markdown-to-jsx";
-import React, {
+import type { DocConfig } from "docgen/types";
+import { compiler, type MarkdownToJSX } from "markdown-to-jsx";
+import type React from "react";
+import {
   Children,
   isValidElement,
-  ReactElement,
-  ReactNode,
+  type ReactElement,
+  type ReactNode,
 } from "react";
 import { CSS, PageBreak, Tailwind } from "..";
 
@@ -24,7 +25,7 @@ interface MarkdownProps {
 export const Markdown = (props: MarkdownProps) => {
   const content = compiler(props.children, props.options);
 
-  let headers: TocRendererProps[] = [];
+  const headers: TocRendererProps[] = [];
 
   const isReactElement = (child: ReactNode): child is ReactElement<any> => {
     return typeof child === "object" && child !== null && "type" in child;
@@ -40,7 +41,7 @@ export const Markdown = (props: MarkdownProps) => {
     ) {
       headers.push({
         heading: child.type,
-        level: parseInt(child.type[1]),
+        level: parseInt(child.type[1], 10),
         children: child.props.children,
         id: child.props.id,
       } as TocRendererProps);
@@ -52,15 +53,15 @@ export const Markdown = (props: MarkdownProps) => {
         child.type.prototype &&
         child.type.prototype.isReactComponent
       ) {
-        // @ts-ignore
+        // @ts-expect-error
         const instance = new child.type(child.props); // Instantiate the class component
         const result = instance.render(); // Call its render method
         detectHeader(result);
       } else if (typeof child.type === "function") {
-        // @ts-ignore
+        // @ts-expect-error
         const result = child.type(child.props); // call the component
         detectHeader(result);
-      } else if (child.props && child.props.children) {
+      } else if (child.props?.children) {
         Children.forEach(child.props.children, detectHeader);
       }
     }
@@ -70,22 +71,20 @@ export const Markdown = (props: MarkdownProps) => {
 
   if (tocRenderer) detectHeader(content);
 
-  const Toc = !!tocRenderer ? (
-    <>{headers.map((header) => tocRenderer(header))}</>
-  ) : null;
+  const Toc = tocRenderer ? headers.map((header) => tocRenderer(header)) : null;
 
   return compiler(
     props.children,
     Object.assign({}, props.options, {
       overrides: {
-        Toc: !!tocRenderer
+        Toc: tocRenderer
           ? {
               component: () => Toc,
             }
           : undefined,
         ...props.options?.overrides,
       },
-    })
+    }),
   );
 };
 

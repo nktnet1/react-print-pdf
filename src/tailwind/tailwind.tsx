@@ -3,24 +3,20 @@
  * Credits to the original author.
  */
 
-import { DocConfig } from "docgen/types";
-import React from "react";
+// @ts-expect-error
+import isPseudoClass from "@csstools/postcss-is-pseudo-class";
+import { createTailwindcssPlugin } from "@mhsdesign/jit-browser-tailwindcss";
+import type { DocConfig } from "docgen/types";
 import postcss from "postcss";
 // import type { Config as TailwindConfig } from "tailwindcss";
-// @ts-ignore
+// @ts-expect-error
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
-
-import type { CorePluginsConfig } from "tailwindcss/types/config";
-
-import { CSS } from "../css/css";
-
-// @ts-ignore
-import preflightCss from "../../node_modules/tailwindcss/lib/css/preflight.css?raw";
-import { createTailwindcssPlugin } from "@mhsdesign/jit-browser-tailwindcss";
-
-// @ts-ignore
-import isPseudoClass from "@csstools/postcss-is-pseudo-class";
+import type React from "react";
 import { renderToString } from "react-dom/server";
+import type { CorePluginsConfig } from "tailwindcss/types/config";
+// @ts-expect-error
+import preflightCss from "../../node_modules/tailwindcss/lib/css/preflight.css?raw";
+import { CSS } from "../css/css";
 
 export const Tailwind = ({
   children,
@@ -38,13 +34,13 @@ export const Tailwind = ({
    */
   config?: any; // Omit<TailwindConfig, "content">;
 }) => {
-  const markup = renderToString(<>{children}</>);
+  const markup = renderToString(children);
 
-  const classNamesList = (markup.match(/class="([^"]*)"/g) || [])
-    .map((match) => {
+  const classNamesList = (markup.match(/class="([^"]*)"/g) || []).flatMap(
+    (match) => {
       return match.substring(7, match.length - 1).split(" ");
-    })
-    .flat();
+    },
+  );
 
   const classNamesSet = new Set(classNamesList);
 
@@ -63,7 +59,7 @@ export const Tailwind = ({
   if (corePlugins && Array.isArray(corePlugins)) {
     showPreflight = corePlugins.includes("preflight");
   } else if (corePlugins && typeof corePlugins === "object") {
-    showPreflight = corePlugins.preflight === false ? false : true;
+    showPreflight = corePlugins.preflight !== false;
   }
 
   const { css } = postcss([
@@ -90,7 +86,7 @@ export const Tailwind = ({
       `,
     {
       from: undefined,
-    }
+    },
   );
 
   return (

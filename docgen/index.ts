@@ -1,18 +1,18 @@
+import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
-import * as fs from "fs";
-import { build } from "tsup";
 import * as docgen from "react-docgen-typescript";
-import { DocConfig } from "./types";
+import { build } from "tsup";
+import { RawPlugin } from "../build/raw";
+import { buildFileMarkdown } from "./buildFileMarkdown";
+import { buildTemplateList, buildTemplates } from "./buildTemplates";
+import { replaceInFile } from "./pageBuilder/buildIntroduction";
+import type { DocConfig } from "./types";
 import {
   formatCamelCaseToTitle,
   getTemplateContents,
   mergeTemplateInfo,
 } from "./utils";
-import { buildFileMarkdown } from "./buildFileMarkdown";
-import { buildTemplateList, buildTemplates } from "./buildTemplates";
-import { RawPlugin } from "../build/raw";
-import { replaceInFile } from "./pageBuilder/buildIntroduction";
 
 const tmpDir = path.join(__dirname, "../.tmp");
 const docsPath = path.join(__dirname, "../docs/components");
@@ -30,7 +30,7 @@ type docFolder = {
   description: string;
   outputPath: string;
   files: docFile[];
-}
+};
 
 type docFile = {
   name: string;
@@ -53,13 +53,13 @@ const process = async () => {
       files.map(async (filePath) => {
         const relativePath = path.relative(
           path.join(__dirname, "../src"),
-          filePath
+          filePath,
         );
 
         const entrypoint = path.join(
           tmpDir,
           path.dirname(relativePath),
-          path.basename(relativePath, ".tsx") + ".js"
+          `${path.basename(relativePath, ".tsx")}.js`,
         );
 
         await build({
@@ -85,49 +85,51 @@ const process = async () => {
             description: "",
             components: {},
           } satisfies DocConfig,
-          elements.__docConfig
+          elements.__docConfig,
         );
 
         const templates = getTemplateContents(filePath);
 
         docConfig = mergeTemplateInfo(docConfig, templates);
 
-        const folderOutputPath:string = path.join(
+        const folderOutputPath: string = path.join(
           __dirname,
-          `../docs/components/${path.basename(filePath, ".tsx")}`
+          `../docs/components/${path.basename(filePath, ".tsx")}`,
         );
 
-        let docFiles: docFile[] = [];
+        const docFiles: docFile[] = [];
 
-        for (const [componentName, value] of Object.entries(docConfig.components)) {
-
-          const componentDocConfig = Object.assign(
-            {
-              name: componentName,
-              description: "",
-              components: {[componentName]: value},
-            }
-          );
+        for (const [componentName, value] of Object.entries(
+          docConfig.components,
+        )) {
+          const componentDocConfig = Object.assign({
+            name: componentName,
+            description: "",
+            components: { [componentName]: value },
+          });
 
           const outputPath = `${folderOutputPath}/${componentName.toLocaleLowerCase()}.mdx`;
 
-          const componentType = types.filter(e=>e.displayName === componentName);
+          const componentType = types.filter(
+            (e) => e.displayName === componentName,
+          );
 
-          const markdown = await buildFileMarkdown(componentDocConfig, componentType, outputPath);
+          const markdown = await buildFileMarkdown(
+            componentDocConfig,
+            componentType,
+            outputPath,
+          );
 
-          docFiles.push(
-            {
-              name: componentDocConfig.name,
-              baseName: path.basename(filePath, ".tsx"),
-              path: path
-                .relative(path.join(__dirname, "../src"), filePath)
-                .toLowerCase(),
-              outputPath,
-              markdown,
-              config: componentDocConfig,
-            }
-          )
-
+          docFiles.push({
+            name: componentDocConfig.name,
+            baseName: path.basename(filePath, ".tsx"),
+            path: path
+              .relative(path.join(__dirname, "../src"), filePath)
+              .toLowerCase(),
+            outputPath,
+            markdown,
+            config: componentDocConfig,
+          });
         }
 
         return {
@@ -135,9 +137,9 @@ const process = async () => {
           name: docConfig.name,
           description: docConfig.description,
           outputPath: folderOutputPath,
-          files: docFiles
-        };;
-        })
+          files: docFiles,
+        };
+      }),
     )
   ).filter(Boolean) as docFolder[];
 
@@ -146,7 +148,7 @@ const process = async () => {
     if (!fs.existsSync(directory)) {
       fs.mkdirSync(directory, { recursive: true });
     } else {
-      if(remove){
+      if (remove) {
         fs.rmSync(directory, { recursive: true });
       }
       fs.mkdirSync(directory, { recursive: true });
@@ -159,23 +161,24 @@ const process = async () => {
     return a.name.localeCompare(b.name);
   });
 
-  fs.writeFileSync(path.join(__dirname , "../docs/sortedDocs.json"), JSON.stringify(sortedDocs)); //writes the object for future processing in fileforge-docs
+  fs.writeFileSync(
+    path.join(__dirname, "../docs/sortedDocs.json"),
+    JSON.stringify(sortedDocs),
+  ); //writes the object for future processing in fileforge-docs
 
   sortedDocs.forEach((docFile) => {
-    docFile.files.forEach((file)=>{
-
+    docFile.files.forEach((file) => {
       checkDirectorySync(docFile.outputPath, false);
 
       fs.writeFileSync(file.outputPath, file.markdown);
-    })
+    });
   });
 
   // Build the card groups
   let snippet = `<Cards>`;
 
   sortedDocs.forEach((docFolder) => {
-
-    const tempPath = "/react-print/components/"+docFolder.name;
+    const tempPath = `/react-print/components/${docFolder.name}`;
 
     snippet += `<Card title="${docFolder.name}" icon="${
       docFolder.icon
@@ -190,10 +193,7 @@ const process = async () => {
 
   checkDirectorySync(snippetsPath);
 
-  fs.writeFileSync(
-    snippetsPath+"/components.mdx",
-    snippet
-  );
+  fs.writeFileSync(`${snippetsPath}/components.mdx`, snippet);
 
   const templatesBuild = await buildTemplates();
 
@@ -211,7 +211,7 @@ const process = async () => {
 
   const templateListingContents = await buildTemplateList(
     templatesBuild,
-    templateListingPath
+    templateListingPath,
   );
 
   fs.writeFileSync(templateListingPath, templateListingContents);
@@ -249,8 +249,8 @@ const process = async () => {
         acc[category].pages.push(
           path.relative(
             path.join(__dirname, "../docs"),
-            template.outputPath.replace(".mdx", "")
-          )
+            template.outputPath.replace(".mdx", ""),
+          ),
         );
 
         return acc;
@@ -276,8 +276,6 @@ const process = async () => {
   const introductionPath = path.join(__dirname, "../docs/introduction.mdx");
 
   replaceInFile(introductionPath, /<Cards>[\s\S]*?<\/Cards>/, snippet); //TODO: fix the relative component import in Fern to avoid this
-
-
 };
 
 process();

@@ -1,6 +1,6 @@
-import ts, { Expression, ObjectLiteralExpression } from "typescript";
-import { DocConfig, ExtendedDocConfig } from "./types";
 import * as prettier from "prettier";
+import ts, { type Expression, type ObjectLiteralExpression } from "typescript";
+import type { DocConfig, ExtendedDocConfig } from "./types";
 
 export const formatCamelCaseToTitle = (str: string) => {
   // Convert camelCase to Title Case with spaces
@@ -25,7 +25,7 @@ const extractTemplates = (node: ObjectLiteralExpression) => {
   const templates: Record<string, Record<string, string>> = {};
 
   const components = listProperties(
-    listProperties(node)["components"] as ts.ObjectLiteralExpression
+    listProperties(node).components as ts.ObjectLiteralExpression,
   );
 
   Object.entries(components).forEach(([componentName, value]) => {
@@ -35,16 +35,15 @@ const extractTemplates = (node: ObjectLiteralExpression) => {
 
     try {
       examples = listProperties(
-        listProperties(value as ts.ObjectLiteralExpression)[
-          "examples"
-        ] as ts.ObjectLiteralExpression
+        listProperties(value as ts.ObjectLiteralExpression)
+          .examples as ts.ObjectLiteralExpression,
       );
-    } catch (e) {}
+    } catch (_e) {}
 
     Object.entries(examples).forEach(([exampleName, value]) => {
-      const template = listProperties(value as ts.ObjectLiteralExpression)[
-        "template"
-      ];
+      const template = listProperties(
+        value as ts.ObjectLiteralExpression,
+      ).template;
 
       templates[componentName][exampleName] = template.getText();
     });
@@ -59,7 +58,7 @@ export const getTemplateContents = (filePath: string) => {
     filePath,
     ts.sys.readFile(filePath) || "",
     ts.ScriptTarget.Latest,
-    true
+    true,
   );
 
   let templates = {};
@@ -79,11 +78,11 @@ export const getTemplateContents = (filePath: string) => {
 
 export const mergeTemplateInfo = (
   docInfo: DocConfig,
-  templates: any
+  templates: any,
 ): ExtendedDocConfig => {
   Object.entries(docInfo.components).forEach(([componentName, value]) => {
     Object.entries(value.examples || {}).forEach(([exampleName, example]) => {
-      // @ts-ignore
+      // @ts-expect-error
       example.templateString = templates[componentName][exampleName];
     });
   });

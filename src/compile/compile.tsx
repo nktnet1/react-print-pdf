@@ -1,8 +1,8 @@
-import { DocConfig } from "docgen/types";
-import React from "react";
 import { Button, ChakraProvider } from "@chakra-ui/react";
+import type { DocConfig } from "docgen/types";
+import type React from "react";
 
-// @ts-ignore
+// @ts-expect-error
 import onedocStyles from "../../dist/index.css?raw";
 
 import { CSS } from "../css/css";
@@ -17,13 +17,13 @@ export interface CompileOptions {
 
 export const compile = async (
   node: React.ReactElement,
-  options?: CompileOptions
+  options?: CompileOptions,
 ) => {
   const { emotion } = Object.assign(
     {
       emotion: false,
     },
-    options || {}
+    options || {},
   );
 
   const ReactDOMServer = await import("react-dom/server");
@@ -57,16 +57,16 @@ export const compile = async (
   const styles = constructStyleTagsFromChunks(chunks);
   const mergedStylesheet = styles.replace(
     /<\/?style( data-emotion="[a-z0-9- ]+")?>/gm,
-    ""
+    "",
   );
 
   const { default: postcss } = await import("postcss");
   const { default: cssvariables } = await import("postcss-css-variables");
   const { default: isPseudoClass } = await import(
-    // @ts-ignore
+    // @ts-expect-error
     "@csstools/postcss-is-pseudo-class"
   );
-  // @ts-ignore
+  // @ts-expect-error
   const { default: logical } = await import("postcss-logical");
 
   const result = await postcss([

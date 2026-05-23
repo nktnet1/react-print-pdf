@@ -1,4 +1,4 @@
-import { Plugin } from "esbuild";
+import type { Plugin } from "esbuild";
 import { readFileSync } from "fs";
 import path from "path";
 
@@ -20,7 +20,7 @@ export const RawPlugin: () => Plugin = () => {
       onLoad({ filter: /.*/, namespace: "raw-loader" }, async (args) => {
         const resolvedPath = path.resolve(
           args.pluginData.resolveDir,
-          args.path.replace(/\?raw$/, "")
+          args.path.replace(/\?raw$/, ""),
         );
 
         console.log("Resolving:", resolvedPath);

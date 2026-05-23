@@ -18,7 +18,7 @@ mdxFiles.forEach((file) => {
   const content = readFileSync(file, "utf-8");
 
   unusedPreviews = unusedPreviews.filter(
-    (preview) => !content.includes(preview)
+    (preview) => !content.includes(preview),
   );
 });
 

@@ -1,13 +1,12 @@
-import { glob } from "glob";
-import { join, relative, dirname, basename, resolve } from "path";
-import { build } from "tsup";
-import { renderPreview } from "./renderPreview";
-import React from "react";
-import remarkFrontmatter from "remark-frontmatter";
 import frontmatter from "front-matter";
 import { promises as fs } from "fs";
-import { formatCamelCaseToTitle, formatSnippet } from "./utils";
+import { glob } from "glob";
+import { basename, dirname, join, relative, resolve } from "path";
+import remarkFrontmatter from "remark-frontmatter";
+import { build } from "tsup";
 import { RawPlugin } from "../build/raw";
+import { renderPreview } from "./renderPreview";
+import { formatCamelCaseToTitle, formatSnippet } from "./utils";
 
 const tmpDir = join(__dirname, "../.tmp");
 
@@ -19,18 +18,17 @@ export async function buildTemplates() {
   return await Promise.all(
     templates.map(async (template) => {
       console.log("Building for template ", template);
-      const outPath =
-        join(
-          tmpDir,
-          dirname(relative(join(__dirname, "../src"), template)),
-          basename(template, ".mdx")
-        ) + ".js";
+      const outPath = `${join(
+        tmpDir,
+        dirname(relative(join(__dirname, "../src"), template)),
+        basename(template, ".mdx"),
+      )}.js`;
 
       const docLocation = join(
         __dirname,
         `../docs/${dirname(
-          relative(join(__dirname, "../src"), template)
-        )}/${basename(template)}`
+          relative(join(__dirname, "../src"), template),
+        )}/${basename(template)}`,
       );
 
       await build({
@@ -66,17 +64,17 @@ export async function buildTemplates() {
           .readFile(template, {
             encoding: "utf-8",
           })
-          .then((file) => file.toString())
+          .then((file) => file.toString()),
       );
 
       const paths = await renderPreview(
         <RealComponent />,
         `${dirname(relative(join(__dirname, "../src"), template)).replace(
           /\//g,
-          " "
+          " ",
         )} ${basename(outPath, ".js")}`,
         docLocation,
-        false
+        false,
       );
 
       const name =
@@ -105,13 +103,13 @@ ${await formatSnippet(body)}
         outputPath: docLocation,
         markdown,
       };
-    })
+    }),
   );
 }
 
 export const buildTemplateList = async (
   templates: Awaited<ReturnType<typeof buildTemplates>>,
-  path: string
+  path: string,
 ) => {
   let markdown = `---
 title: Browse
@@ -137,7 +135,7 @@ icon: list
     templates.forEach((template) => {
       markdown += ` <Card title="${template.name}" href="${relative(
         path,
-        template.path
+        template.path,
       )}">
       <div style={{ marginTop: "1rem", borderRadius: "0.25rem", overflow: "hidden" }}>
         <img src="${relative(path, template.image)}"/>

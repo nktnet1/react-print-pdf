@@ -1,16 +1,16 @@
-import {
+import type { ComponentDoc } from "react-docgen-typescript";
+import { buildExample } from "./buildExample";
+import type {
   ConfigComponentDoc,
   EnrichedExample,
   ExtendedDocConfig,
 } from "./types";
-import { ComponentDoc } from "react-docgen-typescript";
-import { buildExample } from "./buildExample";
-import { formatCamelCaseToTitle, safePropType } from "./utils";
+import { formatCamelCaseToTitle } from "./utils";
 
 export const buildFileMarkdown = async (
   docConfig: ExtendedDocConfig,
   componentDocs: ComponentDoc[],
-  outputPath: string
+  outputPath: string,
 ) => {
   let markdown = `---
 title: ${docConfig.name}
@@ -41,12 +41,12 @@ ${docConfig.description ? `description: "${docConfig.description}"` : ""}
     try {
       examples = docConfig.components[componentName].examples || {};
       componentInfo = docConfig.components[componentName] || false;
-    } catch (e) {}
+    } catch (_e) {}
 
-    let { client, server } = componentInfo || { client: true, server: true };
+    const { client, server } = componentInfo || { client: true, server: true };
 
     // markdown += `## ${componentName}\n\n`;
-    if (component && component.description) {
+    if (component !== false && component.description) {
       markdown += `${component.description}\n\n`;
     }
 
@@ -67,9 +67,7 @@ ${docConfig.description ? `description: "${docConfig.description}"` : ""}
     server ? check : noCheck
   }<span>Server-side</span></div></div>\n\n`;
 
-
     if (Object.keys(examples).length > 0) {
-
       if (examples.default) {
         markdown += `#### Preview\n\n`;
 
@@ -77,7 +75,7 @@ ${docConfig.description ? `description: "${docConfig.description}"` : ""}
           examples.default,
           componentName,
           outputPath,
-          examples.default.compileOptions
+          examples.default.compileOptions,
         );
 
         markdown += exampleMarkdown;
@@ -99,7 +97,7 @@ ${docConfig.description ? `description: "${docConfig.description}"` : ""}
             example,
             componentName,
             outputPath,
-            example.compileOptions
+            example.compileOptions,
           );
 
           markdown += exampleMarkdown;

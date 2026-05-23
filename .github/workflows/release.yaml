@@ -1,13 +1,14 @@
 name: Build and Publish
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "docs/**"
-      - "docgen/**"
-      - ".gitignore"
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   paths-ignore:
+  #     - "docs/**"
+  #     - "docgen/**"
+  #     - ".gitignore"
 
 jobs:
   build-and-publish:

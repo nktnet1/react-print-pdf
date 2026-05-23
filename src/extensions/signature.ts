@@ -1,18 +1,18 @@
 import {
-  PDFAcroSignature,
-  PDFSignature,
   AnnotationFlags,
+  PDFAcroSignature,
+  type PDFDocument,
+  PDFSignature,
   PDFWidgetAnnotation,
-  PDFDocument,
 } from "pdf-lib";
-import type { BoxTrackingOutput, Box } from "../boxTracking";
+import type { Box, BoxTrackingOutput } from "../boxTracking";
 
-import { SIGNATURE_PREFIX, SigTypes } from "./signatureconstants";
+import { SIGNATURE_PREFIX, type SigTypes } from "./signatureconstants";
 
 const addSignaturePlaceholder = (
   pdfFile: PDFDocument,
   box: Box,
-  name: SigTypes
+  name: SigTypes,
 ) => {
   // TODO: allow initials which are potentially present multiple times.
   const pdfPage = pdfFile.getPages()[box.pageNum - 1];
@@ -27,7 +27,7 @@ const addSignaturePlaceholder = (
   // From PDFForm::createTextField()
   const acroSigField = PDFAcroSignature.fromDict(
     signatureDict,
-    signatureDictRef
+    signatureDictRef,
   );
   acroSigField.setPartialName(name);
 
@@ -39,7 +39,7 @@ const addSignaturePlaceholder = (
   // From PDFTextField::addToPage()
   const sigWidget = PDFWidgetAnnotation.create(
     pdfPage.doc.context,
-    sigField.ref
+    sigField.ref,
   );
 
   // From PDFTextField::addToPage() -> PDFField::createWidget()
@@ -63,7 +63,7 @@ const addSignaturePlaceholder = (
 
 export const createSignatures = async (
   pdfDocument: PDFDocument,
-  boxTracking: BoxTrackingOutput
+  boxTracking: BoxTrackingOutput,
 ) => {
   // Filter the box tracking output to only include signatures
   const signatures = Object.entries(boxTracking)
@@ -85,20 +85,20 @@ export const createSignatures = async (
 
           return acc;
         },
-        { area: 0, box: null as unknown as Box }
+        { area: 0, box: null as unknown as Box },
       );
 
       // Warn if the area of the box is 0
       if (boxWithLargestArea.area === 0) {
         console.warn(
-          `No valid box found for signature "${signature}" in file, the area of the box is 0`
+          `No valid box found for signature "${signature}" in file, the area of the box is 0`,
         );
       }
 
       // Warn if there are multiple boxes
       if (box.boxes.length > 1) {
         console.warn(
-          `Multiple boxes found for signature "${signature}" in file, using the box with the largest area`
+          `Multiple boxes found for signature "${signature}" in file, using the box with the largest area`,
         );
       }
 

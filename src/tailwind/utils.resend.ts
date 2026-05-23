@@ -37,13 +37,13 @@ export const quickSafeRenderToString = (element: React.ReactNode): string => {
     const { type, props } = element;
 
     if (typeof type === "function") {
-      const isClass = type.prototype && type.prototype.isReactComponent;
+      const isClass = type.prototype?.isReactComponent;
 
       if (isClass) {
         // If the element is a class component, render it
         const classComponent = type as React.ComponentClass;
         const componentInstance = renderToString(
-          React.createElement(classComponent, props)
+          React.createElement(classComponent, props),
         );
 
         return componentInstance;
