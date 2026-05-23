@@ -8,5 +8,7 @@ allowBuilds:
   puppeteer: true
   sharp: false
   spawn-sync: false
+minimumReleaseAgeExclude:
+  - katex@0.17.0
 overrides:
   react: ^18.3.1
