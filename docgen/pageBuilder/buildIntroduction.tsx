@@ -1,6 +1,4 @@
 import fs from 'fs';
-import path from 'path';
-
 
 export const replaceInFile = (filePath: string, search: RegExp, replace: string) => {
 

@@ -1,5 +1,6 @@
 import { defineConfig } from "tsup";
 import { RawPlugin } from "./build/raw";
+// @ts-expect-error
 import plugin from "node-stdlib-browser/helpers/esbuild/plugin";
 import stdLibBrowser from "node-stdlib-browser";
 

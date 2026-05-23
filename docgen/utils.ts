@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import ts, { Expression, ObjectLiteralExpression } from "typescript";
 import { DocConfig, ExtendedDocConfig } from "./types";
 import * as prettier from "prettier";
 
@@ -10,7 +10,7 @@ export const formatCamelCaseToTitle = (str: string) => {
 };
 
 const listProperties = (node: ts.ObjectLiteralExpression) => {
-  const properties = {};
+  const properties: Record<string, Expression> = {};
 
   node.properties.forEach((property) => {
     if (ts.isPropertyAssignment(property)) {
@@ -21,8 +21,8 @@ const listProperties = (node: ts.ObjectLiteralExpression) => {
   return properties;
 };
 
-const extractTemplates = (node) => {
-  const templates = {};
+const extractTemplates = (node: ObjectLiteralExpression) => {
+  const templates: Record<string, Record<string, string>> = {};
 
   const components = listProperties(
     listProperties(node)["components"] as ts.ObjectLiteralExpression

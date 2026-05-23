@@ -23,7 +23,7 @@ export const RawPlugin: () => Plugin = () => {
           args.path.replace(/\?raw$/, "")
         );
 
-        console.log("Resolving");
+        console.log("Resolving:", resolvedPath);
 
         let contents = "";
 

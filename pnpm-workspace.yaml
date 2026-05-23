@@ -1,0 +1,14 @@
+allowBuilds:
+  '@swc/core': false
+  edgedriver: false
+  esbuild: false
+  geckodriver: false
+  keytar: false
+  pre-commit: true
+  puppeteer: true
+  sharp: false
+  spawn-sync: false
+minimumReleaseAgeExclude:
+  - katex@0.17.0
+overrides:
+  react: ^18.3.1
