@@ -46,11 +46,18 @@ function MdxAnchor({ href, ...props }: ComponentProps<"a">) {
   return <a href={resolvedHref} {...props} />;
 }
 
-function MdxImage({ src, alt = "", ...props }: ComponentProps<"img">) {
+function isPreviewImage(src: ComponentProps<"img">["src"]) {
+  return typeof src === "string" && src.includes("/docs/images/previews/");
+}
+
+function MdxImage({ src, alt = "", style, ...props }: ComponentProps<"img">) {
   const resolvedSrc =
     typeof src === "string" && src.startsWith("/") ? resolveHref(src) : src;
+  const resolvedStyle = isPreviewImage(src)
+    ? { ...style, maxHeight: "none" }
+    : style;
 
-  return <img src={resolvedSrc} alt={alt} {...props} />;
+  return <img src={resolvedSrc} alt={alt} style={resolvedStyle} {...props} />;
 }
 
 function resolveAssetPaths(node: ReactNode): ReactNode {
@@ -65,7 +72,11 @@ function resolveAssetPaths(node: ReactNode): ReactNode {
       const resolvedSrc =
         typeof src === "string" && src.startsWith("/") ? resolveHref(src) : src;
 
-      return cloneElement(image, { src: resolvedSrc });
+      const style = isPreviewImage(src)
+        ? { ...image.props.style, maxHeight: "none" }
+        : image.props.style;
+
+      return cloneElement(image, { src: resolvedSrc, style });
     }
 
     const element = child as ReactElement<{ children?: ReactNode }>;
