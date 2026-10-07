@@ -27,8 +27,10 @@ export const Markdown = (props: MarkdownProps) => {
 
   const headers: TocRendererProps[] = [];
 
-  const isReactElement = (child: ReactNode): child is ReactElement<any> => {
-    return typeof child === "object" && child !== null && "type" in child;
+  const isReactElement = (
+    child: ReactNode,
+  ): child is ReactElement<{ children?: ReactNode; id?: string }> => {
+    return isValidElement<{ children?: ReactNode; id?: string }>(child);
   };
 
   const detectHeader = (child: ReactNode) => {
@@ -94,7 +96,7 @@ export const __docConfig: DocConfig = {
 Markdown allows you to easily separate content from the layout, making it easier to maintain and update your templates. You can pull in content from a CMS or other sources, and use Markdown to format it.
 
 You can also use custom components and variables to make your Markdown more dynamic. For example, you can replace Markdown components with your own components, or use variables to insert dynamic content.`,
-  icon: "fa-brands fa-markdown",
+  icon: "FileTextIcon",
   components: {
     Markdown: {
       server: true,

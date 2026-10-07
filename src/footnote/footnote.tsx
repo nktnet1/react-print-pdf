@@ -22,7 +22,7 @@ export const Footnote = ({
 };
 
 export const __docConfig: DocConfig = {
-  icon: "fa-solid fa-info",
+  icon: "InfoIcon",
   description: "Create automatically numbered footnotes.",
   components: {
     Footnote: {

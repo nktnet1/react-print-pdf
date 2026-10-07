@@ -22,9 +22,11 @@ export interface ConfigComponentDoc<T = Example> {
   };
 }
 
+export type LucideIconName = `${string}Icon`;
+
 export interface DocConfig<T = Example> {
   name?: string;
-  icon?: string;
+  icon?: LucideIconName;
   description: string;
   components: {
     [componentName: string]: ConfigComponentDoc<T>;

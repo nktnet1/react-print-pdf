@@ -21,7 +21,7 @@ export const Latex = ({ children }: { children: string }) => {
 
 export const __docConfig: DocConfig = {
   name: "LaTeX",
-  icon: "fa-solid fa-square-root-variable",
+  icon: "RadicalIcon",
   description: `Render LaTeX formulas right in your React components.
 
 <Warning>

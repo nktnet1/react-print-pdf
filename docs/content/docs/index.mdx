@@ -2,8 +2,22 @@
 title: "React Print"
 sidebarTitle: "Introduction"
 description: "Build PDFs using React and TypeScript."
-icon: "hand-wave"
+icon: Hand
 ---
+
+import {
+  CodeXmlIcon,
+  FileTextIcon,
+  GitBranchIcon,
+  HammerIcon,
+  InfoIcon,
+  PaletteIcon,
+  PanelsTopLeftIcon,
+  RadicalIcon,
+  SignatureIcon,
+  VariableIcon,
+  WindIcon,
+} from "lucide-react";
 
 ## Why ?
 
@@ -17,7 +31,7 @@ We believe documents are at the core of communication—invoices, contracts, res
 
 <Card 
   title='@fileforge/react-print-pdf'
-  icon='fa-brands fa-github'
+  icon={<GitBranchIcon />}
   href='https://github.com/OnedocLabs/react-print-pdf'
 >
 Contribute to development and give us a ⭐️
@@ -33,7 +47,7 @@ React Print is designed to be incrementally adopted, so you can add it to most c
   documents without having to deal with the mess of creating complex layouts and
   maintaining archaic markup.
 </Callout>
-<Card title="Set up" icon="hammer" href="/docs/getting-started/setup">
+<Card title="Set up" icon={<HammerIcon />} href="/docs/getting-started/setup">
   Create a brand-new folder with packages powered by React Print.
 </Card>
 
@@ -41,23 +55,23 @@ React Print is designed to be incrementally adopted, so you can add it to most c
 
 A set of standard components to help you build amazing documents without having to deal with the mess of creating complex layouts and maintaining archaic markup.
 
-<Cards><Card title="compile" icon="fa-solid fa-code" href="/docs/components/compile">
+<Cards><Card title="compile" icon={<CodeXmlIcon />} href="/docs/components/compile">
     Compile a React component to a string with the Onedoc print styles.
-  </Card><Card title="CSS" icon="fa-brands fa-css3-alt" href="/docs/components/css/css">
+  </Card><Card title="CSS" icon={<PaletteIcon />} href="/docs/components/css/css">
     Allows adding CSS to the document while securely parsing and escaping it.
-  </Card><Card title="Footnote" icon="fa-solid fa-info" href="/docs/components/footnote">
+  </Card><Card title="Footnote" icon={<InfoIcon />} href="/docs/components/footnote">
     Create automatically numbered footnotes.
-  </Card><Card title="LaTeX" icon="fa-solid fa-square-root-variable" href="/docs/components/latex">
+  </Card><Card title="LaTeX" icon={<RadicalIcon />} href="/docs/components/latex">
     Render LaTeX formulas right in your React components.
-  </Card><Card title="Markdown" icon="fa-brands fa-markdown" href="/docs/components/markdown">
+  </Card><Card title="Markdown" icon={<FileTextIcon />} href="/docs/components/markdown">
     Render Markdown inside your templates.
-  </Card><Card title="Shell" icon="fa-solid fa-border-all" href="/docs/components/shell/pagetop">
+  </Card><Card title="Shell" icon={<PanelsTopLeftIcon />} href="/docs/components/shell/pagetop">
     Display content in other page regions.
-  </Card><Card title="Signature" icon="signature" href="/docs/components/signature">
+  </Card><Card title="Signature" icon={<SignatureIcon />} href="/docs/components/signature">
     Add signature fields to your document.
-  </Card><Card title="Tailwind" icon="fa-solid fa-wind" href="/docs/components/tailwind">
+  </Card><Card title="Tailwind" icon={<WindIcon />} href="/docs/components/tailwind">
     A simple, drop-in way to use Tailwind CSS v4 in your components.
-  </Card><Card title="Variables" icon="fa-solid fa-subscript" href="/docs/components/variables/pagenumber">
+  </Card><Card title="Variables" icon={<VariableIcon />} href="/docs/components/variables/pagenumber">
     Display dynamic values based on your document, such as page numbers and running headers.
   </Card></Cards>
 <Note>

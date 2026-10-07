@@ -17,18 +17,7 @@ export function baseOptions(): BaseLayoutProps {
         </>
       ),
     },
-    links: [
-      {
-        text: "Onedoc",
-        url: "https://www.onedoclabs.com/",
-        secondary: false,
-      },
-      {
-        text: "Discord",
-        url: "https://discord.gg/uRJE6e2rgr",
-        secondary: false,
-      },
-    ],
+    links: [],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };
 }

@@ -4,12 +4,14 @@ sidebarTitle: "Setup"
 description: "Create a brand-new folder with packages powered by React Print."
 ---
 
+import { CodeXmlIcon, FileTextIcon, GitBranchIcon, PanelsTopLeftIcon } from "lucide-react";
+
 # Fast Set Up ⚡️
 
 Clone this repository ⬇️
 <Card
   title='dev-local'
-  icon='fa-brands fa-github'
+  icon={<GitBranchIcon />}
   href='https://github.com/OnedocLabs/dev-local'
 >
 Clone our dev-local repository and follow the instructions in the readMe to get started quickly.
@@ -102,17 +104,17 @@ We recommend generating your PDF using the [FileForge API](/docs/integrations/on
 Try to modify your PDF by using our different pre-built components.
 
 <Cards>
-  <Card title="Compile" icon='up' href="/docs/components/compile">
+  <Card title="Compile" icon={<CodeXmlIcon />} href="/docs/components/compile">
     A React component to help compile your React code for PDF rendering.
   </Card>
 
 {" "}
 
-<Card title="Footnote" icon="file" href="/docs/components/footnote">
+<Card title="Footnote" icon={<FileTextIcon />} href="/docs/components/footnote">
   A React component to help you build beautiful foot-notes.
 </Card>
 
-  <Card title="Shell" icon='table-layout' href="/docs/components/shell/pagetop">
+  <Card title="Shell" icon={<PanelsTopLeftIcon />} href="/docs/components/shell/pagetop">
     A suite of React components for structured document layout management.
   </Card>
 </Cards>

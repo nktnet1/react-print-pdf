@@ -117,7 +117,7 @@ export const buildTemplateList = async (
   let markdown = `---
 title: Browse
 description: "Browse ready-to-use React Print templates for reports, receipts, NDAs, and invoices."
-icon: list
+icon: LayoutGridIcon
 ---\n\n`;
 
   // Group templates by category

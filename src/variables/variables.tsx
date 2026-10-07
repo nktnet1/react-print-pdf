@@ -99,7 +99,7 @@ export const RunningH6 = RunningHeader(6);
 
 export const __docConfig: DocConfig = {
   name: "Variables",
-  icon: "fa-solid fa-subscript",
+  icon: "VariableIcon",
   description:
     "Display dynamic values based on your document, such as page numbers and running headers.",
   components: {

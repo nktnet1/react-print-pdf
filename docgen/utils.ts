@@ -1,6 +1,6 @@
 import * as prettier from "prettier";
 import ts, { type Expression, type ObjectLiteralExpression } from "typescript";
-import type { DocConfig, ExtendedDocConfig } from "./types";
+import type { DocConfig, EnrichedExample, ExtendedDocConfig } from "./types";
 
 export const formatCamelCaseToTitle = (str: string) => {
   // Convert camelCase to Title Case with spaces
@@ -21,8 +21,10 @@ const listProperties = (node: ts.ObjectLiteralExpression) => {
   return properties;
 };
 
-const extractTemplates = (node: ObjectLiteralExpression) => {
-  const templates: Record<string, Record<string, string>> = {};
+type TemplateContents = Record<string, Record<string, string>>;
+
+const extractTemplates = (node: ObjectLiteralExpression): TemplateContents => {
+  const templates: TemplateContents = {};
 
   const components = listProperties(
     listProperties(node).components as ts.ObjectLiteralExpression,
@@ -52,7 +54,7 @@ const extractTemplates = (node: ObjectLiteralExpression) => {
   return templates;
 };
 
-export const getTemplateContents = (filePath: string) => {
+export const getTemplateContents = (filePath: string): TemplateContents => {
   // Load the file contents to the typescript ast
   const sourceFile = ts.createSourceFile(
     filePath,
@@ -61,7 +63,7 @@ export const getTemplateContents = (filePath: string) => {
     true,
   );
 
-  let templates = {};
+  let templates: TemplateContents = {};
 
   sourceFile.forEachChild((node) => {
     if (ts.isVariableStatement(node)) {
@@ -78,12 +80,13 @@ export const getTemplateContents = (filePath: string) => {
 
 export const mergeTemplateInfo = (
   docInfo: DocConfig,
-  templates: any,
+  templates: TemplateContents,
 ): ExtendedDocConfig => {
   Object.entries(docInfo.components).forEach(([componentName, value]) => {
     Object.entries(value.examples || {}).forEach(([exampleName, example]) => {
-      // @ts-expect-error
-      example.templateString = templates[componentName][exampleName];
+      const enrichedExample = example as EnrichedExample;
+      enrichedExample.templateString =
+        templates[componentName]?.[exampleName] ?? "";
     });
   });
 

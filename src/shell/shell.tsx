@@ -60,22 +60,29 @@ export const NoBreak = (props: React.HTMLProps<HTMLDivElement>) => {
 /**
  * Floats the content to the bottom of the page.
  */
-export const FloatBottom = (props: any) => {
+type FloatBottomStyle = React.CSSProperties & {
+  PrinceFloat: "bottom";
+};
+
+export const FloatBottom = (props: React.HTMLProps<HTMLDivElement>) => {
+  const { style, ...rest } = props;
+
   return (
     <div
-      {...props}
-      style={{
-        PrinceFloat: "bottom",
-      }}
-    >
-      {props.children}
-    </div>
+      {...rest}
+      style={
+        {
+          ...style,
+          PrinceFloat: "bottom",
+        } as FloatBottomStyle
+      }
+    />
   );
 };
 
 export const __docConfig: DocConfig = {
   name: "Shell",
-  icon: "fa-solid fa-border-all",
+  icon: "PanelsTopLeftIcon",
   description: "Display content in other page regions.",
   components: {
     CurrentPageTop: {

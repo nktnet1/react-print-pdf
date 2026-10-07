@@ -7,7 +7,7 @@ import { RawPlugin } from "../build/raw";
 import { buildFileMarkdown } from "./buildFileMarkdown";
 import { buildTemplateList, buildTemplates } from "./buildTemplates";
 import { replaceInFile } from "./pageBuilder/buildIntroduction";
-import type { DocConfig } from "./types";
+import type { DocConfig, LucideIconName } from "./types";
 import {
   formatCamelCaseToTitle,
   getTemplateContents,
@@ -25,7 +25,7 @@ const options: docgen.ParserOptions = {
 };
 
 type docFolder = {
-  icon: string;
+  icon?: LucideIconName;
   name: string;
   description: string;
   outputPath: string;
@@ -221,9 +221,9 @@ const process = async () => {
       .split(path.sep)
       .join("/")}`;
 
-    snippet += `<Card title="${docFolder.name}" icon="${
-      docFolder.icon
-    }" href="${componentPath.toLocaleLowerCase()}">
+    const icon = docFolder.icon ? ` icon={<${docFolder.icon} />}` : "";
+
+    snippet += `<Card title="${docFolder.name}"${icon} href="${componentPath.toLocaleLowerCase()}">
     ${docFolder.description.split(".")[0]}.
   </Card>`;
   });

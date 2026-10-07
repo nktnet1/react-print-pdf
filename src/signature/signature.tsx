@@ -56,7 +56,7 @@ export const Field = ({
 
 export const __docConfig: DocConfig = {
   name: "Signature",
-  icon: "signature",
+  icon: "SignatureIcon",
   description: `Add signature fields to your document. You can specify various types of fields like signature, initials, date, and more.
 
 <Warning>

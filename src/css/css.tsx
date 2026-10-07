@@ -49,7 +49,7 @@ export const Margins = ({
 
 export const __docConfig: DocConfig = {
   name: "CSS",
-  icon: "fa-brands fa-css3-alt",
+  icon: "PaletteIcon",
   description: `Allows adding CSS to the document while securely parsing and escaping it.
 
 NB: While you can add regular CSS with the \`<style>\` tag, it's recommended to use the \`CSS\` component to ensure that the CSS is properly escaped, most notably when using URLs or other potentially unsafe content.`,

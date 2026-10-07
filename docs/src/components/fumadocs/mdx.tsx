@@ -20,7 +20,7 @@ type ChildrenProps = {
 type LegacyCardProps = ChildrenProps & {
   title: string;
   href?: string;
-  icon?: ReactNode;
+  icon?: ReactElement;
 };
 
 type LegacyCalloutProps = ChildrenProps & {
@@ -52,10 +52,15 @@ function MdxImage({ src, alt = "", ...props }: ComponentProps<"img">) {
   return <img src={resolvedSrc} alt={alt} {...props} />;
 }
 
-function LegacyCard({ title, href, children }: LegacyCardProps) {
+function LegacyCard({ title, href, icon, children }: LegacyCardProps) {
   const content = (
     <>
-      <div className="font-semibold text-fd-foreground">{title}</div>
+      <div className="flex items-center gap-2 font-semibold text-fd-foreground">
+        {icon && (
+          <span className="inline-flex shrink-0 [&>svg]:size-4">{icon}</span>
+        )}
+        <span>{title}</span>
+      </div>
       {children && (
         <div className="mt-1 text-sm text-fd-muted-foreground">{children}</div>
       )}
@@ -91,10 +96,18 @@ function LegacyFrame({ children }: ChildrenProps) {
 function LegacyAccordion({
   children,
   title,
-}: ChildrenProps & { title: string; icon?: ReactNode }) {
+  icon,
+}: ChildrenProps & { title: string; icon?: ReactElement }) {
   return (
     <details className="my-4 rounded-lg border px-4 py-3">
-      <summary className="cursor-pointer font-medium">{title}</summary>
+      <summary className="cursor-pointer font-medium">
+        <span className="inline-flex items-center gap-2">
+          {icon && (
+            <span className="inline-flex shrink-0 [&>svg]:size-4">{icon}</span>
+          )}
+          <span>{title}</span>
+        </span>
+      </summary>
       <div className="mt-3">{children}</div>
     </details>
   );

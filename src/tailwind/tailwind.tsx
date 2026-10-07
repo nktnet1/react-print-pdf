@@ -328,7 +328,7 @@ export const Tailwind = ({
 
 export const __docConfig: DocConfig = {
   name: "Tailwind",
-  icon: "fa-solid fa-wind",
+  icon: "WindIcon",
   description: `A simple, drop-in way to use Tailwind CSS v4 in your components.
 
 Tailwind v4's CSS-first configuration is supported through the \`stylesheet\` prop. Legacy JavaScript configuration remains available through \`config\` for backwards compatibility. When rendering on the server, use React Print's async \`compile()\` helper so Tailwind styles are resolved before the HTML is returned.`,
