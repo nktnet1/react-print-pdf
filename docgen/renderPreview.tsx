@@ -7,14 +7,33 @@ import * as path from "path";
 import { fromBuffer } from "pdf2pic";
 import type React from "react";
 import { pipeline } from "stream/promises";
-import { type CompileOptions, compile } from "../dist";
+import { pathToFileURL } from "url";
+import type { CompileOptions } from "../src/compile/compile";
 
 config({ path: ".env.local" });
 config();
 
-const ff = new FileforgeClient({
-  apiKey: process.env.ONEDOC_API_KEY,
-});
+type CompileModule = Pick<typeof import("../src/compile/compile"), "compile">;
+
+const loadCompileModule = async (): Promise<CompileModule> => {
+  const distEntry = pathToFileURL(
+    path.join(__dirname, "../dist/index.mjs"),
+  ).href;
+
+  return (await import(distEntry)) as CompileModule;
+};
+
+const getFileforgeClient = () => {
+  const apiKey = process.env.FILEFORGE_API_KEY ?? process.env.ONEDOC_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      "FILEFORGE_API_KEY (or legacy ONEDOC_API_KEY) is required to generate documentation previews.",
+    );
+  }
+
+  return new FileforgeClient({ apiKey });
+};
 
 export const baseCss = fs.readFileSync(path.join(__dirname, "./base.css"));
 export const indexCss = fs.readFileSync(
@@ -29,11 +48,12 @@ export async function renderPreview(
 ) {
   const Component = component;
   const Element = <>{Component}</>;
+  const { compile } = await loadCompileModule();
 
   const html = `<!doctype html><html><head>
           <link rel="stylesheet" href="base.css" />
           <link rel="stylesheet" href="index.css" />
-          </head><body>${await compile(Element, compileOptions)}</body></html>` as string;
+          </head><body>${await compile(Element, compileOptions)}</body></html>`;
 
   const hash = crypto.createHash("sha256");
   hash.update(html);
@@ -46,8 +66,9 @@ export async function renderPreview(
     `../docs/public/docs/images/previews/${id}/`,
   );
 
-  // If the file doesn't exist, create it by generating the document with Onedoc
+  // If the file doesn't exist, create it by generating the document with Fileforge.
   if (!fs.existsSync(targetFolder)) {
+    const ff = getFileforgeClient();
     const file = await ff.pdf.generate(
       [
         new File([html], "index.html", { type: "text/html" }),

@@ -68,7 +68,11 @@ export const getTemplateContents = (filePath: string): TemplateContents => {
   sourceFile.forEachChild((node) => {
     if (ts.isVariableStatement(node)) {
       node.declarationList.declarations.forEach((declaration) => {
-        if (declaration.name.getText() === "__docConfig") {
+        if (
+          declaration.name.getText() === "__docConfig" &&
+          declaration.initializer &&
+          ts.isObjectLiteralExpression(declaration.initializer)
+        ) {
           templates = extractTemplates(declaration.initializer);
         }
       });

@@ -73,7 +73,6 @@ export async function buildTemplates() {
           /\//g,
           " ",
         )} ${basename(outPath, ".js")}`,
-        docLocation,
         false,
       );
 
@@ -121,16 +120,18 @@ icon: LayoutGridIcon
 ---\n\n`;
 
   // Group templates by category
-  const categories: {
-    [key: string]: Awaited<ReturnType<typeof buildTemplates>>[0][];
-  } = templates.reduce((acc, template) => {
-    const category = template.category || "Uncategorized";
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(template);
-    return acc;
-  }, {});
+  type Template = Awaited<ReturnType<typeof buildTemplates>>[number];
+  const categories = templates.reduce<Record<string, Template[]>>(
+    (acc, template) => {
+      const category = template.category || "Uncategorized";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(template);
+      return acc;
+    },
+    {},
+  );
 
   // Generate markdown for each category
   Object.entries(categories).forEach(([category, templates]) => {

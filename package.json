@@ -41,7 +41,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json",
     "docs:build": "pnpm --dir ./docs build"
   },
   "pre-commit": [
@@ -53,9 +53,9 @@
     "@biomejs/biome": "2.5.15",
     "@chakra-ui/react": "^2.10.10",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@fileforge/client": "^0.1.18",
     "@heroicons/react": "^2.2.0",
     "@mdx-js/esbuild": "^3.1.1",
-    "@onedoc/client": "^0.1.33",
     "@swc/core": "^1.16.13",
     "@types/node": "^25.9.9",
     "@types/postcss-css-variables": "^0.18.3",
