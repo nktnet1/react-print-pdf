@@ -1,11 +1,10 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "..",
     "noEmit": true,
     "rootDir": "..",
     "paths": {
-      "@fileforge/react-print": ["./src/index.ts"]
+      "@fileforge/react-print": ["../src/index.ts"]
     }
   },
   "include": [

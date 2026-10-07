@@ -1,6 +1,7 @@
 import "./generic.css";
 
-export { CompileOptions, compile } from "./compile/compile";
+export type { CompileOptions } from "./compile/compile";
+export { compile } from "./compile/compile";
 export { CSS, Font, Margins } from "./css/css";
 export { Footnote } from "./footnote/footnote";
 export { Latex } from "./latex/latex";

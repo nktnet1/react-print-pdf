@@ -14,7 +14,8 @@
     "paths": {
       "@components/*": ["./src/*"]
     },
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "isolatedModules": true
   },
   "include": ["src"]
 }

@@ -11,6 +11,14 @@ export default defineConfig({
   },
   format: ["esm", "cjs"],
   platform: "browser",
+  inputOptions: {
+    checks: {
+      // React ecosystem packages commonly use "use client" markers. Once these
+      // dependencies are intentionally bundled, there is no per-module boundary
+      // for Rolldown to preserve, so this warning is not actionable here.
+      moduleLevelDirective: false,
+    },
+  },
   sourcemap: true,
   dts: true,
   css: {
