@@ -21,12 +21,9 @@ import {
 } from "react";
 import { renderToString } from "react-dom/server";
 import { type Config, compile as compileTailwind } from "tailwindcss";
-// @ts-expect-error -- imported as text by the repository RawPlugin.
-import preflightCss from "../../node_modules/tailwindcss/preflight.css?raw";
-// @ts-expect-error -- imported as text by the repository RawPlugin.
-import themeCss from "../../node_modules/tailwindcss/theme.css?raw";
-// @ts-expect-error -- imported as text by the repository RawPlugin.
-import utilitiesCss from "../../node_modules/tailwindcss/utilities.css?raw";
+import preflightCss from "tailwindcss/preflight.css?raw";
+import themeCss from "tailwindcss/theme.css?raw";
+import utilitiesCss from "tailwindcss/utilities.css?raw";
 import { CSS, escapeCss } from "../css/css";
 import type { DocConfig } from "../docgen/types";
 

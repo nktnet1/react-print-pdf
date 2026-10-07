@@ -1,14 +1,25 @@
 import { Button, ChakraProvider } from "@chakra-ui/react";
 import type React from "react";
-// @ts-expect-error
-import onedocStyles from "../../dist/index.css?raw";
 import { CSS } from "../css/css";
 import type { DocConfig } from "../docgen/types";
+import footnoteStyles from "../footnote/footnote.css?raw";
+import genericStyles from "../generic.css?raw";
+import shellStyles from "../shell/shell.css?raw";
 import {
   createTailwindStyleCollector,
   Tailwind,
   TailwindStyleCollectorProvider,
 } from "../tailwind/tailwind";
+import headingStyles from "../variables/headings.css?raw";
+import variableStyles from "../variables/variables.css?raw";
+
+const onedocStyles = [
+  genericStyles,
+  footnoteStyles,
+  shellStyles,
+  headingStyles,
+  variableStyles,
+].join("\n");
 
 export interface CompileOptions {
   /**

@@ -28,13 +28,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: npm
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: ./package-lock.json
       - run: npm install
         working-directory: .
       - run: npm run build
+        working-directory: .
+      - run: npx playwright install --with-deps chromium
         working-directory: .
       - run: npm test
         working-directory: .

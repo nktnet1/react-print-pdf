@@ -3,15 +3,18 @@ import { promises as fs } from "fs";
 import { glob } from "glob";
 import { basename, dirname, join, relative } from "path";
 import remarkFrontmatter from "remark-frontmatter";
-import { build } from "tsup";
-import { RawPlugin } from "../build/raw";
+import type { TsdownPlugin } from "tsdown";
 import { renderPreview } from "./renderPreview";
 import { formatCamelCaseToTitle, formatSnippet } from "./utils";
 
 const tmpDir = join(__dirname, "../.tmp");
 
 export async function buildTemplates() {
-  const { default: mdx } = await import("@mdx-js/esbuild");
+  const [{ default: mdx }, { build }, { default: Raw }] = await Promise.all([
+    import("@mdx-js/rollup"),
+    import("tsdown"),
+    import("unplugin-raw/rolldown"),
+  ]);
 
   const templates = await glob(join(__dirname, "../src/ui/**/*.mdx"));
 
@@ -22,7 +25,7 @@ export async function buildTemplates() {
         tmpDir,
         dirname(relative(join(__dirname, "../src"), template)),
         basename(template, ".mdx"),
-      )}.js`;
+      )}.mjs`;
 
       const docLocation = join(
         __dirname,
@@ -33,21 +36,20 @@ export async function buildTemplates() {
 
       await build({
         entry: [template],
-        esbuildPlugins: [
+        plugins: [
           mdx({
             remarkPlugins: [remarkFrontmatter],
             providerImportSource: "@fileforge/react-print/mdx",
-          }),
-          RawPlugin(),
+          }) as unknown as TsdownPlugin,
+          Raw(),
         ],
         dts: false,
         outDir: dirname(outPath),
-        format: "cjs",
+        format: "esm",
+        platform: "node",
         sourcemap: false,
-        splitting: false,
-        bundle: true,
         config: false,
-        clean: true,
+        clean: false,
       });
 
       const { default: Component } = await import(outPath);
@@ -72,7 +74,7 @@ export async function buildTemplates() {
         `${dirname(relative(join(__dirname, "../src"), template)).replace(
           /\//g,
           " ",
-        )} ${basename(outPath, ".js")}`,
+        )} ${basename(outPath, ".mjs")}`,
         false,
       );
 

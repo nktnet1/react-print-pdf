@@ -8,5 +8,10 @@
       "@fileforge/react-print": ["./src/index.ts"]
     }
   },
-  "include": ["./**/*.ts", "./**/*.tsx", "../vitest.config.ts"]
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../vitest.config.mts",
+    "../src/raw.d.ts"
+  ]
 }

@@ -2,8 +2,6 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import * as docgen from "react-docgen-typescript";
-import { build } from "tsup";
-import { RawPlugin } from "../build/raw";
 import { buildFileMarkdown } from "./buildFileMarkdown";
 import { buildTemplateList, buildTemplates } from "./buildTemplates";
 import { replaceInFile } from "./pageBuilder/buildIntroduction";
@@ -42,6 +40,14 @@ type docFile = {
 };
 
 const process = async () => {
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+  fs.mkdirSync(tmpDir, { recursive: true });
+
+  const [{ build }, { default: Raw }] = await Promise.all([
+    import("tsdown"),
+    import("unplugin-raw/rolldown"),
+  ]);
+
   const files = glob
     .sync(path.join(__dirname, "../src/**/*.tsx"))
     .filter((filePath) => {
@@ -59,20 +65,19 @@ const process = async () => {
         const entrypoint = path.join(
           tmpDir,
           path.dirname(relativePath),
-          `${path.basename(relativePath, ".tsx")}.js`,
+          `${path.basename(relativePath, ".tsx")}.mjs`,
         );
 
         await build({
           entry: [filePath],
           dts: false,
           outDir: path.dirname(entrypoint),
-          format: "cjs",
+          format: "esm",
+          platform: "node",
           sourcemap: false,
-          splitting: false,
-          bundle: true,
           config: false,
-          clean: true,
-          esbuildPlugins: [RawPlugin()],
+          clean: false,
+          plugins: [Raw()],
         });
 
         const elements = await import(entrypoint);
