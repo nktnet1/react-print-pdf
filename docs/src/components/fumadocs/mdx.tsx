@@ -7,6 +7,7 @@ import type { MDXComponents } from "mdx/types";
 import {
   Children,
   type ComponentProps,
+  type CSSProperties,
   cloneElement,
   isValidElement,
   type ReactElement,
@@ -50,14 +51,36 @@ function isPreviewImage(src: ComponentProps<"img">["src"]) {
   return typeof src === "string" && src.includes("/docs/images/previews/");
 }
 
+const previewImageStyle = {
+  aspectRatio: "auto 210 / 297",
+  display: "block",
+  height: "auto",
+  marginInline: "auto",
+  maxHeight: "85vh",
+  maxWidth: "100%",
+  objectFit: "contain",
+  width: "auto",
+} satisfies CSSProperties;
+
+function resolveImageStyle(
+  src: ComponentProps<"img">["src"],
+  style: ComponentProps<"img">["style"],
+) {
+  return isPreviewImage(src) ? { ...style, ...previewImageStyle } : style;
+}
+
 function MdxImage({ src, alt = "", style, ...props }: ComponentProps<"img">) {
   const resolvedSrc =
     typeof src === "string" && src.startsWith("/") ? resolveHref(src) : src;
-  const resolvedStyle = isPreviewImage(src)
-    ? { ...style, maxHeight: "none" }
-    : style;
 
-  return <img src={resolvedSrc} alt={alt} style={resolvedStyle} {...props} />;
+  return (
+    <img
+      src={resolvedSrc}
+      alt={alt}
+      style={resolveImageStyle(src, style)}
+      {...props}
+    />
+  );
 }
 
 function resolveAssetPaths(node: ReactNode): ReactNode {
@@ -72,11 +95,10 @@ function resolveAssetPaths(node: ReactNode): ReactNode {
       const resolvedSrc =
         typeof src === "string" && src.startsWith("/") ? resolveHref(src) : src;
 
-      const style = isPreviewImage(src)
-        ? { ...image.props.style, maxHeight: "none" }
-        : image.props.style;
-
-      return cloneElement(image, { src: resolvedSrc, style });
+      return cloneElement(image, {
+        src: resolvedSrc,
+        style: resolveImageStyle(src, image.props.style),
+      });
     }
 
     const element = child as ReactElement<{ children?: ReactNode }>;
