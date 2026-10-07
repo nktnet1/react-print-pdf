@@ -1,4 +1,6 @@
 import { Button, ChakraProvider } from "@chakra-ui/react";
+import isPseudoClass from "@csstools/postcss-is-pseudo-class";
+import postcss from "postcss";
 import type React from "react";
 import { CSS } from "../css/css";
 import type { DocConfig } from "../docgen/types";
@@ -86,11 +88,7 @@ export const compile = async (
     "",
   );
 
-  const { default: postcss } = await import("postcss");
   const { default: cssvariables } = await import("postcss-css-variables");
-  const { default: isPseudoClass } = await import(
-    "@csstools/postcss-is-pseudo-class"
-  );
   const { default: logical } = await import("postcss-logical");
 
   const result = await postcss([

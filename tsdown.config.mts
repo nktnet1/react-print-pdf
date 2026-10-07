@@ -26,6 +26,7 @@ export default defineConfig({
     splitting: false,
   },
   deps: {
+    onlyBundle: false,
     neverBundle: ["react", "react-dom"],
     alwaysBundle: [
       "@csstools/postcss-is-pseudo-class",

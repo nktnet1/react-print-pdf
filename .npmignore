@@ -7,5 +7,5 @@ docgen
 tests
 build
 tailwind.config.ts
-tsdown.config.ts
+tsdown.config.mts
 dist/mdx.*
