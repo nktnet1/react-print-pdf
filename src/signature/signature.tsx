@@ -1,5 +1,5 @@
-import type { DocConfig } from "docgen/types";
 import type React from "react";
+import type { DocConfig } from "../docgen/types";
 import { Tailwind } from "../tailwind/tailwind";
 
 // This provides a loose support for DocuSign fields
@@ -31,16 +31,14 @@ const availableFields = {
   signerAttachmentOptional: "eSignSignerAttachmentOptional",
 };
 
-type fieldTypes = keyof typeof availableFields;
+type FieldType = keyof typeof availableFields;
 
-export const Field = ({
-  type,
-  signee,
-  ...props
-}: {
-  type: fieldTypes;
+type FieldProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  type: FieldType;
   signee: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) => {
+};
+
+export const Field = ({ type, signee, ...props }: FieldProps) => {
   return (
     <input
       {...props}

@@ -1,6 +1,6 @@
-import type { DocConfig } from "docgen/types";
 import { encode } from "html-entities";
 import React from "react";
+import type { DocConfig } from "../docgen/types";
 
 const allowedEntities = {
   "&apos;": "'",

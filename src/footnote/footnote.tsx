@@ -1,6 +1,6 @@
 import type React from "react";
 import "./footnote.css";
-import type { DocConfig } from "../../docgen/types";
+import type { DocConfig } from "../docgen/types";
 
 /**
  * Creates an automatically numbered footnote. This will remove the footnote content from the document flow and place it at the bottom of the page.

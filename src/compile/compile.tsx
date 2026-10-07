@@ -1,11 +1,9 @@
 import { Button, ChakraProvider } from "@chakra-ui/react";
-import type { DocConfig } from "docgen/types";
 import type React from "react";
-
 // @ts-expect-error
 import onedocStyles from "../../dist/index.css?raw";
-
 import { CSS } from "../css/css";
+import type { DocConfig } from "../docgen/types";
 import {
   createTailwindStyleCollector,
   Tailwind,

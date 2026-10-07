@@ -9,7 +9,6 @@
 
 // @ts-expect-error -- plugin does not currently ship an ESM default type.
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
-import type { DocConfig } from "docgen/types";
 import { decode } from "html-entities";
 import postcss from "postcss";
 // @ts-expect-error -- plugin does not currently ship an ESM default type.
@@ -31,6 +30,7 @@ import themeCss from "../../node_modules/tailwindcss/theme.css?raw";
 // @ts-expect-error -- imported as text by the repository RawPlugin.
 import utilitiesCss from "../../node_modules/tailwindcss/utilities.css?raw";
 import { CSS, escapeCss } from "../css/css";
+import type { DocConfig } from "../docgen/types";
 
 type LegacyCorePlugins = string[] | Record<string, boolean>;
 
@@ -153,7 +153,7 @@ async function buildTailwindStyles(
 
   const compiler = await compileTailwind(input, {
     base: "/",
-    loadStylesheet: async (id) => {
+    loadStylesheet: async (id: string) => {
       const content = stylesheetMap[id];
       if (content === undefined) {
         throw new Error(`Unsupported Tailwind stylesheet import: ${id}`);
@@ -165,7 +165,7 @@ async function buildTailwindStyles(
         content,
       };
     },
-    loadModule: async (id) => {
+    loadModule: async (id: string) => {
       if (id !== VIRTUAL_CONFIG_ID || !legacyConfig) {
         throw new Error(
           `Unsupported Tailwind module: ${id}. Pass plugins directly through the legacy config object instead of using @plugin.`,

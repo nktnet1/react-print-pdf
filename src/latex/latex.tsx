@@ -1,5 +1,5 @@
-import type { DocConfig } from "docgen/types";
 import katex from "katex";
+import type { DocConfig } from "../docgen/types";
 
 export const Latex = ({ children }: { children: string }) => {
   const html = katex.renderToString(children, {

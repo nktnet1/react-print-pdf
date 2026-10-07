@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "module": "esnext",
     "lib": ["dom", "esnext"],
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
@@ -13,7 +13,8 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@components/*": ["./src/*"]
-    }
+    },
+    "moduleResolution": "bundler"
   },
   "include": ["src"]
 }

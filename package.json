@@ -41,6 +41,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
+    "typecheck": "tsc --noEmit",
     "docs:build": "pnpm --dir ./docs build"
   },
   "pre-commit": [

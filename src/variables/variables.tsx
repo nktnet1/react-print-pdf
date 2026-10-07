@@ -1,8 +1,8 @@
 import React from "react";
 import "./headings.css";
 import "./variables.css";
-import type { DocConfig } from "../../docgen/types";
 import { CSS } from "../css/css";
+import type { DocConfig } from "../docgen/types";
 import { PageTop } from "../shell/shell";
 
 /**

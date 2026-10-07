@@ -1,13 +1,13 @@
-import type { DocConfig } from "docgen/types";
 import { compiler, type MarkdownToJSX } from "markdown-to-jsx";
-import type React from "react";
 import {
   Children,
+  type ComponentClass,
   isValidElement,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { CSS, PageBreak, Tailwind } from "..";
+import type { DocConfig } from "../docgen/types";
 
 interface TocRendererProps {
   heading: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
@@ -27,10 +27,27 @@ export const Markdown = (props: MarkdownProps) => {
 
   const headers: TocRendererProps[] = [];
 
+  type MarkdownElementProps = { children?: ReactNode; id?: string };
+
   const isReactElement = (
     child: ReactNode,
-  ): child is ReactElement<{ children?: ReactNode; id?: string }> => {
-    return isValidElement<{ children?: ReactNode; id?: string }>(child);
+  ): child is ReactElement<MarkdownElementProps> => {
+    return isValidElement<MarkdownElementProps>(child);
+  };
+
+  const isClassComponent = (
+    type: ReactElement<MarkdownElementProps>["type"],
+  ): type is ComponentClass<MarkdownElementProps> => {
+    if (typeof type !== "function" || !("prototype" in type)) {
+      return false;
+    }
+
+    const { prototype } = type;
+    return (
+      typeof prototype === "object" &&
+      prototype !== null &&
+      "isReactComponent" in prototype
+    );
   };
 
   const detectHeader = (child: ReactNode) => {
@@ -49,20 +66,12 @@ export const Markdown = (props: MarkdownProps) => {
       } as TocRendererProps);
     }
 
-    if (isValidElement(child)) {
-      if (
-        typeof child.type === "function" &&
-        child.type.prototype &&
-        child.type.prototype.isReactComponent
-      ) {
-        // @ts-expect-error
-        const instance = new child.type(child.props); // Instantiate the class component
-        const result = instance.render(); // Call its render method
-        detectHeader(result);
+    if (isReactElement(child)) {
+      if (isClassComponent(child.type)) {
+        const instance = new child.type(child.props);
+        detectHeader(instance.render());
       } else if (typeof child.type === "function") {
-        // @ts-expect-error
-        const result = child.type(child.props); // call the component
-        detectHeader(result);
+        detectHeader(child.type(child.props));
       } else if (child.props?.children) {
         Children.forEach(child.props.children, detectHeader);
       }
@@ -130,11 +139,7 @@ This is a paragraph with a [link](https://google.com)`}</Markdown>
                     component: () => "John Doe",
                   },
                   KPI: {
-                    component: ({
-                      children,
-                    }: {
-                      children: React.ReactNode;
-                    }) => (
+                    component: ({ children }: { children: ReactNode }) => (
                       <div style={{ color: "blue", fontSize: "2rem" }}>
                         {children}
                       </div>
