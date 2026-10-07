@@ -1,7 +1,7 @@
 import frontmatter from "front-matter";
 import { promises as fs } from "fs";
 import { glob } from "glob";
-import { basename, dirname, join, relative, resolve } from "path";
+import { basename, dirname, join, relative } from "path";
 import remarkFrontmatter from "remark-frontmatter";
 import { build } from "tsup";
 import { RawPlugin } from "../build/raw";
@@ -26,7 +26,7 @@ export async function buildTemplates() {
 
       const docLocation = join(
         __dirname,
-        `../docs/${dirname(
+        `../docs/content/docs/${dirname(
           relative(join(__dirname, "../src"), template),
         )}/${basename(template)}`,
       );
@@ -99,7 +99,7 @@ ${await formatSnippet(body)}
         path: relative(join(__dirname, "../src"), template)
           .toLowerCase()
           .replace(/\.mdx$/, ""),
-        image: resolve(docLocation, paths.imagePath),
+        image: paths.imagePath,
         outputPath: docLocation,
         markdown,
       };
@@ -109,7 +109,6 @@ ${await formatSnippet(body)}
 
 export const buildTemplateList = async (
   templates: Awaited<ReturnType<typeof buildTemplates>>,
-  path: string,
 ) => {
   let markdown = `---
 title: Browse
@@ -133,12 +132,9 @@ icon: list
     markdown += `## ${category}\n\n<CardGroup>\n`;
 
     templates.forEach((template) => {
-      markdown += ` <Card title="${template.name}" href="${relative(
-        path,
-        template.path,
-      )}">
+      markdown += ` <Card title="${template.name}" href="/docs/${template.path}">
       <div style={{ marginTop: "1rem", borderRadius: "0.25rem", overflow: "hidden" }}>
-        <img src="${relative(path, template.image)}"/>
+        <img src="${template.image}"/>
       </div>
     </Card>\n`;
     });

@@ -2,14 +2,14 @@
 import { readdirSync, readFileSync, rmSync } from "fs";
 import { glob } from "glob";
 
-const dir = "docs/images/previews";
+const dir = "docs/public/docs/images/previews";
 const folders = readdirSync(dir, { withFileTypes: true })
   .filter((dirent) => dirent.isDirectory())
   .map((dirent) => dirent.name);
 
 // List all the mdx files contained in the docs directory
 
-const mdxFiles = glob.sync("docs/**/*.mdx");
+const mdxFiles = glob.sync("docs/content/docs/**/*.mdx");
 
 let unusedPreviews = folders;
 

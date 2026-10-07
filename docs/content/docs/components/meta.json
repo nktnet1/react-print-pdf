@@ -1,0 +1,15 @@
+{
+  "title": "Components",
+  "defaultOpen": true,
+  "pages": [
+    "compile",
+    "css",
+    "footnote",
+    "latex",
+    "markdown",
+    "shell",
+    "signature",
+    "tailwind",
+    "variables"
+  ]
+}

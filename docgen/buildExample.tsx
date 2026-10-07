@@ -6,7 +6,6 @@ import { formatSnippet } from "./utils";
 export const buildExample = async (
   example: EnrichedExample,
   component: string,
-  outputPath: string,
   compileOptions?: CompileOptions,
 ) => {
   let markdown = ``;
@@ -16,7 +15,6 @@ export const buildExample = async (
   const paths = await renderPreview(
     example.template,
     component,
-    outputPath,
     true,
     compileOptions,
   );

@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+html {
+  scrollbar-gutter: stable;
+}
+
+.prose img {
+  border-radius: 0.5rem;
+}

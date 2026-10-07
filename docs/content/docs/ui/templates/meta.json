@@ -1,0 +1,15 @@
+{
+  "title": "Examples",
+  "pages": [
+    "---Reports---",
+    "scientific-report",
+    "report-charts",
+    "---Receipts---",
+    "receipt",
+    "---NDA---",
+    "nda-markdown",
+    "---Invoices---",
+    "invoice",
+    "invoice-advanced"
+  ]
+}

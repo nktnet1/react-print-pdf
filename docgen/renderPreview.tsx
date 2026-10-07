@@ -24,7 +24,6 @@ export const indexCss = fs.readFileSync(
 export async function renderPreview(
   component: React.ReactElement,
   componentName: string,
-  outputPath: string,
   useBaseCss: boolean = true,
   compileOptions?: CompileOptions,
 ) {
@@ -42,7 +41,10 @@ export async function renderPreview(
   let id = hash.digest("hex");
   id = `${componentName.replace(/ /g, "-").toLowerCase()}-${id.slice(0, 8)}`;
 
-  const targetFolder = path.join(__dirname, `../docs/images/previews/${id}/`);
+  const targetFolder = path.join(
+    __dirname,
+    `../docs/public/docs/images/previews/${id}/`,
+  );
 
   // If the file doesn't exist, create it by generating the document with Onedoc
   if (!fs.existsSync(targetFolder)) {
@@ -99,8 +101,15 @@ export async function renderPreview(
 
   const pages = (await glob(path.join(targetFolder, "*.jpg"))).sort();
   const pdf = await glob(path.join(targetFolder, "*.pdf"));
-  const imagePath = path.relative(path.dirname(outputPath), pages[0]);
-  const pdfPath = path.relative(path.dirname(outputPath), pdf[0]);
+  const publicDocsPath = path.join(__dirname, "../docs/public/docs");
+  const toPublicUrl = (assetPath: string) =>
+    `/docs/${path
+      .relative(publicDocsPath, assetPath)
+      .split(path.sep)
+      .join("/")}`;
+
+  const imagePath = toPublicUrl(pages[0]);
+  const pdfPath = toPublicUrl(pdf[0]);
 
   return {
     imagePath,

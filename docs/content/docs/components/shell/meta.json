@@ -1,0 +1,11 @@
+{
+  "title": "Shell",
+  "pages": [
+    "currentpagetop",
+    "floatbottom",
+    "nobreak",
+    "pagebottom",
+    "pagebreak",
+    "pagetop"
+  ]
+}

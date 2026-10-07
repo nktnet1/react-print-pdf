@@ -6,7 +6,11 @@ import type React from "react";
 import onedocStyles from "../../dist/index.css?raw";
 
 import { CSS } from "../css/css";
-import { Tailwind } from "../tailwind/tailwind";
+import {
+  createTailwindStyleCollector,
+  Tailwind,
+  TailwindStyleCollectorProvider,
+} from "../tailwind/tailwind";
 
 export interface CompileOptions {
   /**
@@ -35,8 +39,15 @@ export const compile = async (
     </>
   );
 
+  const tailwindCollector = createTailwindStyleCollector();
+
   if (!emotion) {
-    return ReactDOMServer.renderToString(Element);
+    const html = ReactDOMServer.renderToString(
+      <TailwindStyleCollectorProvider collector={tailwindCollector}>
+        {Element}
+      </TailwindStyleCollectorProvider>,
+    );
+    return tailwindCollector.resolve(html);
   }
 
   const { CacheProvider } = await import("@emotion/react");
@@ -49,9 +60,15 @@ export const compile = async (
   const { extractCriticalToChunks, constructStyleTagsFromChunks } =
     createEmotionServer(cache);
 
-  Element = <CacheProvider value={cache}>{Element}</CacheProvider>;
+  Element = (
+    <TailwindStyleCollectorProvider collector={tailwindCollector}>
+      <CacheProvider value={cache}>{Element}</CacheProvider>
+    </TailwindStyleCollectorProvider>
+  );
 
-  const html = ReactDOMServer.renderToString(Element);
+  const html = await tailwindCollector.resolve(
+    ReactDOMServer.renderToString(Element),
+  );
 
   const chunks = extractCriticalToChunks(html);
   const styles = constructStyleTagsFromChunks(chunks);

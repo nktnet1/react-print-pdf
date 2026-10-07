@@ -9,15 +9,19 @@ const allowedEntities = {
   ":where": ":is", // This may introduce specificity issues, but there is no workaround supported by the engine.
 };
 
-export const CSS = ({ children }: { children: string }) => {
-  let contents = encode(children);
+export const escapeCss = (css: string) => {
+  let contents = encode(css);
 
   // Replace allowed entities (nb: match all entities and replace them)
   for (const [entity, value] of Object.entries(allowedEntities)) {
     contents = contents.replace(new RegExp(entity, "g"), value);
   }
 
-  return <style dangerouslySetInnerHTML={{ __html: contents }} />;
+  return contents;
+};
+
+export const CSS = ({ children }: { children: string }) => {
+  return <style dangerouslySetInnerHTML={{ __html: escapeCss(children) }} />;
 };
 
 export const Font = ({ url }: { url: string }) => {

@@ -15,7 +15,7 @@ import {
 } from "./utils";
 
 const tmpDir = path.join(__dirname, "../.tmp");
-const docsPath = path.join(__dirname, "../docs/components");
+const docsPath = path.join(__dirname, "../docs/content/docs/components");
 
 const options: docgen.ParserOptions = {
   savePropValueAsString: true,
@@ -92,23 +92,28 @@ const process = async () => {
 
         docConfig = mergeTemplateInfo(docConfig, templates);
 
-        const folderOutputPath: string = path.join(
-          __dirname,
-          `../docs/components/${path.basename(filePath, ".tsx")}`,
-        );
+        const baseName = path.basename(filePath, ".tsx");
+        const componentEntries = Object.entries(docConfig.components);
+        const flattenComponent = componentEntries.length === 1;
+        const folderOutputPath = flattenComponent
+          ? docsPath
+          : path.join(docsPath, baseName);
 
         const docFiles: docFile[] = [];
 
-        for (const [componentName, value] of Object.entries(
-          docConfig.components,
-        )) {
+        for (const [componentName, value] of componentEntries) {
           const componentDocConfig = Object.assign({
             name: componentName,
-            description: "",
+            description: flattenComponent ? docConfig.description : "",
             components: { [componentName]: value },
           });
 
-          const outputPath = `${folderOutputPath}/${componentName.toLocaleLowerCase()}.mdx`;
+          const outputPath = flattenComponent
+            ? path.join(docsPath, `${baseName.toLocaleLowerCase()}.mdx`)
+            : path.join(
+                folderOutputPath,
+                `${componentName.toLocaleLowerCase()}.mdx`,
+              );
 
           const componentType = types.filter(
             (e) => e.displayName === componentName,
@@ -117,7 +122,6 @@ const process = async () => {
           const markdown = await buildFileMarkdown(
             componentDocConfig,
             componentType,
-            outputPath,
           );
 
           docFiles.push({
@@ -161,11 +165,6 @@ const process = async () => {
     return a.name.localeCompare(b.name);
   });
 
-  fs.writeFileSync(
-    path.join(__dirname, "../docs/sortedDocs.json"),
-    JSON.stringify(sortedDocs),
-  ); //writes the object for future processing in fileforge-docs
-
   sortedDocs.forEach((docFile) => {
     docFile.files.forEach((file) => {
       checkDirectorySync(docFile.outputPath, false);
@@ -174,26 +173,62 @@ const process = async () => {
     });
   });
 
+  fs.writeFileSync(
+    path.join(docsPath, "meta.json"),
+    JSON.stringify(
+      {
+        title: "Components",
+        defaultOpen: true,
+        pages: sortedDocs.map((docFile) => docFile.files[0]?.baseName),
+      },
+      null,
+      2,
+    ),
+  );
+
+  sortedDocs.forEach((docFolder) => {
+    if (docFolder.files.length <= 1) {
+      return;
+    }
+
+    fs.writeFileSync(
+      path.join(docFolder.outputPath, "meta.json"),
+      JSON.stringify(
+        {
+          title: docFolder.name,
+          pages: docFolder.files.map((file) =>
+            path.basename(file.outputPath, ".mdx"),
+          ),
+        },
+        null,
+        2,
+      ),
+    );
+  });
+
   // Build the card groups
   let snippet = `<Cards>`;
 
   sortedDocs.forEach((docFolder) => {
-    const tempPath = `/react-print/components/${docFolder.name}`;
+    const firstPage = docFolder.files[0];
+    if (!firstPage) {
+      return;
+    }
+
+    const componentPath = `/docs/components/${path
+      .relative(docsPath, firstPage.outputPath)
+      .replace(/\.mdx$/, "")
+      .split(path.sep)
+      .join("/")}`;
 
     snippet += `<Card title="${docFolder.name}" icon="${
       docFolder.icon
-    }" href="${tempPath.toLocaleLowerCase()}">
+    }" href="${componentPath.toLocaleLowerCase()}">
     ${docFolder.description.split(".")[0]}.
   </Card>`;
   });
 
   snippet += `</Cards>`;
-
-  const snippetsPath = path.join(__dirname, "../docs/snippets");
-
-  checkDirectorySync(snippetsPath);
-
-  fs.writeFileSync(`${snippetsPath}/components.mdx`, snippet);
 
   const templatesBuild = await buildTemplates();
 
@@ -207,75 +242,45 @@ const process = async () => {
     fs.writeFileSync(template.outputPath, template.markdown);
   });
 
-  const templateListingPath = path.join(__dirname, "../docs/ui/templates.mdx");
-
-  const templateListingContents = await buildTemplateList(
-    templatesBuild,
-    templateListingPath,
+  const templateListingPath = path.join(
+    __dirname,
+    "../docs/content/docs/ui/index.mdx",
   );
+
+  const templateListingContents = await buildTemplateList(templatesBuild);
 
   fs.writeFileSync(templateListingPath, templateListingContents);
 
-  // Write to the ./docs/mint.json file, replacing the contents of the "components" key with the new components
-  const mintPath = path.join(__dirname, "../docs/mint.json");
+  const templatesMetaPath = path.join(
+    __dirname,
+    "../docs/content/docs/ui/templates/meta.json",
+  );
+  const templateCategories = templatesBuild.reduce<Record<string, string[]>>(
+    (acc, template) => {
+      const category = template.category || "Uncategorized";
+      acc[category] ??= [];
+      acc[category].push(path.basename(template.outputPath, ".mdx"));
+      return acc;
+    },
+    {},
+  );
+  const templatePages = Object.entries(templateCategories).flatMap(
+    ([category, pages]) => [`---${category}---`, ...pages],
+  );
 
-  const mint = JSON.parse(fs.readFileSync(mintPath, "utf-8"));
+  fs.writeFileSync(
+    templatesMetaPath,
+    JSON.stringify({ title: "Examples", pages: templatePages }, null, 2),
+  );
 
-  mint.navigation.forEach((navItem, index) => {
-    if (navItem.group === "Components") {
-      mint.navigation[index].pages = sortedDocs.map((docFile) => {
-        return `/react-print/components/${docFile.baseName}`;
-      });
-    } else if (navItem.group === "Templates") {
-      // Group templates by category
-      const categoryPages: {
-        [key: string]: {
-          group: string;
-          icon?: string;
-          pages: string[];
-        };
-      } = templatesBuild.reduce((acc, template) => {
-        const category = template.category || "Uncategorized";
-        const icon = template.icon;
+  //-------------------------------------------------------------------------------- UPDATE introduction.mdx COMPONENT CARDS --------------------------------------------------------------------------------
 
-        if (!acc[category]) {
-          acc[category] = {
-            group: category,
-            icon: icon,
-            pages: [],
-          };
-        }
+  const introductionPath = path.join(
+    __dirname,
+    "../docs/content/docs/index.mdx",
+  );
 
-        acc[category].pages.push(
-          path.relative(
-            path.join(__dirname, "../docs"),
-            template.outputPath.replace(".mdx", ""),
-          ),
-        );
-
-        return acc;
-      }, {});
-
-      const categorizedPages = Object.values(categoryPages).map((category) => {
-        return {
-          group: category.group,
-          // icon: category.icon,
-          pages: category.pages,
-        };
-      });
-
-      // Replace the pages array with the new categorizedPages array
-      mint.navigation[index].pages = ["ui/templates", ...categorizedPages];
-    }
-  });
-
-  fs.writeFileSync(mintPath, JSON.stringify(mint, null, 2));
-
-  //-------------------------------------------------------------------------------- GENERATE introduction.mdx FILE for Fern --------------------------------------------------------------------------------
-
-  const introductionPath = path.join(__dirname, "../docs/introduction.mdx");
-
-  replaceInFile(introductionPath, /<Cards>[\s\S]*?<\/Cards>/, snippet); //TODO: fix the relative component import in Fern to avoid this
+  replaceInFile(introductionPath, /<Cards>[\s\S]*?<\/Cards>/, snippet);
 };
 
 process();
