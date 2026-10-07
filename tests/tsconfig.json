@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "noEmit": true,
+    "rootDir": "..",
+    "paths": {
+      "@fileforge/react-print": ["./src/index.ts"]
+    }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx", "../vitest.config.ts"]
+}

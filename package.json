@@ -33,7 +33,7 @@
   },
   "scripts": {
     "build": "tsup --external @fileforge/react-print --clean && tsup --external @fileforge/react-print",
-    "test": "vitest --browser chrome",
+    "test": "npm run build && vitest run --browser chrome",
     "dev": "pnpm --dir ./docs dev",
     "build-components": "npm run build && tsx ./docgen/index.ts",
     "prune-docs": "tsx ./docgen/prune.ts",
@@ -41,8 +41,9 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json",
-    "docs:build": "pnpm --dir ./docs build"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json",
+    "docs:build": "pnpm --dir ./docs build",
+    "test:watch": "npm run build && vitest --browser chrome"
   },
   "pre-commit": [
     "build-components-commit"

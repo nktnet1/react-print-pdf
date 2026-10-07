@@ -1,5 +1,5 @@
+import { compile, Tailwind } from "@fileforge/react-print";
 import { expect, test } from "vitest";
-import { compile, Tailwind } from "../dist/index.mjs";
 
 test("loads in frontend app", async () => {
   expect(compile).toBeDefined();
