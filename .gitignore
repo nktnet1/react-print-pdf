@@ -9,3 +9,7 @@ dist
 **/previews/**/index.html
 
 pack
+
+*.bundle
+*.patch
+
