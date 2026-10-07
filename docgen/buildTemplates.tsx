@@ -91,7 +91,7 @@ ${attributes.icon ? `icon: ${attributes.icon}` : ""}
 category: ${attributes.category || "Uncategorized"}
 ---\n\n`;
 
-      markdown += `<Frame background="subtle"><img src="${paths.imagePath}" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>\n\n`;
+      markdown += `<Frame background="subtle"><PreviewImage src="${paths.imagePath}" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>\n\n`;
 
       markdown += `\`\`\`jsx
 ${await formatSnippet(body)}
@@ -142,7 +142,7 @@ icon: LayoutGridIcon
     templates.forEach((template) => {
       markdown += ` <Card title="${template.name}" href="/docs/${template.path}">
       <div style={{ marginTop: "1rem", borderRadius: "0.25rem", overflow: "hidden" }}>
-        <img src="${template.image}"/>
+        <PreviewImage src="${template.image}"/>
       </div>
     </Card>\n`;
     });

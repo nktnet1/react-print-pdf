@@ -7,6 +7,7 @@ import type { MDXComponents } from "mdx/types";
 import {
   Children,
   type ComponentProps,
+  cloneElement,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -52,6 +53,34 @@ function MdxImage({ src, alt = "", ...props }: ComponentProps<"img">) {
   return <img src={resolvedSrc} alt={alt} {...props} />;
 }
 
+function resolveAssetPaths(node: ReactNode): ReactNode {
+  return Children.map(node, (child) => {
+    if (!isValidElement(child)) {
+      return child;
+    }
+
+    if (child.type === "img") {
+      const image = child as ReactElement<ComponentProps<"img">>;
+      const src = image.props.src;
+      const resolvedSrc =
+        typeof src === "string" && src.startsWith("/") ? resolveHref(src) : src;
+
+      return cloneElement(image, { src: resolvedSrc });
+    }
+
+    const element = child as ReactElement<{ children?: ReactNode }>;
+    if (element.props.children === undefined) {
+      return child;
+    }
+
+    return cloneElement(
+      element,
+      undefined,
+      resolveAssetPaths(element.props.children),
+    );
+  });
+}
+
 function LegacyCard({ title, href, icon, children }: LegacyCardProps) {
   const content = (
     <>
@@ -62,7 +91,9 @@ function LegacyCard({ title, href, icon, children }: LegacyCardProps) {
         <span>{title}</span>
       </div>
       {children && (
-        <div className="mt-1 text-sm text-fd-muted-foreground">{children}</div>
+        <div className="mt-1 text-sm text-fd-muted-foreground">
+          {resolveAssetPaths(children)}
+        </div>
       )}
     </>
   );
@@ -88,7 +119,7 @@ function LegacyCards({ children }: ChildrenProps) {
 function LegacyFrame({ children }: ChildrenProps) {
   return (
     <div className="my-4 overflow-hidden rounded-lg border bg-fd-card p-2">
-      {children}
+      {resolveAssetPaths(children)}
     </div>
   );
 }
@@ -189,6 +220,7 @@ const legacyComponents = {
   Frame: LegacyFrame,
   Info: (props: ChildrenProps) => <LegacyCallout intent="info" {...props} />,
   Note: (props: ChildrenProps) => <LegacyCallout intent="note" {...props} />,
+  PreviewImage: MdxImage,
   Tab: LegacyTab,
   Tabs: LegacyTabs,
   Tip: (props: ChildrenProps) => <LegacyCallout intent="tip" {...props} />,
