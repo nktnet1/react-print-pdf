@@ -71,7 +71,7 @@ NB: While you can add regular CSS with the \`<style>\` tag, it's recommended to 
         default: {
           name: "Load a Google Font",
           description:
-            "Load a Google Font its URL. This will allow you to use the font in your document.",
+            "Load a Google Font from its URL. This will allow you to use the font in your document.",
           template: (
             <React.Fragment>
               <Font url="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" />

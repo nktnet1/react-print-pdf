@@ -7,14 +7,33 @@ import type {
 } from "./types";
 import { formatCamelCaseToTitle } from "./utils";
 
+const getFrontmatterDescription = (
+  docConfig: ExtendedDocConfig,
+  componentDocs: ComponentDoc[],
+) => {
+  const defaultExample = Object.values(docConfig.components)[0]?.examples
+    ?.default;
+  const description =
+    docConfig.description ||
+    componentDocs.find((component) => component.description)?.description ||
+    defaultExample?.description ||
+    `Learn how to use ${docConfig.name} with React Print.`;
+
+  return description
+    .trim()
+    .split(/\n\s*\n/, 1)[0]
+    .replace(/\s+/g, " ");
+};
+
 export const buildFileMarkdown = async (
   docConfig: ExtendedDocConfig,
   componentDocs: ComponentDoc[],
 ) => {
+  const description = getFrontmatterDescription(docConfig, componentDocs);
   let markdown = `---
 title: ${docConfig.name}
+description: ${JSON.stringify(description)}
 ${docConfig.icon ? `icon: ${docConfig.icon}` : ""}
-${docConfig.description ? `description: "${docConfig.description}"` : ""}
 ---\n\n`;
 
   const componentKeys = new Set([
