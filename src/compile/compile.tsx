@@ -78,10 +78,8 @@ export const compile = async (
   const { default: postcss } = await import("postcss");
   const { default: cssvariables } = await import("postcss-css-variables");
   const { default: isPseudoClass } = await import(
-    // @ts-expect-error
     "@csstools/postcss-is-pseudo-class"
   );
-  // @ts-expect-error
   const { default: logical } = await import("postcss-logical");
 
   const result = await postcss([

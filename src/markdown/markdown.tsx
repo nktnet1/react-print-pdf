@@ -71,7 +71,10 @@ export const Markdown = (props: MarkdownProps) => {
         const instance = new child.type(child.props);
         detectHeader(instance.render());
       } else if (typeof child.type === "function") {
-        detectHeader(child.type(child.props));
+        const FunctionComponent = child.type as (
+          props: MarkdownElementProps,
+        ) => ReactNode;
+        detectHeader(FunctionComponent(child.props));
       } else if (child.props?.children) {
         Children.forEach(child.props.children, detectHeader);
       }

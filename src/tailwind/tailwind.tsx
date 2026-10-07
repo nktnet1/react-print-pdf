@@ -7,11 +7,9 @@
  * resolves their styles before returning the final HTML string.
  */
 
-// @ts-expect-error -- plugin does not currently ship an ESM default type.
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import { decode } from "html-entities";
 import postcss from "postcss";
-// @ts-expect-error -- plugin does not currently ship an ESM default type.
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
 import {
   createContext,
