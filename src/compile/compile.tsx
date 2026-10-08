@@ -43,6 +43,9 @@ const extractEmotionStyleTags = (html: string) => {
 export interface CompileOptions {
   /**
    * Whether to use Emotion CSS.
+   *
+   * In browsers, CSS collection mounts a detached React root so Emotion's
+   * insertion effects run. Components' mount and cleanup effects may also run.
    */
   emotion?: boolean;
 }
@@ -103,18 +106,43 @@ export const compile = async (
     </TailwindStyleCollectorProvider>
   );
 
-  const renderedHtml = await tailwindCollector.resolve(renderToString(Element));
-  const { html, css: inlineEmotionCss } = extractEmotionStyleTags(renderedHtml);
-  const cachedEmotionCss = styleContainer
-    ? Array.from(
+  let renderedHtml: string;
+  let cachedEmotionCss: string;
+
+  if (styleContainer) {
+    // Emotion's browser build inserts styles from React insertion effects,
+    // which renderToString() never executes. Render into a detached root so
+    // both class styles and <Global /> rules reach this isolated cache.
+    const [{ createRoot }, { flushSync }] = await Promise.all([
+      import("react-dom/client"),
+      import("react-dom"),
+    ]);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+
+    try {
+      flushSync(() => root.render(Element));
+      renderedHtml = host.innerHTML;
+      // Read styles before unmount: Emotion's <Global /> cleanup removes its
+      // separate stylesheet during the unmount insertion effect.
+      cachedEmotionCss = Array.from(
         styleContainer.querySelectorAll<HTMLStyleElement>(
           "style[data-emotion]",
         ),
-        (style) => style.textContent || "",
-      ).join("")
-    : Object.values(cache.inserted)
-        .filter((value): value is string => typeof value === "string")
-        .join("");
+        (style) => style.textContent ?? "",
+      ).join("");
+    } finally {
+      flushSync(() => root.unmount());
+    }
+  } else {
+    renderedHtml = renderToString(Element);
+    cachedEmotionCss = Object.values(cache.inserted)
+      .filter((value): value is string => typeof value === "string")
+      .join("");
+  }
+
+  const resolvedHtml = await tailwindCollector.resolve(renderedHtml);
+  const { html, css: inlineEmotionCss } = extractEmotionStyleTags(resolvedHtml);
 
   cache.sheet.flush();
 
