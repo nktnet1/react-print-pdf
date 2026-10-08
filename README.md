@@ -47,6 +47,20 @@ const html = await compile(<Document />);
 
 `compile()` returns HTML and print styles. React Print PDF does not require or bundle a hosted PDF service; pass the HTML to whichever local or remote PDF renderer fits your application.
 
+### Gotenberg
+
+For a self-hosted PDF renderer, React Print PDF includes a Gotenberg integration that compiles the React document and submits the resulting HTML to Gotenberg's Chromium route:
+
+```tsx
+import { compileWithGotenberg } from "react-print-pdf";
+
+const pdf = await compileWithGotenberg(<Document />, {
+  baseUrl: "http://localhost:3000",
+});
+```
+
+The helper returns a `Uint8Array`. It defaults to CSS page sizing, printed backgrounds, and PDF document outlines; all Gotenberg form fields can be overridden through `formFields`. See [`docs/content/docs/integrations/gotenberg.mdx`](docs/content/docs/integrations/gotenberg.mdx) for Docker and authentication examples.
+
 ## Components
 
 The library includes utilities for:

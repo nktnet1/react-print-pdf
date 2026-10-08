@@ -1,0 +1,121 @@
+---
+title: "Gotenberg"
+description: "Render React Print PDF documents with a self-hosted Gotenberg Chromium service."
+icon: ContainerIcon
+---
+
+[Gotenberg](https://gotenberg.dev/) is an open-source, Docker-first document conversion service. React Print PDF can compile your React document to HTML and send that HTML directly to Gotenberg's Chromium HTML-to-PDF route.
+
+<Callout intent="warning" title="Keep Gotenberg private">
+  Gotenberg recommends treating the service like a database: keep it behind your firewall rather than exposing it directly to the public internet. Call this integration from trusted server-side code and never ship Gotenberg credentials to a browser bundle.
+</Callout>
+
+## Run Gotenberg
+
+Gotenberg's current documentation uses the versioned `gotenberg/gotenberg:8` image. This example enables basic authentication, increases the API timeout to 60 seconds, and starts Chromium when the container starts.
+
+```yaml title="compose.yaml"
+services:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    environment:
+      GOTENBERG_API_BASIC_AUTH_USERNAME: ${GOTENBERG_API_BASIC_AUTH_USERNAME}
+      GOTENBERG_API_BASIC_AUTH_PASSWORD: ${GOTENBERG_API_BASIC_AUTH_PASSWORD}
+    command:
+      - gotenberg
+      - --api-enable-basic-auth
+      - --api-timeout=60s
+      - --chromium-auto-start
+    restart: unless-stopped
+```
+
+Without basic authentication you can omit the two environment variables and `--api-enable-basic-auth`, provided the service is only reachable from trusted infrastructure.
+
+## Compile and render a PDF
+
+`compileWithGotenberg()` calls React Print PDF's `compile()` function internally, wraps the generated HTML as `index.html`, and sends it to `/forms/chromium/convert/html`.
+
+```tsx
+import { writeFile } from "node:fs/promises";
+import {
+  PageBottom,
+  PageTop,
+  compileWithGotenberg,
+} from "react-print-pdf";
+
+const Document = () => (
+  <main>
+    <PageTop>Quarterly report</PageTop>
+    <h1>Results</h1>
+    <p>Generated with React Print PDF and Gotenberg.</p>
+    <PageBottom>Confidential</PageBottom>
+  </main>
+);
+
+const pdf = await compileWithGotenberg(<Document />, {
+  baseUrl: process.env.GOTENBERG_BASE_URL ?? "http://localhost:3000",
+  auth: {
+    username: process.env.GOTENBERG_API_BASIC_AUTH_USERNAME!,
+    password: process.env.GOTENBERG_API_BASIC_AUTH_PASSWORD!,
+  },
+});
+
+await writeFile("report.pdf", pdf);
+```
+
+The helper returns a `Uint8Array`, which can be written directly with Node.js `writeFile`, returned from most web frameworks, or converted to a `Buffer` with `Buffer.from(pdf)` when needed.
+
+## Defaults
+
+The integration enables three Gotenberg Chromium fields by default because they map well to React Print PDF documents:
+
+- `preferCssPageSize=true` so CSS `@page` sizes win over Gotenberg's default paper dimensions.
+- `printBackground=true` so document background colors and graphics are preserved.
+- `generateDocumentOutline=true` so semantic `<h1>` through `<h6>` headings can become PDF bookmarks. Gotenberg automatically enables tagged PDF output when document outlines are requested.
+
+Override any field through `formFields`:
+
+```tsx
+const pdf = await compileWithGotenberg(<Document />, {
+  baseUrl: "http://gotenberg:3000",
+  formFields: {
+    generateDocumentOutline: false,
+    waitDelay: "500ms",
+  },
+});
+```
+
+`formFields` accepts other scalar fields supported by Gotenberg's Chromium HTML conversion route, such as `landscape`, `scale`, `emulatedMediaType`, `waitForSelector`, or `waitForExpression`.
+
+## Local assets
+
+Gotenberg stores uploaded HTML and assets in one flat directory. If your compiled document references a local asset by filename, attach it with `assets`:
+
+```tsx
+const pdf = await compileWithGotenberg(<Document />, {
+  baseUrl: "http://gotenberg:3000",
+  assets: [
+    {
+      name: "logo.svg",
+      blob: new Blob([logoSvg], { type: "image/svg+xml" }),
+    },
+  ],
+});
+```
+
+Reference that file as `logo.svg` in the document. Do not use nested paths such as `assets/logo.svg`. Remote images and fonts work when the Gotenberg container can reach their URLs.
+
+## Convert precompiled HTML
+
+If you already called `compile()`, use the lower-level helper instead:
+
+```tsx
+import { compile, convertHtmlWithGotenberg } from "react-print-pdf";
+
+const html = await compile(<Document />);
+const pdf = await convertHtmlWithGotenberg(html, {
+  baseUrl: "http://gotenberg:3000",
+});
+```
+
+Failed HTTP responses throw `GotenbergError`, including the HTTP status, Gotenberg trace ID when available, and the response body. Requests time out after 60 seconds by default; customize that with `timeoutMs` or pass an external `AbortSignal`.
