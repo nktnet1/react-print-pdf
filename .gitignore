@@ -15,3 +15,5 @@ pack
 
 .vitest/
 .vitest-attachments/
+
+tests/__screenshots__/
