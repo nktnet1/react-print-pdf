@@ -36,32 +36,15 @@ export const validateReleaseTrigger = ({
 }) => {
   const release = parseReleaseVersion(version);
 
-  if (eventName === "push") {
-    if (refType !== "tag") {
-      throw new Error("Stable releases must be triggered by a Git tag");
-    }
-    if (release.beta !== undefined) {
-      throw new Error(
-        "Beta releases must use workflow_dispatch via pnpm release:beta, not Git tags",
-      );
-    }
-    const expectedTag = releaseTag(release.version);
-    if (refName !== expectedTag) {
-      throw new Error(
-        `Release tag ${String(refName)} does not match package version ${expectedTag}`,
-      );
-    }
-  } else if (eventName === "workflow_dispatch") {
-    if (refType !== "branch") {
-      throw new Error("Beta workflow dispatches must target a branch");
-    }
-    if (release.beta === undefined) {
-      throw new Error(
-        "workflow_dispatch is reserved for beta versions; stable releases require a matching vX.Y.Z tag",
-      );
-    }
-  } else {
-    throw new Error(`Unsupported release event: ${String(eventName)}`);
+  if (eventName !== "push" || refType !== "tag") {
+    throw new Error("Releases require a matching Git tag push");
+  }
+
+  const expectedTag = releaseTag(release.version);
+  if (refName !== expectedTag) {
+    throw new Error(
+      `Release tag ${String(refName)} does not match package version ${expectedTag}`,
+    );
   }
 
   return release;
