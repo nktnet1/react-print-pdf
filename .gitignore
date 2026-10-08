@@ -17,3 +17,6 @@ pack
 .vitest-attachments/
 
 tests/__screenshots__/
+
+# Vitest coverage artifacts
+coverage/

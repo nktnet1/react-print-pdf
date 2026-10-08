@@ -52,5 +52,16 @@ jobs:
       - name: Install PDF inspection utilities
         run: sudo apt-get update && sudo apt-get install -y poppler-utils
 
-      - name: Test
-        run: pnpm test
+      - name: Test with coverage thresholds
+        run: pnpm test:coverage
+
+      - name: Upload Node and browser coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage/node/
+            coverage/browser/
+          if-no-files-found: warn
+          retention-days: 14

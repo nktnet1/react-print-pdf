@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { coverage } from "./vitest.coverage";
 
 export default defineConfig({
   resolve: {
@@ -18,6 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    coverage: { ...coverage, reportsDirectory: "coverage/node" },
     include: ["tests/**/*.node.test.tsx"],
   },
 });

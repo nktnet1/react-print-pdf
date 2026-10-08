@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
+import { coverage } from "./vitest.coverage";
 
 export default defineConfig({
   resolve: {
@@ -43,6 +44,7 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.{ts,tsx}"],
+    coverage: { ...coverage, reportsDirectory: "coverage/browser" },
     exclude: [...configDefaults.exclude, "tests/**/*.node.test.tsx"],
     browser: {
       enabled: true,
