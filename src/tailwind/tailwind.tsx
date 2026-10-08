@@ -21,10 +21,14 @@ import {
 } from "react";
 import { renderToString } from "react-dom/server";
 import { type Config, compile as compileTailwind } from "tailwindcss";
-import preflightCss from "tailwindcss/preflight.css?raw";
-import themeCss from "tailwindcss/theme.css?raw";
 import { CSS, escapeCss } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
+
+// Replaced with the Tailwind package's CSS text during tsdown compilation.
+// Keeping these sources out of the CSS asset pipeline prevents ?raw imports
+// from becoming empty stylesheets in the published server bundle.
+declare const __REACT_PRINT_TAILWIND_THEME_CSS__: string;
+declare const __REACT_PRINT_TAILWIND_PREFLIGHT_CSS__: string;
 
 type LegacyCorePlugins = string[] | Record<string, boolean>;
 
@@ -132,9 +136,16 @@ async function buildTailwindStyles(
     "@layer theme, base, components, utilities;",
     // Inline the bundled sources: the standalone Tailwind compiler does not
     // expand CSS imports itself, even when a loadStylesheet callback exists.
-    themeCss,
-    includePreflight ? `@layer base {\n${preflightCss}\n}` : "",
+    __REACT_PRINT_TAILWIND_THEME_CSS__,
+    includePreflight
+      ? `@layer base {\n${__REACT_PRINT_TAILWIND_PREFLIGHT_CSS__}\n}`
+      : "",
     "@tailwind utilities;",
+    // Explicitly register rendered classes in the compiler input. This also
+    // works when the bundled Tailwind runtime cannot discover source files.
+    ...classNames.map(
+      (className) => `@source inline(${JSON.stringify(className)});`,
+    ),
     legacyConfig ? `@config "${VIRTUAL_CONFIG_ID}";` : "",
     stylesheet ?? "",
   ]
