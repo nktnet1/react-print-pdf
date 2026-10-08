@@ -66,7 +66,8 @@
     "docs:build": "pnpm --dir ./docs build",
     "test:watch": "playwright install chromium && npm run build && vitest --browser.headless=false",
     "release:beta": "tsx ./scripts/release-beta.ts",
-    "bootstrap:oidc": "tsx ./scripts/bootstrap-oidc.ts",
+    "bootstrap:package": "tsx ./scripts/bootstrap-package.ts",
+    "setup:oidc": "tsx ./scripts/setup-oidc.ts",
     "release:validate": "tsx ./scripts/validate-release.ts",
     "prepublishOnly": "tsx ./scripts/prevent-direct-publish.ts"
   },

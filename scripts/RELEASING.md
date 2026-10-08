@@ -8,34 +8,49 @@ requires a `workflow_dispatch` workflow to exist on the default branch.
 ## Bootstrap npm trusted publishing
 
 The release workflow publishes with GitHub Actions OIDC and does not use an
-`NPM_TOKEN`. npm requires the package to exist before a trusted publisher can be
-configured, so bootstrap the package and trust relationship once from a
-maintainer checkout:
+`NPM_TOKEN`. npm requires a package to exist before a trusted publisher can be
+configured, so initial setup is deliberately split into two maintainer-only
+steps.
+
+First publish the fixed bootstrap version:
 
 ```sh
-pnpm bootstrap:oidc
-pnpm bootstrap:oidc --publish
+pnpm bootstrap:package
+pnpm bootstrap:package --publish
 ```
 
-The first command is a non-mutating check. With `--publish`, the script verifies
-local npm authentication, publishes `react-print-pdf@0.0.0-bootstrap.0` under the
-`bootstrap` dist-tag only when the package name does not exist yet, then runs
-`npm trust github` for `nktnet1/react-print-pdf`, `release.yaml`, and the
-`Production` GitHub environment with direct `npm publish` permission. It also
-verifies the resulting trust configuration.
+The first command is a non-mutating check. With `--publish`, the script checks
+for the exact `react-print-pdf@0.0.0-bootstrap.0` version and publishes it under
+the `bootstrap` dist-tag when that version is missing. It does this even when
+other versions of `react-print-pdf` already exist; package-name existence alone
+is not enough to prove that the bootstrap step was completed. The temporary
+bootstrap package has no lifecycle scripts and does not modify the committed
+`package.json`.
 
-The bootstrap requires npm 11.15.0 or newer, package write access, and npm
+After the bootstrap publish succeeds, configure npm OIDC separately:
+
+```sh
+pnpm setup:oidc
+```
+
+`setup:oidc` refuses to start the trust flow until the fixed bootstrap version
+is visible on the npm registry. It then configures `npm trust github` for
+`nktnet1/react-print-pdf`, `release.yaml`, and the `Production` GitHub
+environment with direct `npm publish` permission, and verifies the resulting
+trust configuration.
+
+The OIDC setup requires npm 11.15.0 or newer, package write access, and npm
 account 2FA. Run `npm login --auth-type=web` first if `npm whoami` does not
 succeed. `npm trust` does not accept a bypass-2FA granular token by itself. The
-bootstrap therefore performs an interactive `npm trust list` before its
+setup therefore performs an interactive `npm trust list` before its
 machine-readable checks; complete the browser challenge and enable npm's
 **skip 2FA for the next 5 minutes** option so the remaining trust operations can
 finish. TOTP users can instead provide `NPM_CONFIG_OTP`.
 
 If an existing trusted publisher points somewhere else, inspect it first and
-then use `pnpm bootstrap:oidc --publish --replace` only when you intend to revoke
-and replace that configuration. npm requires a newly created trusted publisher
-to complete its first successful OIDC publish within two days.
+then use `pnpm setup:oidc --replace` only when you intend to revoke and replace
+that configuration. npm requires a newly created trusted publisher to complete
+its first successful OIDC publish within two days.
 
 ## Beta releases
 
