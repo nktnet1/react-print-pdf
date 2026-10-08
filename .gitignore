@@ -13,3 +13,5 @@ pack
 *.bundle
 *.patch
 
+.vitest/
+.vitest-attachments/
