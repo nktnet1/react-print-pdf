@@ -3,6 +3,6 @@ if (
   process.env.RELEASE_PUBLISH !== "1"
 ) {
   throw new Error(
-    "Direct npm publishing is disabled. Use pnpm release:beta for beta releases or push a matching vX.Y.Z tag for a stable release.",
+    "Direct npm publishing is disabled. Publish releases by pushing a matching version tag (pnpm release:beta handles beta tags).",
   );
 }

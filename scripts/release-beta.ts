@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { nextBetaVersion } from "#scripts/beta-version";
-import { RELEASE_PACKAGE_NAME } from "#scripts/release-policy";
+import { RELEASE_PACKAGE_NAME, releaseTag } from "#scripts/release-policy";
 
 const { values } = parseArgs({
   options: {
@@ -59,7 +59,7 @@ Default: continue the current beta series, update package.json, and run release 
 --base: choose the stable base for a new beta series, for example 0.2.0 or v0.2.0.
         A base is required when package.json currently contains a stable version.
 --dry-run: show the next beta version without modifying files.
---publish: commit package.json, push the current branch, then dispatch release CI.
+--publish: commit package.json on main, push main, then push a matching beta tag.
 
 Stable releases do not use this script. Set package.json to the desired stable
 version, commit it, create an annotated vX.Y.Z tag, and push the tag.`);
@@ -77,8 +77,8 @@ version, commit it, create an annotated vX.Y.Z tag, and push the tag.`);
   }
 
   const branch = git(["symbolic-ref", "--short", "HEAD"]);
-  if (values.publish) {
-    run("gh", ["auth", "status"]);
+  if (values.publish && branch !== "main") {
+    throw new Error("Beta publishing requires the main branch");
   }
 
   const manifestPath = resolve(root, "package.json");
@@ -101,6 +101,16 @@ version, commit it, create an annotated vX.Y.Z tag, and push the tag.`);
   );
   console.log(`${manifest.version} -> ${version} (npm tag: beta)`);
   if (values["dry-run"]) return;
+
+  const tag = releaseTag(version);
+  if (values.publish) {
+    if (git(["tag", "--list", tag])) {
+      throw new Error(`Release tag ${tag} already exists locally`);
+    }
+    if (git(["ls-remote", "--tags", "origin", `refs/tags/${tag}`])) {
+      throw new Error(`Release tag ${tag} already exists on origin`);
+    }
+  }
 
   manifest.version = version;
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -131,11 +141,12 @@ version, commit it, create an annotated vX.Y.Z tag, and push the tag.`);
 
   git(["add", "--", "package.json"]);
   git(["commit", "--no-verify", "-m", version]);
-  run("git", ["push", "origin", `HEAD:refs/heads/${branch}`]);
-  run("gh", ["workflow", "run", "release.yaml", "--ref", branch]);
+  run("git", ["push", "origin", "HEAD:refs/heads/main"]);
+  run("git", ["tag", "-a", tag, "-m", tag]);
+  run("git", ["push", "origin", `refs/tags/${tag}`]);
 
   console.log(
-    `Pushed ${version} and dispatched Release CI. The workflow will publish ${RELEASE_PACKAGE_NAME}@${version} with the beta dist-tag.`,
+    `Pushed ${tag}. After Pipeline passes on main, Release will publish ${RELEASE_PACKAGE_NAME}@${version} with the beta dist-tag.`,
   );
 };
 

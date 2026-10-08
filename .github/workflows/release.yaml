@@ -1,7 +1,6 @@
 name: Release
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -14,7 +13,68 @@ permissions:
   contents: read
 
 jobs:
+  verify-pipeline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout tagged commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require passing main pipeline for the tagged commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          commit="$(git rev-parse 'HEAD^{commit}')"
+          git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          if ! git merge-base --is-ancestor "$commit" origin/main; then
+            echo "::error::Release tag must point to a commit on main"
+            exit 1
+          fi
+
+          # Tag pushes and main pushes can race. Wait for Pipeline's push
+          # run for this exact commit, never a PR or another main commit.
+          for attempt in {1..60}; do
+            runs="$(gh api --method GET \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/pipeline.yaml/runs" \
+              -f head_sha="$commit" -f branch=main -f event=push -F per_page=100)"
+            result="$(jq -r --arg sha "$commit" '
+              [.workflow_runs[] | select(
+                .head_sha == $sha and .head_branch == "main" and .event == "push"
+              )] | max_by(.run_number) |
+              if . == null then "missing"
+              else "\(.status):\(.conclusion // "pending")" end
+            ' <<< "$runs")"
+
+            case "$result" in
+              completed:success)
+                echo "Pipeline passed for $commit"
+                exit 0
+                ;;
+              completed:*)
+                echo "::error::Pipeline did not pass for $commit ($result)"
+                exit 1
+                ;;
+              *)
+                echo "Waiting for main Pipeline on $commit ($result, attempt $attempt/60)"
+                sleep 30
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for a passing main Pipeline on $commit"
+          exit 1
+
   publish:
+    needs: verify-pipeline
     runs-on: ubuntu-24.04
     environment: Production
     permissions:
@@ -39,24 +99,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Set up Bun for compatibility tests
-        uses: oven-sh/setup-bun@v2
-
       - name: Validate release trigger
         id: release
         run: pnpm release:validate
 
-      - name: Check formatting and lint
-        run: pnpm check
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Test
-        run: pnpm test
+      - name: Build publishable package
+        run: pnpm build
 
       - name: Publish to npm
         env:

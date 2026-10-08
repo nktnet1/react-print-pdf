@@ -29,33 +29,44 @@ describe("release policy", () => {
         version: "1.2.3",
       }),
     ).toThrow(/does not match/);
-    expect(() =>
+  });
+
+  test("publishes beta versions only from matching tags", () => {
+    expect(
       validateReleaseTrigger({
         eventName: "push",
         refName: "v1.2.3-beta.1",
         refType: "tag",
         version: "1.2.3-beta.1",
-      }),
-    ).toThrow(/workflow_dispatch/);
-  });
-
-  test("reserves workflow dispatch for beta versions", () => {
-    expect(
-      validateReleaseTrigger({
-        eventName: "workflow_dispatch",
-        refName: "main",
-        refType: "branch",
-        version: "1.2.3-beta.1",
       }).distTag,
     ).toBe("beta");
+    expect(() =>
+      validateReleaseTrigger({
+        eventName: "push",
+        refName: "v1.2.3-beta.2",
+        refType: "tag",
+        version: "1.2.3-beta.1",
+      }),
+    ).toThrow(/does not match/);
+  });
+
+  test("rejects branch pushes and manual dispatches", () => {
+    expect(() =>
+      validateReleaseTrigger({
+        eventName: "push",
+        refName: "main",
+        refType: "branch",
+        version: "1.2.3",
+      }),
+    ).toThrow(/matching Git tag/);
     expect(() =>
       validateReleaseTrigger({
         eventName: "workflow_dispatch",
         refName: "main",
         refType: "branch",
-        version: "1.2.3",
+        version: "1.2.3-beta.1",
       }),
-    ).toThrow(/stable releases require/);
+    ).toThrow(/matching Git tag/);
   });
 });
 

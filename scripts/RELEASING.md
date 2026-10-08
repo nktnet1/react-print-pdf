@@ -1,9 +1,11 @@
 # Releases
 
-Release CI owns npm publication. It never increments `package.json` and it
-publishes exactly the version committed in Git. Merge the release workflow to
-the default branch before using `pnpm release:beta --publish`, because GitHub
-requires a `workflow_dispatch` workflow to exist on the default branch.
+Only tagged commits can publish to npm. The `Pipeline` workflow runs checks on
+pushes to `main` and pull requests targeting `main`. A `v*` tag starts the
+separate `Release` workflow, which requires a successful **main push** Pipeline
+run for the exact tagged commit before npm publishing is allowed. Passing a
+pull request alone is not enough. Release never increments `package.json`; it
+publishes exactly the version committed in Git.
 
 ## Bootstrap npm trusted publishing
 
@@ -69,12 +71,11 @@ pnpm release:beta --publish
 ```
 
 The script selects the next unused `-beta.N` version from the npm registry,
-runs the repository checks, commits only `package.json`, pushes the current
-branch, and dispatches `.github/workflows/release.yaml` through the GitHub CLI.
-The workflow accepts `workflow_dispatch` only when `package.json` contains a
-beta version and publishes it with the `beta` npm dist-tag.
-
-`gh auth status` must succeed before `--publish` can modify the repository.
+runs the repository checks, commits only `package.json` on `main`, pushes the
+commit, then creates and pushes an annotated `vX.Y.Z-beta.N` tag. The tag
+triggers `Release`, which waits for the exact commit's main Pipeline run to pass
+and publishes using the `beta` npm dist-tag. `--publish` requires a clean local
+`main` branch with push access.
 
 ## Stable releases
 
@@ -87,7 +88,11 @@ git push origin v0.2.0
 ```
 
 The release workflow validates that the tag is exactly `v${package.version}`
-and that the version has no prerelease suffix, then publishes it with the
-`latest` npm dist-tag.
+and publishes stable versions with the `latest` npm dist-tag. Both stable and
+beta tags must point to a commit reachable from `main` with a successful
+Pipeline run for that **exact SHA** triggered by a push to `main`. When the tag
+is pushed before that Pipeline run finishes, Release waits for the result;
+failed, cancelled, missing, or timed-out runs cannot publish. The Release job
+has npm OIDC access only after this gate passes.
 
 Direct `npm publish` from a local checkout is blocked by `prepublishOnly`.
