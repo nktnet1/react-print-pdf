@@ -1,4 +1,7 @@
 export const RELEASE_PACKAGE_NAME = "react-print-pdf";
+export const RELEASE_GITHUB_REPOSITORY = "nktnet1/react-print-pdf";
+export const RELEASE_WORKFLOW_FILE = "release.yaml";
+export const RELEASE_ENVIRONMENT = "Production";
 
 const versionPattern =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-beta\.(0|[1-9]\d*))?$/;

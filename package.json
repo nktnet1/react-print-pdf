@@ -45,6 +45,7 @@
     "docs:build": "pnpm --dir ./docs build",
     "test:watch": "playwright install chromium && npm run build && vitest --browser.headless=false",
     "release:beta": "tsx ./scripts/release-beta.ts",
+    "bootstrap:oidc": "tsx ./scripts/bootstrap-oidc.ts",
     "release:validate": "tsx ./scripts/validate-release.ts",
     "prepublishOnly": "tsx ./scripts/prevent-direct-publish.ts"
   },
@@ -107,5 +108,9 @@
     "dist",
     "README.md",
     "LICENSE.md"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nktnet1/react-print-pdf.git"
+  }
 }
