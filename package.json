@@ -1,30 +1,51 @@
 {
   "name": "react-print-pdf",
   "version": "0.1.150",
+  "type": "module",
   "description": "Fileforge components for JavaScript React",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./client": {
-      "types": "./dist/client/index.d.ts",
-      "require": "./dist/client/index.js",
-      "import": "./dist/client/index.mjs"
+      "import": {
+        "types": "./dist/client/index.d.ts",
+        "default": "./dist/client/index.js"
+      },
+      "require": {
+        "types": "./dist/client/index.d.cts",
+        "default": "./dist/client/index.cjs"
+      }
     },
     "./server": {
-      "types": "./dist/server/index.d.ts",
-      "require": "./dist/server/index.js",
-      "import": "./dist/server/index.mjs"
+      "import": {
+        "types": "./dist/server/index.d.ts",
+        "default": "./dist/server/index.js"
+      },
+      "require": {
+        "types": "./dist/server/index.d.cts",
+        "default": "./dist/server/index.cjs"
+      }
     },
     "./mdx": {
-      "types": "./dist/mdx.d.ts",
-      "require": "./dist/mdx.js",
-      "import": "./dist/mdx.mjs"
+      "import": {
+        "types": "./dist/mdx.d.ts",
+        "default": "./dist/mdx.js"
+      },
+      "require": {
+        "types": "./dist/mdx.d.cts",
+        "default": "./dist/mdx.cjs"
+      }
     },
     "./dist/*.css": {
       "import": "./dist/*.css",

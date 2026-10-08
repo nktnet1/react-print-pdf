@@ -17,7 +17,7 @@ type CompileModule = Pick<typeof import("../src/compile/compile"), "compile">;
 
 const loadCompileModule = async (): Promise<CompileModule> => {
   const distEntry = pathToFileURL(
-    path.join(__dirname, "../dist/index.mjs"),
+    path.join(import.meta.dirname, "../dist/index.js"),
   ).href;
 
   return (await import(distEntry)) as CompileModule;
@@ -35,8 +35,12 @@ const getFileforgeClient = () => {
   return new FileforgeClient({ apiKey });
 };
 
-export const baseCss = fs.readFileSync(path.join(__dirname, "./base.css"));
-const indexCss = fs.readFileSync(path.join(__dirname, "../dist/index.css"));
+export const baseCss = fs.readFileSync(
+  path.join(import.meta.dirname, "./base.css"),
+);
+const indexCss = fs.readFileSync(
+  path.join(import.meta.dirname, "../dist/index.css"),
+);
 
 export async function renderPreview(
   component: React.ReactElement,
@@ -60,7 +64,7 @@ export async function renderPreview(
   id = `${componentName.replace(/ /g, "-").toLowerCase()}-${id.slice(0, 8)}`;
 
   const targetFolder = path.join(
-    __dirname,
+    import.meta.dirname,
     `../docs/public/docs/images/previews/${id}/`,
   );
 
@@ -120,7 +124,7 @@ export async function renderPreview(
 
   const pages = (await glob(path.join(targetFolder, "*.jpg"))).sort();
   const pdf = await glob(path.join(targetFolder, "*.pdf"));
-  const publicDocsPath = path.join(__dirname, "../docs/public/docs");
+  const publicDocsPath = path.join(import.meta.dirname, "../docs/public/docs");
   const toPublicUrl = (assetPath: string) =>
     `/docs/${path
       .relative(publicDocsPath, assetPath)

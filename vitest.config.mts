@@ -6,7 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "react-print-pdf": fileURLToPath(
-        new URL("./dist/index.mjs", import.meta.url),
+        new URL("./dist/index.js", import.meta.url),
       ),
     },
   },

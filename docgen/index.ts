@@ -12,8 +12,11 @@ import {
   mergeTemplateInfo,
 } from "./utils";
 
-const tmpDir = path.join(__dirname, "../.tmp");
-const docsPath = path.join(__dirname, "../docs/content/docs/components");
+const tmpDir = path.join(import.meta.dirname, "../.tmp");
+const docsPath = path.join(
+  import.meta.dirname,
+  "../docs/content/docs/components",
+);
 
 const options: docgen.ParserOptions = {
   savePropValueAsString: true,
@@ -49,7 +52,7 @@ const process = async () => {
   ]);
 
   const files = glob
-    .sync(path.join(__dirname, "../src/**/*.tsx"))
+    .sync(path.join(import.meta.dirname, "../src/**/*.tsx"))
     .filter((filePath) => {
       return !filePath.includes("/src/ui/");
     });
@@ -58,7 +61,7 @@ const process = async () => {
     await Promise.all(
       files.map(async (filePath) => {
         const relativePath = path.relative(
-          path.join(__dirname, "../src"),
+          path.join(import.meta.dirname, "../src"),
           filePath,
         );
 
@@ -133,7 +136,7 @@ const process = async () => {
             name: componentDocConfig.name,
             baseName: path.basename(filePath, ".tsx"),
             path: path
-              .relative(path.join(__dirname, "../src"), filePath)
+              .relative(path.join(import.meta.dirname, "../src"), filePath)
               .toLowerCase(),
             outputPath,
             markdown,
@@ -248,7 +251,7 @@ const process = async () => {
   });
 
   const templateListingPath = path.join(
-    __dirname,
+    import.meta.dirname,
     "../docs/content/docs/ui/index.mdx",
   );
 
@@ -257,7 +260,7 @@ const process = async () => {
   fs.writeFileSync(templateListingPath, templateListingContents);
 
   const templatesMetaPath = path.join(
-    __dirname,
+    import.meta.dirname,
     "../docs/content/docs/ui/templates/meta.json",
   );
   const templateCategories = templatesBuild.reduce<Record<string, string[]>>(
@@ -281,7 +284,7 @@ const process = async () => {
   //-------------------------------------------------------------------------------- UPDATE introduction.mdx COMPONENT CARDS --------------------------------------------------------------------------------
 
   const introductionPath = path.join(
-    __dirname,
+    import.meta.dirname,
     "../docs/content/docs/index.mdx",
   );
 

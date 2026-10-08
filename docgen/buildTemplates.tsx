@@ -7,7 +7,7 @@ import type { TsdownPlugin } from "tsdown";
 import { renderPreview } from "./renderPreview";
 import { formatCamelCaseToTitle, formatSnippet } from "./utils";
 
-const tmpDir = join(__dirname, "../.tmp");
+const tmpDir = join(import.meta.dirname, "../.tmp");
 
 export async function buildTemplates() {
   const [{ default: mdx }, { build }, { default: Raw }] = await Promise.all([
@@ -16,21 +16,21 @@ export async function buildTemplates() {
     import("unplugin-raw/rolldown"),
   ]);
 
-  const templates = await glob(join(__dirname, "../src/ui/**/*.mdx"));
+  const templates = await glob(join(import.meta.dirname, "../src/ui/**/*.mdx"));
 
   return await Promise.all(
     templates.map(async (template) => {
       console.log("Building for template ", template);
       const outPath = `${join(
         tmpDir,
-        dirname(relative(join(__dirname, "../src"), template)),
+        dirname(relative(join(import.meta.dirname, "../src"), template)),
         basename(template, ".mdx"),
       )}.mjs`;
 
       const docLocation = join(
-        __dirname,
+        import.meta.dirname,
         `../docs/content/docs/${dirname(
-          relative(join(__dirname, "../src"), template),
+          relative(join(import.meta.dirname, "../src"), template),
         )}/${basename(template)}`,
       );
 
@@ -71,10 +71,9 @@ export async function buildTemplates() {
 
       const paths = await renderPreview(
         <RealComponent />,
-        `${dirname(relative(join(__dirname, "../src"), template)).replace(
-          /\//g,
-          " ",
-        )} ${basename(outPath, ".mjs")}`,
+        `${dirname(
+          relative(join(import.meta.dirname, "../src"), template),
+        ).replace(/\//g, " ")} ${basename(outPath, ".mjs")}`,
         false,
       );
 
@@ -101,7 +100,7 @@ ${await formatSnippet(body)}
         name,
         icon: attributes.icon,
         category: attributes.category,
-        path: relative(join(__dirname, "../src"), template)
+        path: relative(join(import.meta.dirname, "../src"), template)
           .toLowerCase()
           .replace(/\.mdx$/, ""),
         image: paths.imagePath,

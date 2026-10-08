@@ -11,6 +11,8 @@ export default defineConfig({
   },
   format: ["esm", "cjs"],
   platform: "browser",
+  // Let package.json type=module drive .js (ESM) / .cjs (CommonJS) extensions.
+  fixedExtension: false,
   inputOptions: {
     checks: {
       // React ecosystem packages commonly use "use client" markers. Once these
