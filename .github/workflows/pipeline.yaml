@@ -55,6 +55,9 @@ jobs:
       - name: Test with coverage thresholds
         run: pnpm test:coverage
 
+      - name: Smoke test installed CommonJS and ESM exports via Verdaccio
+        run: pnpm test:verdaccio
+
       - name: Upload combined Node and browser coverage report
         if: always()
         uses: actions/upload-artifact@v4
