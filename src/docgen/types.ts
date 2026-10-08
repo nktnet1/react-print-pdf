@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import type { CompileOptions } from "#/compile/compile.tsx";
+import type { CompileOptions } from "#/compile/compile";
 
 interface Example {
   description?: string;

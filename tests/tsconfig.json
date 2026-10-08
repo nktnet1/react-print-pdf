@@ -4,6 +4,9 @@
     "noEmit": true,
     "rootDir": "..",
     "paths": {
+      "#/*": ["../src/*"],
+      "#docgen/*": ["../docgen/*"],
+      "#scripts/*": ["../scripts/*"],
       "react-print-pdf": ["../src/index.ts"]
     },
     "types": ["node"]

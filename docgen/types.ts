@@ -4,4 +4,4 @@ export type {
   EnrichedExample,
   ExtendedDocConfig,
   LucideIconName,
-} from "#/docgen/types.ts";
+} from "#/docgen/types";

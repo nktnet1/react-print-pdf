@@ -1,6 +1,6 @@
 import type React from "react";
-import type { DocConfig } from "#/docgen/types.ts";
-import { Tailwind } from "#/tailwind/tailwind.tsx";
+import type { DocConfig } from "#/docgen/types";
+import { Tailwind } from "#/tailwind/tailwind";
 
 // This provides a loose support for DocuSign fields
 const availableFields = {

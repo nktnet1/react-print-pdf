@@ -4,7 +4,7 @@ import type {
   DocConfig,
   EnrichedExample,
   ExtendedDocConfig,
-} from "#docgen/types.ts";
+} from "#docgen/types";
 
 export const formatCamelCaseToTitle = (str: string) => {
   // Convert camelCase to Title Case with spaces

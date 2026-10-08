@@ -1,7 +1,7 @@
-import type { CompileOptions } from "#/compile/compile.tsx";
-import { baseCss, renderPreview } from "#docgen/renderPreview.tsx";
-import type { EnrichedExample } from "#docgen/types.ts";
-import { formatSnippet } from "#docgen/utils.ts";
+import type { CompileOptions } from "#/compile/compile";
+import { baseCss, renderPreview } from "#docgen/renderPreview";
+import type { EnrichedExample } from "#docgen/types";
+import { formatSnippet } from "#docgen/utils";
 
 export const buildExample = async (
   example: EnrichedExample,

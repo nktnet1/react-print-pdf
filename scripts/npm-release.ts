@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import {
   RELEASE_GITHUB_REPOSITORY,
   RELEASE_PACKAGE_NAME,
-} from "#scripts/release-policy.ts";
+} from "#scripts/release-policy";
 
 export const BOOTSTRAP_VERSION = "0.0.0-bootstrap.0";
 export const BOOTSTRAP_TAG = "bootstrap";

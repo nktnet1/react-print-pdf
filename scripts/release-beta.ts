@@ -2,8 +2,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { nextBetaVersion } from "#scripts/beta-version.ts";
-import { RELEASE_PACKAGE_NAME } from "#scripts/release-policy.ts";
+import { nextBetaVersion } from "#scripts/beta-version";
+import { RELEASE_PACKAGE_NAME } from "#scripts/release-policy";
 
 const { values } = parseArgs({
   options: {

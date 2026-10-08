@@ -1,11 +1,11 @@
 import "#/generic.css";
 
-export type { CompileOptions } from "#/compile/compile.tsx";
-export { compile } from "#/compile/compile.tsx";
-export { CSS, Font, Margins } from "#/css/css.tsx";
-export { Footnote } from "#/footnote/footnote.tsx";
-export { Latex } from "#/latex/latex.tsx";
-export { Markdown } from "#/markdown/markdown.tsx";
+export type { CompileOptions } from "#/compile/compile";
+export { compile } from "#/compile/compile";
+export { CSS, Font, Margins } from "#/css/css";
+export { Footnote } from "#/footnote/footnote";
+export { Latex } from "#/latex/latex";
+export { Markdown } from "#/markdown/markdown";
 export {
   CurrentPageTop,
   FloatBottom,
@@ -13,9 +13,9 @@ export {
   PageBottom,
   PageBreak,
   PageTop,
-} from "#/shell/shell.tsx";
-export { Field } from "#/signature/signature.tsx";
-export { Tailwind } from "#/tailwind/tailwind.tsx";
+} from "#/shell/shell";
+export { Field } from "#/signature/signature";
+export { Tailwind } from "#/tailwind/tailwind";
 export {
   PageNumber,
   PagesNumber,
@@ -25,4 +25,4 @@ export {
   RunningH4,
   RunningH5,
   RunningH6,
-} from "#/variables/variables.tsx";
+} from "#/variables/variables";

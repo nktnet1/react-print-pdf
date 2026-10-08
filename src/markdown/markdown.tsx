@@ -6,10 +6,10 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { CSS } from "#/css/css.tsx";
-import type { DocConfig } from "#/docgen/types.ts";
-import { PageBreak } from "#/shell/shell.tsx";
-import { Tailwind } from "#/tailwind/tailwind.tsx";
+import { CSS } from "#/css/css";
+import type { DocConfig } from "#/docgen/types";
+import { PageBreak } from "#/shell/shell";
+import { Tailwind } from "#/tailwind/tailwind";
 
 interface TocRendererProps {
   heading: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";

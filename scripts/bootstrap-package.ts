@@ -9,11 +9,11 @@ import {
   packageVersionExists,
   run,
   validateReleaseManifest,
-} from "#scripts/npm-release.ts";
+} from "#scripts/npm-release";
 import {
   RELEASE_GITHUB_REPOSITORY,
   RELEASE_PACKAGE_NAME,
-} from "#scripts/release-policy.ts";
+} from "#scripts/release-policy";
 
 const { values } = parseArgs({
   options: {

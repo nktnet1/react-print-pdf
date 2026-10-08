@@ -4,8 +4,8 @@ import frontmatter from "front-matter";
 import { glob } from "glob";
 import remarkFrontmatter from "remark-frontmatter";
 import type { TsdownPlugin } from "tsdown";
-import { renderPreview } from "#docgen/renderPreview.tsx";
-import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils.ts";
+import { renderPreview } from "#docgen/renderPreview";
+import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils";
 
 const tmpDir = join(import.meta.dirname, "../.tmp");
 

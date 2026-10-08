@@ -2,13 +2,13 @@ import { Button, ChakraProvider } from "@chakra-ui/react";
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import postcss from "postcss";
 import type React from "react";
-import { CSS } from "#/css/css.tsx";
-import type { DocConfig } from "#/docgen/types.ts";
+import { CSS } from "#/css/css";
+import type { DocConfig } from "#/docgen/types";
 import {
   createTailwindStyleCollector,
   Tailwind,
   TailwindStyleCollectorProvider,
-} from "#/tailwind/tailwind.tsx";
+} from "#/tailwind/tailwind";
 import footnoteStyles from "../footnote/footnote.css?raw";
 import genericStyles from "../generic.css?raw";
 import shellStyles from "../shell/shell.css?raw";

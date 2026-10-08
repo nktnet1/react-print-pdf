@@ -2,15 +2,15 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as glob from "glob";
 import * as docgen from "react-docgen-typescript";
-import { buildFileMarkdown } from "#docgen/buildFileMarkdown.ts";
-import { buildTemplateList, buildTemplates } from "#docgen/buildTemplates.tsx";
-import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction.tsx";
-import type { DocConfig, LucideIconName } from "#docgen/types.ts";
+import { buildFileMarkdown } from "#docgen/buildFileMarkdown";
+import { buildTemplateList, buildTemplates } from "#docgen/buildTemplates";
+import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction";
+import type { DocConfig, LucideIconName } from "#docgen/types";
 import {
   formatCamelCaseToTitle,
   getTemplateContents,
   mergeTemplateInfo,
-} from "#docgen/utils.ts";
+} from "#docgen/utils";
 
 const tmpDir = path.join(import.meta.dirname, "../.tmp");
 const docsPath = path.join(

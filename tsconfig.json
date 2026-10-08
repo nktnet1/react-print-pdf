@@ -14,7 +14,11 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "paths": {
+      "#/*": ["./src/*"],
+      "#docgen/*": ["./docgen/*"],
+      "#scripts/*": ["./scripts/*"]
+    }
   },
   "include": ["src"]
 }

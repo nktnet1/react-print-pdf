@@ -8,12 +8,12 @@ import { config } from "dotenv";
 import { glob } from "glob";
 import { fromBuffer } from "pdf2pic";
 import type React from "react";
-import type { CompileOptions } from "#/compile/compile.tsx";
+import type { CompileOptions } from "#/compile/compile";
 
 config({ path: ".env.local" });
 config();
 
-type CompileModule = Pick<typeof import("#/compile/compile.tsx"), "compile">;
+type CompileModule = Pick<typeof import("#/compile/compile"), "compile">;
 
 const loadCompileModule = async (): Promise<CompileModule> => {
   const distEntry = pathToFileURL(

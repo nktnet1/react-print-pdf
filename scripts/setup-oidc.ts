@@ -8,13 +8,13 @@ import {
   repositoryRoot,
   run,
   validateReleaseManifest,
-} from "#scripts/npm-release.ts";
+} from "#scripts/npm-release";
 import {
   RELEASE_ENVIRONMENT,
   RELEASE_GITHUB_REPOSITORY,
   RELEASE_PACKAGE_NAME,
   RELEASE_WORKFLOW_FILE,
-} from "#scripts/release-policy.ts";
+} from "#scripts/release-policy";
 
 const MINIMUM_NPM_VERSION = [11, 15, 0] as const;
 
