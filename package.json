@@ -1,6 +1,6 @@
 {
   "name": "react-print-pdf",
-  "version": "0.1.150",
+  "version": "0.1.151-beta.1",
   "type": "module",
   "description": "Open-source React components and utilities for building printable PDF documents",
   "main": "./dist/index.cjs",
