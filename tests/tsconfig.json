@@ -10,7 +10,7 @@
   "include": [
     "./**/*.ts",
     "./**/*.tsx",
-    "../vitest.config.mts",
+    "../vitest.config.ts",
     "../src/raw.d.ts"
   ]
 }
