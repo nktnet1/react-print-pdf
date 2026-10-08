@@ -52,6 +52,9 @@ const requireModernNpm = (): void => {
 type TrustConfiguration = {
   id?: string;
   type?: string;
+  file?: string;
+  repository?: string;
+  environment?: string;
   claims?: {
     repository?: string;
     workflow_ref?: { file?: string };
@@ -60,12 +63,30 @@ type TrustConfiguration = {
   permissions?: string[];
 };
 
+const trustRepository = (
+  configuration: TrustConfiguration,
+): string | undefined =>
+  configuration.repository ?? configuration.claims?.repository;
+
+const trustWorkflowFile = (
+  configuration: TrustConfiguration,
+): string | undefined =>
+  configuration.file ?? configuration.claims?.workflow_ref?.file;
+
+const trustEnvironment = (
+  configuration: TrustConfiguration,
+): string | undefined =>
+  configuration.environment ?? configuration.claims?.environment;
+
 const isExpectedTrust = (configuration: TrustConfiguration): boolean =>
   configuration.type === "github" &&
-  configuration.claims?.repository === RELEASE_GITHUB_REPOSITORY &&
-  configuration.claims.workflow_ref?.file === RELEASE_WORKFLOW_FILE &&
-  configuration.claims.environment === RELEASE_ENVIRONMENT &&
+  trustRepository(configuration) === RELEASE_GITHUB_REPOSITORY &&
+  trustWorkflowFile(configuration) === RELEASE_WORKFLOW_FILE &&
+  trustEnvironment(configuration) === RELEASE_ENVIRONMENT &&
   configuration.permissions?.includes("createPackage") === true;
+
+const isTrustConfiguration = (value: unknown): value is TrustConfiguration =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const commandOutput = (error: unknown): string => {
   if (!(error instanceof Error)) return String(error);
@@ -129,7 +150,7 @@ const primeTrustAuthentication = (): void => {
 };
 
 const listTrust = (): TrustConfiguration[] => {
-  let output: string;
+  let output = "";
   try {
     output = run(
       "npm",
@@ -160,10 +181,11 @@ const listTrust = (): TrustConfiguration[] => {
     });
   }
 
-  if (!Array.isArray(parsed)) {
+  const configurations = Array.isArray(parsed) ? parsed : [parsed];
+  if (!configurations.every(isTrustConfiguration)) {
     throw new Error("Unexpected response from npm trust list --json");
   }
-  return parsed as TrustConfiguration[];
+  return configurations;
 };
 
 const createTrust = (): void => {
@@ -258,8 +280,7 @@ The trusted publisher is restricted to:
   if (trust.length > 0 && !values.replace) {
     const summary = trust
       .map((configuration) => {
-        const claims = configuration.claims;
-        return `${configuration.id ?? "unknown-id"}: ${configuration.type ?? "unknown"} ${claims?.repository ?? "unknown-repo"} ${claims?.workflow_ref?.file ?? "unknown-workflow"} ${claims?.environment ?? "no-environment"}`;
+        return `${configuration.id ?? "unknown-id"}: ${configuration.type ?? "unknown"} ${trustRepository(configuration) ?? "unknown-repo"} ${trustWorkflowFile(configuration) ?? "unknown-workflow"} ${trustEnvironment(configuration) ?? "no-environment"}`;
       })
       .join("\n  ");
     throw new Error(
