@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -14,6 +14,8 @@ export default defineConfig({
     target: "esnext",
   },
   test: {
+    include: ["tests/**/*.test.{ts,tsx}"],
+    exclude: [...configDefaults.exclude, "tests/**/*.node.test.tsx"],
     browser: {
       enabled: true,
       headless: true,

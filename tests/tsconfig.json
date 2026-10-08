@@ -15,6 +15,7 @@
     "./**/*.ts",
     "./**/*.tsx",
     "../vitest.config.ts",
+    "../vitest.node.config.ts",
     "../src/raw.d.ts"
   ]
 }

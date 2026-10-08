@@ -54,7 +54,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "test": "playwright install chromium && npm run build && vitest run",
+    "test": "playwright install chromium && npm run build && vitest run --config vitest.node.config.ts && vitest run",
     "dev": "pnpm --dir ./docs dev",
     "build-components": "npm run build && tsx ./docgen/index.ts",
     "prune-docs": "tsx ./docgen/prune.ts",
@@ -112,7 +112,6 @@
     "@csstools/postcss-is-pseudo-class": "^6.0.3",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
-    "@emotion/server": "^11.11.0",
     "html-entities": "^2.6.0",
     "katex": "^0.19.0",
     "markdown-to-jsx": "^7.7.17",

@@ -13,3 +13,7 @@ pack
 *.bundle
 *.patch
 
+.vitest/
+.vitest-attachments/
+
+tests/__screenshots__/

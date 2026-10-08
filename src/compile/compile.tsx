@@ -23,6 +23,22 @@ const printStyles = [
   variableStyles,
 ].join("\n");
 
+const emotionStyleTagPattern =
+  /<style\b[^>]*\bdata-emotion=(?:"[^"]*"|'[^']*')[^>]*>([\s\S]*?)<\/style>/gi;
+
+const extractEmotionStyleTags = (html: string) => {
+  let css = "";
+  const cleanedHtml = html.replace(
+    emotionStyleTagPattern,
+    (_styleTag, styleContents: string) => {
+      css += styleContents;
+      return "";
+    },
+  );
+
+  return { html: cleanedHtml, css };
+};
+
 export interface CompileOptions {
   /**
    * Whether to use Emotion CSS.
@@ -63,13 +79,24 @@ export const compile = async (
 
   const { CacheProvider } = await import("@emotion/react");
   const { default: createCache } = await import("@emotion/cache");
-  const { default: createEmotionServer } = await import(
-    "@emotion/server/create-instance"
-  );
 
-  const cache = createCache({ key: "css" });
-  const { extractCriticalToChunks, constructStyleTagsFromChunks } =
-    createEmotionServer(cache);
+  const styleContainer =
+    typeof document === "undefined" ? undefined : document.createElement("div");
+  const cache = createCache({
+    key: "react-print-pdf",
+    ...(styleContainer
+      ? {
+          container: styleContainer,
+          // Emotion's speedy mode inserts CSS through CSSOM, where textContent
+          // is intentionally empty. Disable it for this detached collector.
+          speedy: false,
+        }
+      : {}),
+  });
+
+  // On Node, compat mode keeps generated rules in cache.inserted instead of
+  // requiring @emotion/server to recover them later.
+  cache.compat = true;
 
   Element = (
     <TailwindStyleCollectorProvider collector={tailwindCollector}>
@@ -77,16 +104,24 @@ export const compile = async (
     </TailwindStyleCollectorProvider>
   );
 
-  const html = await tailwindCollector.resolve(
+  const renderedHtml = await tailwindCollector.resolve(
     ReactDOMServer.renderToString(Element),
   );
+  const { html, css: inlineEmotionCss } = extractEmotionStyleTags(renderedHtml);
+  const cachedEmotionCss = styleContainer
+    ? Array.from(
+        styleContainer.querySelectorAll<HTMLStyleElement>(
+          "style[data-emotion]",
+        ),
+        (style) => style.textContent || "",
+      ).join("")
+    : Object.values(cache.inserted)
+        .filter((value): value is string => typeof value === "string")
+        .join("");
 
-  const chunks = extractCriticalToChunks(html);
-  const styles = constructStyleTagsFromChunks(chunks);
-  const mergedStylesheet = styles.replace(
-    /<\/?style( data-emotion="[a-z0-9- ]+")?>/gm,
-    "",
-  );
+  cache.sheet.flush();
+
+  const mergedStylesheet = `${inlineEmotionCss}${cachedEmotionCss}`;
 
   const { default: cssvariables } = await import("postcss-css-variables");
   const { default: logical } = await import("postcss-logical");

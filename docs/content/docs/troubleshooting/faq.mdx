@@ -19,6 +19,12 @@ import { PageBreak } from "react-print-pdf/client";
 
 The package does not include or require a hosted server. `compile()` produces HTML locally in your application.
 
+## Vite warns that `stream` or `events` was externalized
+
+You should not need Node.js `stream` or `events` polyfills for React Print PDF. Older versions pulled in `@emotion/server` for `compile(..., { emotion: true })`; that package depends on legacy Node stream utilities and caused Vite to emit browser-compatibility warnings even when the Emotion path was not being used.
+
+React Print PDF now collects Emotion's generated CSS directly from an isolated Emotion cache, so `@emotion/server` is no longer a runtime dependency. If you still see those warnings after upgrading, inspect your application's dependency graph for another package that imports `@emotion/server`, `html-tokenize`, `multipipe`, or `through`.
+
 ## `gap` or `justify-evenly` looks different in the PDF
 
 React Print PDF keeps Tailwind's standard flexbox output, including `gap`, `row-gap`, `column-gap`, and `justify-content: space-evenly`. The final layout is still determined by the PDF renderer's CSS engine.
