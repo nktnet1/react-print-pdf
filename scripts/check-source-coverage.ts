@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { coverageThresholds } from "../vitest.coverage";
+import { coverageThresholds } from "#config/vitest.coverage";
 
 type Metric = keyof typeof coverageThresholds;
 type Counts = { total: number; covered: number };

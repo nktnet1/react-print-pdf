@@ -23,3 +23,19 @@ test("extracts Emotion CSS without @emotion/server", async () => {
   expect(html).toMatch(/\.react-print-pdf-[a-z0-9-]+/);
   expect(html).not.toContain("<style data-emotion");
 });
+
+test("collects inline Emotion style tags into the resulting stylesheet", async () => {
+  const html = await compile(
+    <main>
+      <style data-emotion="legacy custom">
+        {".inline-emotion { color: rgb(11, 22, 33); }"}
+      </style>
+      <span className="inline-emotion">Inline style</span>
+    </main>,
+    { emotion: true },
+  );
+
+  expect(html).toContain("Inline style");
+  expect(html).toMatch(/\.inline-emotion\s*\{[^}]*color:/);
+  expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
+});

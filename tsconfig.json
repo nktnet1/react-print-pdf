@@ -17,7 +17,8 @@
     "paths": {
       "#/*": ["./src/*"],
       "#docgen/*": ["./docgen/*"],
-      "#scripts/*": ["./scripts/*"]
+      "#scripts/*": ["./scripts/*"],
+      "#config/*": ["./config/*"]
     }
   },
   "include": ["src"]

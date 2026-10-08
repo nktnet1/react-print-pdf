@@ -53,10 +53,10 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --config config/tsdown.config.ts --config-loader tsx",
     "test": "pnpm test:source && pnpm test:package",
     "test:source": "vitest run",
-    "test:package": "pnpm build && vitest run --config vitest.package.config.ts",
+    "test:package": "pnpm build && vitest run --config config/vitest.package.config.ts",
     "test:coverage": "vitest run --coverage && tsx scripts/check-source-coverage.ts coverage/combined/coverage-summary.json && pnpm test:package",
     "dev": "pnpm --dir ./docs dev",
     "build-components": "npm run build && tsx ./docgen/index.ts",
@@ -65,9 +65,9 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p tsconfig.tools.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p config/tsconfig.tools.json",
     "docs:build": "pnpm --dir ./docs build",
-    "test:watch": "vitest --config vitest.browser.config.ts --browser.headless=false",
+    "test:watch": "vitest --config config/vitest.browser.config.ts --browser.headless=false",
     "release:beta": "tsx ./scripts/release-beta.ts",
     "bootstrap:package": "tsx ./scripts/bootstrap-package.ts",
     "setup:oidc": "tsx ./scripts/setup-oidc.ts",
@@ -139,7 +139,8 @@
   "imports": {
     "#/*": "./src/*",
     "#docgen/*": "./docgen/*",
-    "#scripts/*": "./scripts/*"
+    "#scripts/*": "./scripts/*",
+    "#config/*": "./config/*.ts"
   },
   "peerDependencies": {
     "playwright": ">=1.42.0"

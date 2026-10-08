@@ -9,7 +9,9 @@
       "#scripts/*": ["../scripts/*"],
       "react-print-pdf": ["../src/index.ts"],
       "react-print-pdf/client": ["../src/client.ts"],
-      "react-print-pdf/playwright": ["../src/playwright/index.ts"]
+      "react-print-pdf/playwright": ["../src/playwright/index.ts"],
+      "#config/*": ["../config/*"],
+      "react-print-pdf/mdx": ["../src/mdx.ts"]
     },
     "types": ["node"]
   },
@@ -17,9 +19,9 @@
     "./**/*.ts",
     "./**/*.tsx",
     "../vitest.config.ts",
-    "../vitest.node.config.ts",
-    "../vitest.browser.config.ts",
-    "../vitest.package.config.ts",
+    "../config/vitest.node.config.ts",
+    "../config/vitest.browser.config.ts",
+    "../config/vitest.package.config.ts",
     "../src/raw.d.ts"
   ]
 }

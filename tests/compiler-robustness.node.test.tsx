@@ -107,3 +107,27 @@ test("unsupported Tailwind imports reject and do not poison the next compilation
   expect(html).toMatch(/\.font-bold\s*\{[^}]*font-weight:/);
   expect(html).toContain("Recovered");
 }, 15_000);
+
+test("legacy corePlugins controls Preflight without requiring a legacy theme", async () => {
+  const withoutPreflight = await compile(
+    <Tailwind config={{ corePlugins: ["display"] }}>
+      <div className="font-bold">No Preflight</div>
+    </Tailwind>,
+  );
+  expect(withoutPreflight).not.toContain("box-sizing: border-box");
+  expect(withoutPreflight).toMatch(/\.font-bold\s*\{[^}]*font-weight:/);
+
+  const withPreflight = await compile(
+    <Tailwind config={{ corePlugins: ["preflight"] }}>
+      <div className="font-bold">With Preflight</div>
+    </Tailwind>,
+  );
+  expect(withPreflight).toContain("box-sizing: border-box");
+
+  const explicitlyEnabled = await compile(
+    <Tailwind config={{ corePlugins: { preflight: false } }} preflight>
+      <div className="font-bold">Explicit Preflight</div>
+    </Tailwind>,
+  );
+  expect(explicitlyEnabled).toContain("box-sizing: border-box");
+}, 15_000);

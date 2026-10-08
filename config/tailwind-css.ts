@@ -4,8 +4,7 @@ import { createRequire } from "node:module";
 // Use exactly the same CSS sources for the published bundle and source tests.
 // Tailwind's compiler does not expand these imports on its own.
 const require = createRequire(import.meta.url);
-/** @param {string} file */
-const cssAsLiteral = (file) =>
+const cssAsLiteral = (file: string) =>
   JSON.stringify(readFileSync(require.resolve(file), "utf8"));
 
 export const tailwindCssDefines = {

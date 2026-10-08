@@ -107,8 +107,12 @@ pnpm test
 
 `test:source` runs the Node and Chromium tests **directly from `src/`** using
 Vitest projects, without a package build. The test configuration uses the same
-Tailwind theme and Preflight CSS definitions as `tsdown`. `test:package` builds
-`dist/` and runs the separate Bun, Vercel, export/declaration, and bundle
+Tailwind theme and Preflight CSS definitions as `tsdown`. The main
+`vitest.config.ts` stays at the repository root for automatic discovery; its
+supporting test configurations and the build configuration live under `config/`.
+Internal tooling imports use the `#config/*` package subpath mapping.
+`test:package` builds `dist/` and runs the separate Bun, Vercel,
+export/declaration, and bundle
 compatibility checks against the **actual published entrypoints**.
 `test` runs both suites in that order.
 
@@ -116,9 +120,12 @@ compatibility checks against the **actual published entrypoints**.
 result once, then runs the published-package tests. Node and Chromium hits are
 merged by Vitest into a single `coverage/combined/` report (HTML, LCOV, and
 JSON summary); build artifacts and vendor runtime code do not count towards
-source coverage. Minimum thresholds are 20% lines/statements, 15% functions,
-and 10% branches. The post-run guard rejects empty `src/` coverage. CI uses
-this command on pull requests and pushes to `main` and uploads the report.
+source coverage. Minimum thresholds are 85% lines/statements, 80% functions,
+and 70% branches (based on the measured source-test baseline). The post-run
+guard rejects empty `src/` coverage. CI uses this command on pull requests and
+pushes to `main` and uploads the report. Export-only entrypoints may show 0%
+coverage because they contain no executable logic; their published imports are
+verified separately by `test:package`.
 
 Chromium is required for the browser suite and PDF integration tests. Install
 it with `pnpm exec playwright install chromium`; the PDF integration tests also

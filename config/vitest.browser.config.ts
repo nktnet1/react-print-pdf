@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
-import { tailwindCssDefines } from "./build/tailwind-css.js";
+import { tailwindCssDefines } from "#config/tailwind-css";
 
 export default defineConfig({
+  root: process.cwd(),
   // The source compiler uses the same inlined Tailwind CSS as tsdown.
   define: tailwindCssDefines,
   resolve: {
@@ -12,15 +13,17 @@ export default defineConfig({
     alias: [
       {
         find: /^#\//,
-        replacement: fileURLToPath(new URL("./src/", import.meta.url)),
+        replacement: fileURLToPath(new URL("../src/", import.meta.url)),
       },
       {
         find: /^react-print-pdf\/client$/,
-        replacement: fileURLToPath(new URL("./src/client.ts", import.meta.url)),
+        replacement: fileURLToPath(
+          new URL("../src/client.ts", import.meta.url),
+        ),
       },
       {
         find: /^react-print-pdf$/,
-        replacement: fileURLToPath(new URL("./src/index.ts", import.meta.url)),
+        replacement: fileURLToPath(new URL("../src/index.ts", import.meta.url)),
       },
     ],
   },
@@ -45,6 +48,8 @@ export default defineConfig({
     target: "esnext",
   },
   test: {
+    // This config lives in config/, but test discovery starts at project root.
+    dir: process.cwd(),
     name: "browser",
     include: ["tests/**/*.test.{ts,tsx}"],
     exclude: [...configDefaults.exclude, "tests/**/*.node.test.tsx"],

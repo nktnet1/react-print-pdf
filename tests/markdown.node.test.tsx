@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Component, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Markdown } from "react-print-pdf";
 import { expect, test } from "vitest";
@@ -63,4 +63,35 @@ test("detects headings across ReactNode children for a table of contents", () =>
   expect(html).toContain('data-toc-level="2"');
   expect(html).toContain("First");
   expect(html).toContain("Second");
+});
+
+test("TOC discovers nested headings returned by class and function components", () => {
+  class ClassHeading extends Component {
+    render() {
+      return <h2 id="class-section">Class section</h2>;
+    }
+  }
+
+  const FunctionHeading = () => <h3 id="function-section">Function section</h3>;
+
+  const html = renderToStaticMarkup(
+    <Markdown
+      tocRenderer={({ level, id, children }) => (
+        <a href={`#${id}`} data-toc-level={level}>
+          {children}
+        </a>
+      )}
+    >
+      {"<Toc />\n\n"}
+      <section>
+        <ClassHeading />
+        <FunctionHeading />
+      </section>
+    </Markdown>,
+  );
+
+  expect(html).toContain('href="#class-section"');
+  expect(html).toContain('href="#function-section"');
+  expect(html).toContain('data-toc-level="2"');
+  expect(html).toContain('data-toc-level="3"');
 });

@@ -1,9 +1,13 @@
+import { fileURLToPath } from "node:url";
 import nodePolyfills from "@rolldown/plugin-node-polyfills";
 import { defineConfig } from "tsdown";
 import Raw from "unplugin-raw/rolldown";
-import { tailwindCssDefines } from "./build/tailwind-css.js";
+import { tailwindCssDefines } from "#config/tailwind-css";
 
+// tsdown otherwise resolves entries relative to this config/ directory.
+// Keep the package root stable for entries, tsconfig discovery, and dist output.
 export default defineConfig({
+  cwd: fileURLToPath(new URL("../", import.meta.url)),
   define: tailwindCssDefines,
   entry: {
     index: "src/index.ts",
