@@ -1,5 +1,8 @@
 const assert = require("node:assert/strict");
+const { styleText } = require("node:util");
+const { Global, jsx } = require("@emotion/react");
 const { createElement } = require("react");
+const { verifyConsumerCompilation } = require("./assert-compilation.cjs");
 
 const entrypoints = [
   ["react-print-pdf", "compile", "index"],
@@ -14,11 +17,18 @@ for (const [name, exportName, entry] of entrypoints) {
   assert.equal(typeof require(name)[exportName], "function", name);
 }
 
-const { compile } = require("react-print-pdf");
-compile(createElement("h1", null, "Verdaccio CJS"))
-  .then((html) => {
-    assert.match(html, /Verdaccio CJS/);
-    console.log("CommonJS exports and compilation passed");
+verifyConsumerCompilation({
+  format: "CJS",
+  root: require("react-print-pdf"),
+  client: require("react-print-pdf/client"),
+  createElement,
+  Global,
+  jsx,
+})
+  .then(() => {
+    console.log(
+      `CommonJS exports and installed-package compilation ${styleText("green", "passed")}`,
+    );
   })
   .catch((error) => {
     console.error(error);

@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
+import { styleText } from "node:util";
+import { Global, jsx } from "@emotion/react";
 import { createElement } from "react";
 import * as root from "react-print-pdf";
 import * as client from "react-print-pdf/client";
 import * as mdx from "react-print-pdf/mdx";
 import * as playwright from "react-print-pdf/playwright";
+import compilation from "./assert-compilation.cjs";
 
 const entrypoints = [
   ["react-print-pdf", root, "compile", "index"],
@@ -23,6 +26,14 @@ for (const [name, exports, exportName, entry] of entrypoints) {
   assert.equal(typeof exports[exportName], "function", name);
 }
 
-const html = await root.compile(createElement("h1", null, "Verdaccio ESM"));
-assert.match(html, /Verdaccio ESM/);
-console.log("ESM exports and compilation passed");
+await compilation.verifyConsumerCompilation({
+  format: "ESM",
+  root,
+  client,
+  createElement,
+  Global,
+  jsx,
+});
+console.log(
+  `ESM exports and installed-package compilation ${styleText("green", "passed")}`,
+);

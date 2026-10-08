@@ -55,7 +55,7 @@ jobs:
       - name: Test with coverage thresholds
         run: pnpm test:coverage
 
-      - name: Smoke test installed CommonJS and ESM exports via Verdaccio
+      - name: Smoke test installed CJS, ESM and Vite/Chromium via Verdaccio
         run: pnpm test:verdaccio
 
       - name: Upload combined Node and browser coverage report
