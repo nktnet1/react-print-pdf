@@ -113,6 +113,7 @@ export const compile = async (
     // Emotion's browser build inserts styles from React insertion effects,
     // which renderToString() never executes. Render into a detached root so
     // both class styles and <Global /> rules reach this isolated cache.
+    /* v8 ignore next -- @preserve */
     const [{ createRoot }, { flushSync }] = await Promise.all([
       import("react-dom/client"),
       import("react-dom"),
@@ -148,6 +149,7 @@ export const compile = async (
 
   const mergedStylesheet = `${inlineEmotionCss}${cachedEmotionCss}`;
 
+  /* v8 ignore next -- @preserve */
   const { default: cssvariables } = await import("postcss-css-variables");
   const { default: logical } = await import("postcss-logical");
 
