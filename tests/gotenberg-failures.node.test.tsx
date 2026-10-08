@@ -1,4 +1,9 @@
-import { convertHtmlWithGotenberg, type GotenbergAsset } from "react-print-pdf";
+import { jsx } from "@emotion/react";
+import {
+  compileWithGotenberg,
+  convertHtmlWithGotenberg,
+  type GotenbergAsset,
+} from "react-print-pdf";
 import { expect, test, vi } from "vitest";
 
 const endpoint = "http://gotenberg:3000";
@@ -63,6 +68,77 @@ test("includes uploaded assets and respects custom request headers", async () =>
   expect(new TextDecoder().decode(pdf)).toBe("%PDF-1.7");
 });
 
+test.each([
+  "  <!DOCTYPE HTML><html><body>Existing doctype</body></html>",
+  '\n<html lang="en"><body>Existing html element</body></html>',
+])("preserves an existing complete HTML document", async (html) => {
+  const fetcher: typeof fetch = async (_input, init) => {
+    const body = init?.body as FormData;
+    const document = body.get("files") as File;
+    expect(await document.text()).toBe(html);
+    return new Response("%PDF");
+  };
+
+  await convertHtmlWithGotenberg(html, { baseUrl: endpoint, fetch: fetcher });
+});
+
+test("normalizes nested service URLs and serializes zero, false and unset fields", async () => {
+  const fetcher = vi.fn<typeof fetch>(async (input, init) => {
+    expect(String(input)).toBe(
+      "https://pdf.example.test/api/forms/chromium/convert/html",
+    );
+
+    const body = init?.body as FormData;
+    expect(body.get("quality")).toBe("0");
+    expect(body.get("printBackground")).toBe("false");
+    expect(body.has("unsetField")).toBe(false);
+    expect(body.get("preferCssPageSize")).toBe("true");
+
+    const headers = new Headers(init?.headers);
+    expect(headers.get("Authorization")).toBe("Basic dXNlcjpwYXNz");
+    expect(headers.has("Content-Type")).toBe(false);
+
+    return new Response("%PDF");
+  });
+
+  await convertHtmlWithGotenberg("<p>Report</p>", {
+    baseUrl: "https://pdf.example.test/api///",
+    formFields: { quality: 0, printBackground: false, unsetField: undefined },
+    headers: {
+      Authorization: "Bearer should-be-overridden",
+      "Content-Type": "application/json",
+    },
+    auth: { username: "user", password: "pass" },
+    fetch: fetcher,
+  });
+
+  expect(fetcher).toHaveBeenCalledOnce();
+});
+
+test("forwards Emotion compilation options to the Gotenberg document", async () => {
+  const fetcher: typeof fetch = async (_input, init) => {
+    const body = init?.body as FormData;
+    const document = body.get("files") as File;
+    const html = await document.text();
+    expect(html).toContain("Styled Gotenberg document");
+    expect(html).toContain("#123456");
+    expect(html).toMatch(/\.react-print-pdf-[a-z0-9-]+/);
+    expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
+    return new Response("%PDF");
+  };
+
+  const result = await compileWithGotenberg(
+    jsx("p", { css: { color: "#123456" } }, "Styled Gotenberg document"),
+    {
+      baseUrl: endpoint,
+      compile: { emotion: true },
+      fetch: fetcher,
+    },
+  );
+
+  expect(new TextDecoder().decode(result)).toBe("%PDF");
+});
+
 test.each(["", "index.html", "images/logo.png", "images\\logo.png"])(
   "rejects unsafe or reserved asset filename %j before calling fetch",
   async (name) => {
@@ -121,6 +197,27 @@ test("propagates external cancellation and removes its abort listener", async ()
 
   await rejection;
   expect(removed).toHaveBeenCalledWith("abort", expect.any(Function));
+});
+
+test("cleans up an external abort listener after a successful request", async () => {
+  const controller = new AbortController();
+  const removed = vi.spyOn(controller.signal, "removeEventListener");
+  let requestSignal: AbortSignal | undefined;
+
+  const result = await convertHtmlWithGotenberg("<p>Report</p>", {
+    baseUrl: endpoint,
+    signal: controller.signal,
+    fetch: async (_input, init) => {
+      requestSignal = init?.signal ?? undefined;
+      return new Response("%PDF");
+    },
+  });
+
+  expect(new TextDecoder().decode(result)).toBe("%PDF");
+  expect(removed).toHaveBeenCalledWith("abort", expect.any(Function));
+  expect(requestSignal?.aborted).toBe(false);
+  controller.abort(new Error("too late to cancel"));
+  expect(requestSignal?.aborted).toBe(false);
 });
 
 test("honours an already-aborted signal", async () => {

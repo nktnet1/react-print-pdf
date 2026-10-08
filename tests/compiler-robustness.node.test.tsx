@@ -35,6 +35,37 @@ test("concurrent Tailwind compilations do not leak candidates or themes", async 
   }
 }, 15_000);
 
+test("sibling Tailwind regions keep conflicting theme definitions separate", async () => {
+  const html = await compile(
+    <>
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #123456; }"
+      >
+        <p className="bg-shared">First region</p>
+      </Tailwind>
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #654321; }"
+      >
+        <p className="bg-shared">Second region</p>
+      </Tailwind>
+    </>,
+  );
+
+  const regionStyles = Array.from(
+    html.matchAll(/<style>([\s\S]*?)<\/style>/g),
+    ([, css]) => css,
+  ).filter((css) => css.includes(".bg-shared"));
+
+  expect(regionStyles).toHaveLength(2);
+  expect(regionStyles[0]).toContain("#123456");
+  expect(regionStyles[0]).not.toContain("#654321");
+  expect(regionStyles[1]).toContain("#654321");
+  expect(regionStyles[1]).not.toContain("#123456");
+  expect(html).not.toContain("data-react-print-tailwind-");
+}, 15_000);
+
 test("legacy theme extensions work without the default Preflight reset", async () => {
   const html = await compile(
     <Tailwind
@@ -130,6 +161,21 @@ test("legacy corePlugins controls Preflight without requiring a legacy theme", a
     </Tailwind>,
   );
   expect(explicitlyEnabled).toContain("box-sizing: border-box");
+}, 15_000);
+
+test("explicitly disabling Preflight overrides a legacy array that enables it", async () => {
+  const html = await compile(
+    <Tailwind
+      config={{ corePlugins: ["preflight"], content: ["./no-such-file.tsx"] }}
+      preflight={false}
+    >
+      <p className="font-bold">Explicit override</p>
+    </Tailwind>,
+  );
+
+  expect(html).not.toContain("box-sizing: border-box");
+  expect(html).toMatch(/\.font-bold\s*\{[^}]*font-weight:/);
+  expect(html).toContain("Explicit override");
 }, 15_000);
 
 test("unsupported Tailwind plugins fail with an actionable error", async () => {

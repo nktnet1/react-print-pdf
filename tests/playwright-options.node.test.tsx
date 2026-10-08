@@ -1,10 +1,14 @@
+import { jsx } from "@emotion/react";
 import type { Browser, BrowserContext, Page } from "playwright";
-import { convertHtmlWithPlaywright } from "react-print-pdf/playwright";
+import {
+  compileWithPlaywright,
+  convertHtmlWithPlaywright,
+} from "react-print-pdf/playwright";
 import { expect, test, vi } from "vitest";
 
 const createBrowser = () => {
   const events: string[] = [];
-  const setContent = vi.fn(async () => {
+  const setContent = vi.fn(async (_html: string) => {
     events.push("setContent");
   });
   const evaluate = vi.fn(async (callback: () => Promise<void>) => {
@@ -113,4 +117,88 @@ test("can skip waiting for fonts and leaves complete HTML documents unchanged", 
   expect(fixture.evaluate).not.toHaveBeenCalled();
   expect(fixture.emulateMedia).not.toHaveBeenCalled();
   expect(fixture.events).toEqual(["setContent", "pdf", "close context"]);
+});
+
+test("forwards browser options and awaits the readiness hook before printing", async () => {
+  const fixture = createBrowser();
+  const document =
+    '  <HTML lang="en"><body>Preserve complete HTML</body></HTML>';
+
+  await convertHtmlWithPlaywright(document, {
+    browser: fixture.browser,
+    context: { viewport: { width: 640, height: 480 } },
+    setContent: { waitUntil: "networkidle" },
+    media: null,
+    pdf: { preferCSSPageSize: false, printBackground: false, outline: false },
+    waitForFonts: false,
+    onPageReady: async () => {
+      await Promise.resolve();
+      fixture.events.push("ready");
+    },
+  });
+
+  expect(fixture.browser.newContext).toHaveBeenCalledWith({
+    viewport: { width: 640, height: 480 },
+  });
+  expect(fixture.setContent).toHaveBeenCalledWith(document, {
+    waitUntil: "networkidle",
+  });
+  expect(fixture.emulateMedia).toHaveBeenCalledWith({ media: null });
+  expect(fixture.pdf).toHaveBeenCalledWith({
+    preferCSSPageSize: false,
+    printBackground: false,
+    outline: false,
+    tagged: true,
+  });
+  expect(fixture.evaluate).not.toHaveBeenCalled();
+  expect(fixture.events).toEqual([
+    "setContent",
+    "media",
+    "ready",
+    "pdf",
+    "close context",
+  ]);
+});
+
+test.each(["setContent", "pdf"] as const)(
+  "closes the isolated context when %s fails",
+  async (operation) => {
+    const fixture = createBrowser();
+    const failure = new Error(`${operation} failed`);
+    fixture[operation].mockRejectedValueOnce(failure);
+
+    await expect(
+      convertHtmlWithPlaywright("<p>Failed document</p>", {
+        browser: fixture.browser,
+        waitForFonts: false,
+      }),
+    ).rejects.toBe(failure);
+
+    expect(fixture.closeContext).toHaveBeenCalledOnce();
+    expect(fixture.closeBrowser).not.toHaveBeenCalled();
+    if (operation === "setContent") {
+      expect(fixture.pdf).not.toHaveBeenCalled();
+    }
+  },
+);
+
+test("passes Emotion compile options through to Playwright", async () => {
+  const fixture = createBrowser();
+
+  const pdf = await compileWithPlaywright(
+    jsx("p", { css: { color: "#123456" } }, "Styled document"),
+    {
+      browser: fixture.browser,
+      compile: { emotion: true },
+      waitForFonts: false,
+    },
+  );
+
+  const html = fixture.setContent.mock.calls[0]?.[0];
+  expect(html).toContain("Styled document");
+  expect(html).toContain("#123456");
+  expect(html).toMatch(/\.react-print-pdf-[a-z0-9-]+/);
+  expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
+  expect(Buffer.from(pdf).toString()).toBe("%PDF-1.7");
+  expect(fixture.closeContext).toHaveBeenCalledOnce();
 });

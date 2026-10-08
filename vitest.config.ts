@@ -14,7 +14,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["**/node_modules/**", "src/**/*.d.ts", "src/docgen/**"],
+      exclude: [
+        "**/node_modules/**",
+        "src/**/*.d.ts",
+        "src/docgen/**",
+        // Re-export entrypoints contain no executable lines to cover.
+        "src/client.ts",
+        "src/index.ts",
+        "src/playwright/index.ts",
+      ],
       reporter: ["text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage/combined",
       reportOnFailure: true,

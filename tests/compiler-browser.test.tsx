@@ -1,4 +1,5 @@
 import { Global, jsx } from "@emotion/react";
+import { useLayoutEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { compile, Tailwind } from "react-print-pdf";
 import { expect, test, vi } from "vitest";
@@ -228,4 +229,24 @@ test("browser Emotion compilation cleans up after a render failure", async () =>
   );
   const html = await compile(<p>Can still compile</p>, { emotion: true });
   expect(html).toContain("Can still compile");
+});
+
+test("browser Emotion compilation unmounts detached React effects before returning", async () => {
+  const events: string[] = [];
+  const Tracked = () => {
+    useLayoutEffect(() => {
+      events.push("mounted");
+      return () => {
+        events.push("unmounted");
+      };
+    }, []);
+
+    return <p data-detached-render>Detached React root</p>;
+  };
+
+  const html = await compile(<Tracked />, { emotion: true });
+
+  expect(html).toContain('data-detached-render="true"');
+  expect(html).toContain("Detached React root");
+  expect(events).toEqual(["mounted", "unmounted"]);
 });

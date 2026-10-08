@@ -15,6 +15,10 @@ import {
   PagesNumber,
   PageTop,
   RunningH1,
+  RunningH2,
+  RunningH3,
+  RunningH4,
+  RunningH5,
   RunningH6,
 } from "react-print-pdf";
 import { expect, test } from "vitest";
@@ -27,6 +31,17 @@ test("CSS escapes closing tags instead of allowing markup injection", () => {
   expect(html).toContain("&lt;/style>");
   expect(html).not.toContain("<script>");
   expect(html.match(/<\/style>/g)).toHaveLength(1);
+});
+
+test("CSS rewrites unsupported :where selectors without escaping valid CSS quotes", () => {
+  const html = renderToStaticMarkup(
+    <CSS>{`:where(.chapter, .appendix)::before { content: "Section"; }`}</CSS>,
+  );
+
+  expect(html).toContain(
+    ':is(.chapter, .appendix)::before { content: "Section"; }',
+  );
+  expect(html).not.toContain(":where(");
 });
 
 test("Font emits a stylesheet import", () => {
@@ -121,6 +136,20 @@ test("page counters emit the intended counter styles", () => {
   expect(html).toContain('class="react-print-pages-number-decimal"');
 });
 
+test("page counters default to decimal for current and total pages", () => {
+  const html = renderToStaticMarkup(
+    <>
+      <PageNumber />
+      <PagesNumber />
+    </>,
+  );
+
+  expect(html).toContain("counter(page, decimal)");
+  expect(html).toContain("counter(pages, decimal)");
+  expect(html).toContain('class="react-print-page-number-decimal"');
+  expect(html).toContain('class="react-print-pages-number-decimal"');
+});
+
 test("running heading placeholders retain level and decorators", () => {
   const html = renderToStaticMarkup(
     <>
@@ -133,6 +162,21 @@ test("running heading placeholders retain level and decorators", () => {
   expect(html).toContain('data-before="Chapter: "');
   expect(html).toContain('data-after="!"');
   expect(html).toContain("react-print-h6-contents");
+});
+
+test("running heading placeholders support all intermediate heading levels", () => {
+  const html = renderToStaticMarkup(
+    <>
+      <RunningH2 />
+      <RunningH3 />
+      <RunningH4 />
+      <RunningH5 />
+    </>,
+  );
+
+  for (const level of [2, 3, 4, 5]) {
+    expect(html).toContain(`react-print-h${level}-contents`);
+  }
 });
 
 test("Footnote preserves rich text and includes its print CSS", async () => {
@@ -173,4 +217,39 @@ test("signature fields encode their type and signee without losing input props",
   expect(inputs?.[2]).toContain('name="eSignRadio"');
   expect(inputs?.[2]).toContain('type="radio"');
   expect(inputs?.[2]).toContain('data-react-print-signee="reviewer"');
+});
+
+test.each([
+  ["signHereOptional", "eSignSignHereOptional"],
+  ["signInitialHere", "eSignInitialHere"],
+  ["signInitialHereOptional", "eSignInitialHereOptional"],
+  ["company", "eSignCompany"],
+  ["dateSigned", "eSignDateSigned"],
+  ["title", "eSignTitle"],
+  ["fullName", "eSignFullName"],
+  ["lastName", "eSignLastName"],
+  ["firstName", "eSignFirstName"],
+  ["emailAddress", "eSignEmailAddress"],
+  ["number", "eSignNumber"],
+  ["date", "eSignDate"],
+  ["ssn", "eSignSSN"],
+  ["zip5", "eSignZIP5"],
+  ["zip5dash4", "eSignZIP5DASH4"],
+  ["note", "eSignNote"],
+  ["list", "eSignList"],
+  ["approve", "eSignApprove"],
+  ["decline", "eSignDecline"],
+  ["view", "eSignView"],
+  ["signerAttachment", "eSignSignerAttachment"],
+  ["signerAttachmentOptional", "eSignSignerAttachmentOptional"],
+] as const)("maps DocuSign field %s to %s", (type, expectedName) => {
+  const html = renderToStaticMarkup(
+    <Field type={type} signee="reviewer" name="caller-value" />,
+  );
+
+  expect(html).toContain(`name="${expectedName}"`);
+  expect(html).not.toContain('name="caller-value"');
+  expect(html).toContain('type="text"');
+  expect(html).toContain(`data-react-print-sign="${type}"`);
+  expect(html).toContain('data-react-print-signee="reviewer"');
 });
