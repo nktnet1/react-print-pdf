@@ -1,9 +1,9 @@
 /**
- * Tailwind CSS support for React Print.
+ * Tailwind CSS support for React Print PDF.
  *
  * Tailwind CSS v4 exposes an asynchronous compiler initialization step and a
  * synchronous `build()` step. React's string renderer is synchronous, so the
- * React Print `compile()` helper collects Tailwind regions during render and
+ * React Print PDF `compile()` helper collects Tailwind regions during render and
  * resolves their styles before returning the final HTML string.
  */
 
@@ -44,7 +44,7 @@ export type TailwindProps = {
    * A legacy JavaScript Tailwind config. Tailwind CSS v4 still supports JS
    * configuration through `@config`, but CSS-first configuration is preferred.
    *
-   * Tailwind v4 no longer supports `corePlugins`; React Print only reads the
+   * Tailwind v4 no longer supports `corePlugins`; React Print PDF only reads the
    * legacy `corePlugins.preflight` value for backwards compatibility. The
    * `content` option is ignored because candidates are collected from the
    * rendered children automatically.
@@ -327,7 +327,7 @@ export const __docConfig: DocConfig = {
   icon: "WindIcon",
   description: `A simple, drop-in way to use Tailwind CSS v4 in your components.
 
-Tailwind v4's CSS-first configuration is supported through the \`stylesheet\` prop. Legacy JavaScript configuration remains available through \`config\` for backwards compatibility. When rendering on the server, use React Print's async \`compile()\` helper so Tailwind styles are resolved before the HTML is returned.`,
+Tailwind v4's CSS-first configuration is supported through the \`stylesheet\` prop. Legacy JavaScript configuration remains available through \`config\` for backwards compatibility. When rendering on the server, use React Print PDF's async \`compile()\` helper so Tailwind styles are resolved before the HTML is returned.`,
   components: {
     Tailwind: {
       client: true,

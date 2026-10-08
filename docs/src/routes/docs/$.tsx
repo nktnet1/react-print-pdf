@@ -28,7 +28,9 @@ export const Route = createFileRoute("/docs/$")({
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: loaderData ? `${loaderData.title} | React Print` : "React Print",
+        title: loaderData
+          ? `${loaderData.title} | React Print PDF`
+          : "React Print PDF",
       },
     ],
   }),

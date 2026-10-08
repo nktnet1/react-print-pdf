@@ -17,7 +17,7 @@ const getFrontmatterDescription = (
     docConfig.description ||
     componentDocs.find((component) => component.description)?.description ||
     defaultExample?.description ||
-    `Learn how to use ${docConfig.name} with React Print.`;
+    `Learn how to use ${docConfig.name} with React Print PDF.`;
 
   return description
     .trim()

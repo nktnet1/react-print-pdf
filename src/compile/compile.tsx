@@ -107,14 +107,14 @@ export const __docConfig: DocConfig = {
   name: "compile",
   icon: "CodeXmlIcon",
   description:
-    "Compile a React component to a string with the React Print styles.",
+    "Compile a React component to a string with the React Print PDF styles.",
   components: {
     compile: {
       server: true,
       client: true,
       examples: {
         default: {
-          description: `A simple function to compile a React component to an HTML string with the React Print styles.
+          description: `A simple function to compile a React component to an HTML string with the React Print PDF styles.
           \`\`\`jsx
           const html = await compile(<Component />);
           \`\`\``,

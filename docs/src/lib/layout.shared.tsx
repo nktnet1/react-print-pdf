@@ -8,12 +8,12 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <>
           <img
-            src={withBasePath("/logo/react-print-trim.png")}
-            className="h-8 w-8 rounded-md"
+            src={withBasePath("/logo/icon.svg")}
+            className="h-8 w-8 rounded-full"
             loading="eager"
-            alt="React Print"
+            alt="React Print PDF"
           />
-          React Print
+          React Print PDF
         </>
       ),
     },

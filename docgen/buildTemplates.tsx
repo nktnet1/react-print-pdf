@@ -81,7 +81,7 @@ export async function buildTemplates() {
         attributes.title || formatCamelCaseToTitle(basename(template, ".mdx"));
       const description =
         attributes.description ||
-        `Example ${name} template built with React Print.`;
+        `Example ${name} template built with React Print PDF.`;
 
       let markdown = `---
 title: ${name}
@@ -116,7 +116,7 @@ export const buildTemplateList = async (
 ) => {
   let markdown = `---
 title: Browse
-description: "Browse ready-to-use React Print templates for reports, receipts, NDAs, and invoices."
+description: "Browse ready-to-use React Print PDF templates for reports, receipts, NDAs, and invoices."
 icon: LayoutGridIcon
 ---\n\n`;
 

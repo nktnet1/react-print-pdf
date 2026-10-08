@@ -15,7 +15,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "React Print" },
+      { title: "React Print PDF" },
       {
         name: "description",
         content: "Build print-ready HTML and PDFs with React and TypeScript.",
