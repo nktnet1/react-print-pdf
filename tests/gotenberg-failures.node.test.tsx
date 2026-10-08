@@ -155,3 +155,54 @@ test("forwards fetch failures without leaving a timeout scheduled", async () => 
     vi.useRealTimers();
   }
 });
+
+test("explains when neither a custom fetcher nor the Fetch API is available", async () => {
+  vi.stubGlobal("fetch", undefined);
+  try {
+    await expect(
+      convertHtmlWithGotenberg("<main>Report</main>", { baseUrl: endpoint }),
+    ).rejects.toThrow(
+      "Gotenberg integration requires a runtime with the Fetch API available.",
+    );
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+test("omits absent trace and empty response details from server errors", async () => {
+  const fetcher: typeof fetch = async () =>
+    new Response("  \n  ", { status: 503, statusText: "Service Unavailable" });
+
+  await expect(
+    convertHtmlWithGotenberg("<main>Report</main>", {
+      baseUrl: endpoint,
+      fetch: fetcher,
+    }),
+  ).rejects.toMatchObject({
+    name: "GotenbergError",
+    message: "Gotenberg request failed with 503 Service Unavailable",
+    trace: undefined,
+    responseBody: undefined,
+  });
+});
+
+test("uses global fetch when no request-specific fetcher is supplied", async () => {
+  const globalFetch = vi.fn<typeof fetch>(
+    async () => new Response("%PDF-1.7", { status: 200 }),
+  );
+  vi.stubGlobal("fetch", globalFetch);
+
+  try {
+    const result = await convertHtmlWithGotenberg("<p>Report</p>", {
+      baseUrl: endpoint,
+      formFields: { preferCssPageSize: undefined },
+    });
+
+    expect(new TextDecoder().decode(result)).toBe("%PDF-1.7");
+    const formData = globalFetch.mock.calls[0]?.[1]?.body as FormData;
+    expect(formData.get("preferCssPageSize")).toBe("true");
+    expect(globalFetch).toHaveBeenCalledOnce();
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});

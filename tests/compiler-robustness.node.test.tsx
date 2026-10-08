@@ -131,3 +131,25 @@ test("legacy corePlugins controls Preflight without requiring a legacy theme", a
   );
   expect(explicitlyEnabled).toContain("box-sizing: border-box");
 }, 15_000);
+
+test("unsupported Tailwind plugins fail with an actionable error", async () => {
+  await expect(
+    compile(
+      <Tailwind stylesheet='@plugin "./not-a-bundled-plugin.js";'>
+        <p className="font-bold">Plugin</p>
+      </Tailwind>,
+    ),
+  ).rejects.toThrow(/Unsupported Tailwind module:.*not-a-bundled-plugin/);
+});
+
+test("a manually specified virtual config cannot load without a legacy config", async () => {
+  await expect(
+    compile(
+      <Tailwind stylesheet='@config "react-print-tailwind-config";'>
+        <p className="font-bold">Missing config</p>
+      </Tailwind>,
+    ),
+  ).rejects.toThrow(
+    /Unsupported Tailwind module:.*react-print-tailwind-config/,
+  );
+});

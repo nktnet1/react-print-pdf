@@ -93,6 +93,20 @@ test("layout wrappers preserve their content, classes and extra attributes", () 
   expect(html).toContain("prince-float:bottom");
 });
 
+test("PageTop and NoBreak add their default classes without custom class names", () => {
+  const html = renderToStaticMarkup(
+    <>
+      <PageTop>Header</PageTop>
+      <NoBreak>Body</NoBreak>
+    </>,
+  );
+
+  expect(html).toMatch(/class="react-print-page-top\s*"/);
+  expect(html).toMatch(/class="react-print-no-break\s*"/);
+  expect(html).toContain("Header");
+  expect(html).toContain("Body");
+});
+
 test("page counters emit the intended counter styles", () => {
   const html = renderToStaticMarkup(
     <>

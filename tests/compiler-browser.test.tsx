@@ -205,3 +205,27 @@ test("concurrent browser Emotion compilations keep their styles separate", async
     expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
   }
 }, 30_000);
+
+test("browser Emotion compilation cleans up after a render failure", async () => {
+  const originalEmotionStyleCount = document.head.querySelectorAll(
+    "style[data-emotion]",
+  ).length;
+  const reactErrorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+  const Broken = () => {
+    throw new Error("cannot render print component");
+  };
+
+  try {
+    await expect(compile(<Broken />, { emotion: true })).rejects.toThrow(
+      "cannot render print component",
+    );
+  } finally {
+    reactErrorLog.mockRestore();
+  }
+
+  expect(document.head.querySelectorAll("style[data-emotion]")).toHaveLength(
+    originalEmotionStyleCount,
+  );
+  const html = await compile(<p>Can still compile</p>, { emotion: true });
+  expect(html).toContain("Can still compile");
+});
