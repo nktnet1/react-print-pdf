@@ -1,6 +1,9 @@
 import { appendFileSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { RELEASE_PACKAGE_NAME, validateReleaseTrigger } from "./release-policy";
+import {
+  RELEASE_PACKAGE_NAME,
+  validateReleaseTrigger,
+} from "#scripts/release-policy.ts";
 
 const manifest = JSON.parse(
   readFileSync(resolve(import.meta.dirname, "..", "package.json"), "utf8"),

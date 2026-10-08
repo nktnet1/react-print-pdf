@@ -24,8 +24,8 @@ import { type Config, compile as compileTailwind } from "tailwindcss";
 import preflightCss from "tailwindcss/preflight.css?raw";
 import themeCss from "tailwindcss/theme.css?raw";
 import utilitiesCss from "tailwindcss/utilities.css?raw";
-import { CSS, escapeCss } from "../css/css";
-import type { DocConfig } from "../docgen/types";
+import { CSS, escapeCss } from "#/css/css.tsx";
+import type { DocConfig } from "#/docgen/types.ts";
 
 type LegacyCorePlugins = string[] | Record<string, boolean>;
 

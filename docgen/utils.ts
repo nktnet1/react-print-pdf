@@ -1,6 +1,10 @@
 import * as prettier from "prettier";
 import ts, { type Expression, type ObjectLiteralExpression } from "typescript";
-import type { DocConfig, EnrichedExample, ExtendedDocConfig } from "./types";
+import type {
+  DocConfig,
+  EnrichedExample,
+  ExtendedDocConfig,
+} from "#docgen/types.ts";
 
 export const formatCamelCaseToTitle = (str: string) => {
   // Convert camelCase to Title Case with spaces

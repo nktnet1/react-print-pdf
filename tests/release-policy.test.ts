@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { nextBetaVersion } from "../scripts/beta-version";
+import { nextBetaVersion } from "#scripts/beta-version.ts";
 import {
   parseReleaseVersion,
   validateReleaseTrigger,
-} from "../scripts/release-policy";
+} from "#scripts/release-policy.ts";
 
 describe("release policy", () => {
   test("maps stable and beta versions to npm dist-tags", () => {

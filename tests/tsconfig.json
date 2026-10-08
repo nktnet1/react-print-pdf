@@ -5,7 +5,8 @@
     "rootDir": "..",
     "paths": {
       "react-print-pdf": ["../src/index.ts"]
-    }
+    },
+    "types": ["node"]
   },
   "include": [
     "./**/*.ts",

@@ -1,11 +1,11 @@
 import type { ComponentDoc } from "react-docgen-typescript";
-import { buildExample } from "./buildExample";
+import { buildExample } from "#docgen/buildExample.tsx";
 import type {
   ConfigComponentDoc,
   EnrichedExample,
   ExtendedDocConfig,
-} from "./types";
-import { formatCamelCaseToTitle } from "./utils";
+} from "#docgen/types.ts";
+import { formatCamelCaseToTitle } from "#docgen/utils.ts";
 
 const getFrontmatterDescription = (
   docConfig: ExtendedDocConfig,

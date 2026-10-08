@@ -1,5 +1,5 @@
 // List all the folder paths contained in the docs/images/previews directory
-import { readdirSync, readFileSync, rmSync } from "fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import { glob } from "glob";
 
 const dir = "docs/public/docs/images/previews";

@@ -8,7 +8,7 @@ import {
   RELEASE_GITHUB_REPOSITORY,
   RELEASE_PACKAGE_NAME,
   RELEASE_WORKFLOW_FILE,
-} from "./release-policy";
+} from "#scripts/release-policy.ts";
 
 const BOOTSTRAP_VERSION = "0.0.0-bootstrap.0";
 const BOOTSTRAP_TAG = "bootstrap";

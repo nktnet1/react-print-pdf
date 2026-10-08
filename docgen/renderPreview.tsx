@@ -1,19 +1,19 @@
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { pipeline } from "node:stream/promises";
+import { pathToFileURL } from "node:url";
 import { FileforgeClient } from "@fileforge/client";
-import * as crypto from "crypto";
 import { config } from "dotenv";
-import * as fs from "fs";
 import { glob } from "glob";
-import * as path from "path";
 import { fromBuffer } from "pdf2pic";
 import type React from "react";
-import { pipeline } from "stream/promises";
-import { pathToFileURL } from "url";
-import type { CompileOptions } from "../src/compile/compile";
+import type { CompileOptions } from "#/compile/compile.tsx";
 
 config({ path: ".env.local" });
 config();
 
-type CompileModule = Pick<typeof import("../src/compile/compile"), "compile">;
+type CompileModule = Pick<typeof import("#/compile/compile.tsx"), "compile">;
 
 const loadCompileModule = async (): Promise<CompileModule> => {
   const distEntry = pathToFileURL(

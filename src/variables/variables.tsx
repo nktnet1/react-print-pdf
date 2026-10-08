@@ -1,9 +1,9 @@
 import React from "react";
-import "./headings.css";
-import "./variables.css";
-import { CSS } from "../css/css";
-import type { DocConfig } from "../docgen/types";
-import { PageTop } from "../shell/shell";
+import "#/variables/headings.css";
+import "#/variables/variables.css";
+import { CSS } from "#/css/css.tsx";
+import type { DocConfig } from "#/docgen/types.ts";
+import { PageTop } from "#/shell/shell.tsx";
 
 /**
  * Returns the current page number.

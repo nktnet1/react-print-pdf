@@ -105,7 +105,7 @@
     "remark-frontmatter": "^5.0.0",
     "tsdown": "^0.23.0",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "unplugin-raw": "^0.7.0",
     "vitest": "^4.1.11"
   },
@@ -133,5 +133,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/nktnet1/react-print-pdf.git"
+  },
+  "imports": {
+    "#/*": "./src/*",
+    "#docgen/*": "./docgen/*",
+    "#scripts/*": "./scripts/*"
   }
 }

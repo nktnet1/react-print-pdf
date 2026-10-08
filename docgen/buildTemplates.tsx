@@ -1,11 +1,11 @@
+import { promises as fs } from "node:fs";
+import { basename, dirname, join, relative } from "node:path";
 import frontmatter from "front-matter";
-import { promises as fs } from "fs";
 import { glob } from "glob";
-import { basename, dirname, join, relative } from "path";
 import remarkFrontmatter from "remark-frontmatter";
 import type { TsdownPlugin } from "tsdown";
-import { renderPreview } from "./renderPreview";
-import { formatCamelCaseToTitle, formatSnippet } from "./utils";
+import { renderPreview } from "#docgen/renderPreview.tsx";
+import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils.ts";
 
 const tmpDir = join(import.meta.dirname, "../.tmp");
 
