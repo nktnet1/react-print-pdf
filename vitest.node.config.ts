@@ -3,11 +3,18 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "react-print-pdf": fileURLToPath(
-        new URL("./dist/index.js", import.meta.url),
-      ),
-    },
+    alias: [
+      {
+        find: /^react-print-pdf\/playwright$/,
+        replacement: fileURLToPath(
+          new URL("./dist/playwright/index.js", import.meta.url),
+        ),
+      },
+      {
+        find: /^react-print-pdf$/,
+        replacement: fileURLToPath(new URL("./dist/index.js", import.meta.url)),
+      },
+    ],
   },
   test: {
     environment: "node",

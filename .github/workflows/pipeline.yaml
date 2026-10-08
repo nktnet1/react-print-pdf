@@ -49,5 +49,8 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Install PDF inspection utilities
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
       - name: Test
         run: pnpm test

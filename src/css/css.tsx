@@ -43,7 +43,7 @@ export const Margins = ({
   bottom,
 }: MarginsProps) => {
   return (
-    <CSS>{`@page {size: ${pageRatio};margin-top:${top}px;margin-right:${right}px;margin-left:${left}px;margin-bottom:${bottom}px;`}</CSS>
+    <CSS>{`@page {size: ${pageRatio};margin-top:${top}px;margin-right:${right}px;margin-left:${left}px;margin-bottom:${bottom}px;}`}</CSS>
   );
 };
 

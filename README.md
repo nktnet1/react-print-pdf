@@ -99,7 +99,10 @@ The source documentation lives under [`docs/content/docs`](docs/content/docs).
 pnpm build
 pnpm typecheck
 pnpm check
+pnpm test
 ```
+
+PDF integration tests use Playwright Chromium and Poppler's `pdfinfo`/`pdftotext` to verify rendered documents. Install `poppler-utils` locally before running `pnpm test` (CI installs it automatically).
 
 See [`docs/content/docs/contributing.mdx`](docs/content/docs/contributing.mdx) for the contribution workflow.
 

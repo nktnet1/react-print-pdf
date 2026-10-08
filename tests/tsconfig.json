@@ -8,7 +8,8 @@
       "#docgen/*": ["../docgen/*"],
       "#scripts/*": ["../scripts/*"],
       "react-print-pdf": ["../src/index.ts"],
-      "react-print-pdf/client": ["../src/client.ts"]
+      "react-print-pdf/client": ["../src/client.ts"],
+      "react-print-pdf/playwright": ["../src/playwright/index.ts"]
     },
     "types": ["node"]
   },
