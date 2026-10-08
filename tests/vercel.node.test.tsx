@@ -25,8 +25,8 @@ test("compiles Tailwind in a server runtime", async () => {
   );
 
   expect(html).toContain("Serverless report");
-  expect(html).toContain(".bg-blue-500");
-  expect(html).toContain(".rounded-lg");
+  expect(html).toMatch(/\.bg-blue-500\s*\{[^}]*background-color:/);
+  expect(html).toMatch(/\.rounded-lg\s*\{[^}]*border-radius:/);
   expect(html).not.toContain("data-react-print-tailwind-");
 });
 

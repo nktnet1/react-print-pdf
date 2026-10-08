@@ -23,7 +23,6 @@ import { renderToString } from "react-dom/server";
 import { type Config, compile as compileTailwind } from "tailwindcss";
 import preflightCss from "tailwindcss/preflight.css?raw";
 import themeCss from "tailwindcss/theme.css?raw";
-import utilitiesCss from "tailwindcss/utilities.css?raw";
 import { CSS, escapeCss } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
 
@@ -74,12 +73,6 @@ const TailwindStyleCollectorContext =
   createContext<TailwindStyleCollector | null>(null);
 
 const VIRTUAL_CONFIG_ID = "react-print-tailwind-config";
-
-const stylesheetMap: Record<string, string> = {
-  "tailwindcss/theme.css": themeCss,
-  "tailwindcss/preflight.css": preflightCss,
-  "tailwindcss/utilities.css": utilitiesCss,
-};
 
 function extractClassNames(markup: string) {
   const classNames = new Set<string>();
@@ -137,9 +130,11 @@ async function buildTailwindStyles(
 
   const input = [
     "@layer theme, base, components, utilities;",
-    '@import "tailwindcss/theme.css" layer(theme);',
-    includePreflight ? '@import "tailwindcss/preflight.css" layer(base);' : "",
-    '@import "tailwindcss/utilities.css" layer(utilities);',
+    // Inline the bundled sources: the standalone Tailwind compiler does not
+    // expand CSS imports itself, even when a loadStylesheet callback exists.
+    themeCss,
+    includePreflight ? `@layer base {\n${preflightCss}\n}` : "",
+    "@tailwind utilities;",
     legacyConfig ? `@config "${VIRTUAL_CONFIG_ID}";` : "",
     stylesheet ?? "",
   ]
@@ -149,16 +144,7 @@ async function buildTailwindStyles(
   const compiler = await compileTailwind(input, {
     base: "/",
     loadStylesheet: async (id: string) => {
-      const content = stylesheetMap[id];
-      if (content === undefined) {
-        throw new Error(`Unsupported Tailwind stylesheet import: ${id}`);
-      }
-
-      return {
-        path: id,
-        base: "/",
-        content,
-      };
+      throw new Error(`Unsupported Tailwind stylesheet import: ${id}`);
     },
     loadModule: async (id: string) => {
       if (id !== VIRTUAL_CONFIG_ID || !legacyConfig) {
