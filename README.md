@@ -61,6 +61,23 @@ const pdf = await compileWithGotenberg(<Document />, {
 
 The helper returns a `Uint8Array`. It defaults to CSS page sizing, printed backgrounds, and PDF document outlines; all Gotenberg form fields can be overridden through `formFields`. See [`docs/content/docs/integrations/gotenberg.mdx`](docs/content/docs/integrations/gotenberg.mdx) for Docker and authentication examples.
 
+### Playwright
+
+For local/in-process Chromium rendering, install Playwright and use the optional server-only integration:
+
+```sh
+pnpm add playwright
+pnpm exec playwright install chromium
+```
+
+```tsx
+import { compileWithPlaywright } from "react-print-pdf/playwright";
+
+const pdf = await compileWithPlaywright(<Document />);
+```
+
+Pass an existing Playwright `Browser` through the `browser` option to reuse Chromium across renders while keeping each document in an isolated browser context. See [`docs/content/docs/integrations/playwright.mdx`](docs/content/docs/integrations/playwright.mdx) for lifecycle, Next.js, and deployment examples.
+
 ## Components
 
 The library includes utilities for:

@@ -27,6 +27,16 @@
         "default": "./dist/client/index.cjs"
       }
     },
+    "./playwright": {
+      "import": {
+        "types": "./dist/playwright/index.d.ts",
+        "default": "./dist/playwright/index.js"
+      },
+      "require": {
+        "types": "./dist/playwright/index.d.cts",
+        "default": "./dist/playwright/index.cjs"
+      }
+    },
     "./mdx": {
       "import": {
         "types": "./dist/mdx.d.ts",
@@ -127,5 +137,13 @@
     "#/*": "./src/*",
     "#docgen/*": "./docgen/*",
     "#scripts/*": "./scripts/*"
+  },
+  "peerDependencies": {
+    "playwright": ">=1.42.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   }
 }

@@ -7,6 +7,7 @@ export default defineConfig({
     index: "src/index.ts",
     mdx: "src/mdx.ts",
     "client/index": "src/client.ts",
+    "playwright/index": "src/playwright/index.ts",
   },
   format: ["esm", "cjs"],
   platform: "browser",
@@ -28,7 +29,7 @@ export default defineConfig({
   },
   deps: {
     onlyBundle: false,
-    neverBundle: ["react", "react-dom"],
+    neverBundle: ["react", "react-dom", "playwright"],
     alwaysBundle: [
       "@csstools/postcss-is-pseudo-class",
       "@emotion/cache",

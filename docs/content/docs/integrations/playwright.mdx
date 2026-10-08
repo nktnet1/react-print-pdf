@@ -1,0 +1,177 @@
+---
+title: "Playwright"
+description: "Render React Print PDF documents locally with Playwright Chromium."
+icon: ChromeIcon
+---
+
+[Playwright](https://playwright.dev/) can render React Print PDF output directly with Chromium, without a separate document service. The integration is server-only and lives at `react-print-pdf/playwright`, so applications that only use the browser/client entrypoint do not pull Playwright into their bundle.
+
+## Install Playwright and Chromium
+
+Playwright is an optional peer dependency. Install it in the application that renders PDFs, then install the Chromium build that matches that Playwright version:
+
+```sh title="pnpm"
+pnpm add playwright
+pnpm exec playwright install chromium
+```
+
+On Linux CI or a fresh container, Playwright can install Chromium and its operating-system dependencies together:
+
+```sh
+pnpm exec playwright install --with-deps chromium
+```
+
+## Compile and render a PDF
+
+`compileWithPlaywright()` calls React Print PDF's `compile()` function and renders the resulting HTML with Chromium:
+
+```tsx
+import { writeFile } from "node:fs/promises";
+import { PageBottom, PageTop } from "react-print-pdf";
+import { compileWithPlaywright } from "react-print-pdf/playwright";
+
+const Document = () => (
+  <main>
+    <PageTop>Quarterly report</PageTop>
+    <h1>Results</h1>
+    <p>Generated with React Print PDF and Playwright.</p>
+    <PageBottom>Confidential</PageBottom>
+  </main>
+);
+
+const pdf = await compileWithPlaywright(<Document />);
+await writeFile("report.pdf", pdf);
+```
+
+The helper returns a `Uint8Array`. When it launches Chromium itself, it also closes Chromium before returning.
+
+## PDF defaults
+
+React Print PDF changes four Playwright PDF defaults because they are a better fit for document templates:
+
+- `preferCSSPageSize: true` so CSS `@page` declarations control paper size.
+- `printBackground: true` so background colors and images are preserved.
+- `outline: true` so document headings can produce PDF bookmarks.
+- `tagged: true` so Chromium emits a tagged/accessibility-aware PDF structure.
+
+Override any `page.pdf()` option through `pdf`:
+
+```tsx
+const pdf = await compileWithPlaywright(<Document />, {
+  pdf: {
+    format: "A4",
+    landscape: true,
+    outline: false,
+  },
+});
+```
+
+`page.pdf()` uses print CSS media by default. If a document intentionally needs screen styles, set `media: "screen"`.
+
+## Reuse Chromium
+
+Launching a browser is comparatively expensive. For a server that generates PDFs repeatedly, reuse a `Browser` and let React Print PDF create a fresh browser context for each document:
+
+```tsx
+import { chromium } from "playwright";
+import { compileWithPlaywright } from "react-print-pdf/playwright";
+
+const browser = await chromium.launch();
+
+try {
+  const firstPdf = await compileWithPlaywright(<FirstDocument />, { browser });
+  const secondPdf = await compileWithPlaywright(<SecondDocument />, { browser });
+} finally {
+  await browser.close();
+}
+```
+
+The integration never closes a browser supplied through `browser`. It does close the per-document browser context, which keeps cookies, cache, local storage, and pages isolated between renders.
+
+## Wait for dynamic content
+
+`page.setContent()` waits for the normal `load` event by default, and React Print PDF additionally waits for `document.fonts.ready`. Avoid using Playwright's `networkidle` readiness signal as a generic delay; Playwright currently discourages it.
+
+For charts or other application-specific asynchronous rendering, use `onPageReady`:
+
+```tsx
+const pdf = await compileWithPlaywright(<Document />, {
+  onPageReady: async (page) => {
+    await page.locator("[data-chart-ready='true']").waitFor();
+  },
+});
+```
+
+## Convert precompiled HTML
+
+If you already called `compile()`, use the lower-level helper:
+
+```tsx
+import { compile } from "react-print-pdf";
+import { convertHtmlWithPlaywright } from "react-print-pdf/playwright";
+
+const html = await compile(<Document />);
+const pdf = await convertHtmlWithPlaywright(html);
+```
+
+## Next.js route handler
+
+Use the Node.js runtime for Chromium. This example caches a browser promise at module scope so warm server instances can reuse Chromium while each request still receives a fresh browser context:
+
+```ts title="app/api/report/route.ts"
+import { createElement } from "react";
+import { chromium, type Browser } from "playwright";
+import { compileWithPlaywright } from "react-print-pdf/playwright";
+import { Report } from "@/documents/report";
+
+export const runtime = "nodejs";
+
+let browserPromise: Promise<Browser> | undefined;
+
+const launchBrowser = async () => {
+  const browser = await chromium.launch();
+  browser.on("disconnected", () => {
+    browserPromise = undefined;
+  });
+  return browser;
+};
+
+const getBrowser = () => {
+  browserPromise ??= launchBrowser().catch((error) => {
+    browserPromise = undefined;
+    throw error;
+  });
+  return browserPromise;
+};
+
+export async function GET() {
+  const browser = await getBrowser();
+  const pdf = await compileWithPlaywright(createElement(Report), { browser });
+
+  return new Response(pdf, {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": 'inline; filename="report.pdf"',
+    },
+  });
+}
+```
+
+A warm function or long-running Node.js process can reuse the browser. A cold start or a new server instance still launches its own Chromium process, so treat reuse as an optimization rather than a guarantee.
+
+<Callout intent="note" title="Deploying Chromium on Vercel">
+  The older advice that Playwright simply cannot run on Vercel is no longer universally true. Vercel added [Large Functions up to 5 GB](https://vercel.com/changelog/vercel-functions-can-now-be-up-to-5-gb-in-package-size) on Fluid compute in June 2026, which makes browser-automation dependencies more practical, and it also supports [container-based Functions](https://vercel.com/changelog/bring-your-dockerfile-to-vercel-functions). Standard Function packaging still has tighter limits, however, so a normal Playwright installation is not guaranteed to be zero-config. Check your Vercel runtime and package-size configuration, or use the Gotenberg integration when you prefer Chromium to run as a separate service.
+</Callout>
+
+## Advanced options
+
+`compileWithPlaywright()` and `convertHtmlWithPlaywright()` also accept:
+
+- `launch` for `chromium.launch()` options when the helper owns the browser.
+- `context` for `browser.newContext()` options.
+- `setContent` for `page.setContent()` options.
+- `media` for explicit `print` or `screen` CSS media emulation.
+- `waitForFonts: false` to skip the default font readiness wait.
+- `onPageReady` for custom readiness logic before PDF generation.
+
+Playwright's PDF generation is Chromium-backed. If you want the renderer in a separately deployed/self-hosted process instead of inside the application runtime, use the [Gotenberg integration](/docs/integrations/gotenberg).
