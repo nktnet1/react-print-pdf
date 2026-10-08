@@ -1,4 +1,5 @@
 import { compile, Tailwind } from "react-print-pdf";
+import { compile as compileClient } from "react-print-pdf/client";
 import { expect, test } from "vitest";
 
 test("loads in frontend app", async () => {
@@ -11,6 +12,19 @@ test("works in frontend app", async () => {
   const html = await compile(<TestComponent />);
 
   expect(html).toContain("Test");
+});
+
+test("client entrypoint compiles in Vite without ReactDOMServer namespace interop", async () => {
+  const node = <div data-browser-render="true">Vite browser render</div>;
+  const [rootHtml, clientHtml] = await Promise.all([
+    compile(node),
+    compileClient(node),
+  ]);
+
+  for (const html of [rootHtml, clientHtml]) {
+    expect(html).toContain('data-browser-render="true"');
+    expect(html).toContain("Vite browser render");
+  }
 });
 
 test("works with tailwind", async () => {
