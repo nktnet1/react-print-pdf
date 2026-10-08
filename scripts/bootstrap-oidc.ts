@@ -148,12 +148,54 @@ const createBootstrapPackage = (): string => {
   return directory;
 };
 
-const listTrust = (): TrustConfiguration[] => {
-  const output = run(
-    "npm",
-    ["trust", "list", RELEASE_PACKAGE_NAME, "--registry", REGISTRY, "--json"],
-    { capture: true },
+const commandOutput = (error: unknown): string => {
+  if (!(error instanceof Error)) return String(error);
+
+  const commandError = error as Error & {
+    stdout?: string | Buffer | null;
+    stderr?: string | Buffer | null;
+  };
+  return [commandError.message, commandError.stdout, commandError.stderr]
+    .filter((value): value is string | Buffer => value != null)
+    .map((value) => value.toString())
+    .join("\n");
+};
+
+const hasConfiguredOtp = (): boolean =>
+  Boolean(process.env.NPM_CONFIG_OTP ?? process.env.npm_config_otp);
+
+const primeTrustAuthentication = (): void => {
+  if (hasConfiguredOtp()) return;
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    throw new Error(
+      "npm trust requires interactive 2FA. Run this bootstrap in an interactive terminal or provide NPM_CONFIG_OTP.",
+    );
+  }
+
+  console.log(
+    'npm trust requires interactive 2FA. Complete the browser challenge and enable npm\'s "skip 2FA for the next 5 minutes" option so the bootstrap can run its follow-up trust checks.',
   );
+  run("npm", ["trust", "list", RELEASE_PACKAGE_NAME, "--registry", REGISTRY]);
+};
+
+const listTrust = (): TrustConfiguration[] => {
+  let output: string;
+  try {
+    output = run(
+      "npm",
+      ["trust", "list", RELEASE_PACKAGE_NAME, "--registry", REGISTRY, "--json"],
+      { capture: true },
+    );
+  } catch (error) {
+    if (/\bEOTP\b/.test(commandOutput(error))) {
+      throw new Error(
+        'npm trust still requires 2FA. Re-run the bootstrap and enable "skip 2FA for the next 5 minutes" during the interactive browser challenge, or provide NPM_CONFIG_OTP.',
+      );
+    }
+    throw error;
+  }
+
   const parsed = JSON.parse(output) as unknown;
   if (!Array.isArray(parsed)) {
     throw new Error("Unexpected response from npm trust list --json");
@@ -275,6 +317,7 @@ The trusted publisher is restricted to:
     }
   }
 
+  primeTrustAuthentication();
   const trust = listTrust();
   if (trust.some(isExpectedTrust)) {
     console.log("Trusted publisher is already configured correctly.");
@@ -323,4 +366,7 @@ The trusted publisher is restricted to:
   );
 };
 
-await main();
+await main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});

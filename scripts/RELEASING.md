@@ -25,11 +25,17 @@ local npm authentication, publishes `react-print-pdf@0.0.0-bootstrap.0` under th
 verifies the resulting trust configuration.
 
 The bootstrap requires npm 11.15.0 or newer, package write access, and npm
-account 2FA. Run `npm login` first if `npm whoami` does not succeed. If an
-existing trusted publisher points somewhere else, inspect it first and then use
-`pnpm bootstrap:oidc --publish --replace` only when you intend to revoke and
-replace that configuration. npm requires a newly created trusted publisher to
-complete its first successful OIDC publish within two days.
+account 2FA. Run `npm login --auth-type=web` first if `npm whoami` does not
+succeed. `npm trust` does not accept a bypass-2FA granular token by itself. The
+bootstrap therefore performs an interactive `npm trust list` before its
+machine-readable checks; complete the browser challenge and enable npm's
+**skip 2FA for the next 5 minutes** option so the remaining trust operations can
+finish. TOTP users can instead provide `NPM_CONFIG_OTP`.
+
+If an existing trusted publisher points somewhere else, inspect it first and
+then use `pnpm bootstrap:oidc --publish --replace` only when you intend to revoke
+and replace that configuration. npm requires a newly created trusted publisher
+to complete its first successful OIDC publish within two days.
 
 ## Beta releases
 
