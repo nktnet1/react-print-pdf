@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const fixture = fileURLToPath(
-  new URL("./fixtures/package-consumer/", import.meta.url),
+  new URL("../fixtures/package-consumer/", import.meta.url),
 );
 
 const node = (script: string) =>
@@ -18,17 +18,17 @@ const node = (script: string) =>
 describe("published package entrypoints", () => {
   test("loads ESM and CommonJS exports using native Node resolution", () => {
     const script = fileURLToPath(
-      new URL("./fixtures/package-consumer/runtime.mjs", import.meta.url),
+      new URL("../fixtures/package-consumer/runtime.mjs", import.meta.url),
     );
     expect(node(script)).toContain("package-exports-ok");
   });
 
   test("resolves ESM and CommonJS declaration exports in a consumer tsconfig", () => {
     const tsc = fileURLToPath(
-      new URL("../node_modules/typescript/bin/tsc", import.meta.url),
+      new URL("../../node_modules/typescript/bin/tsc", import.meta.url),
     );
     const config = fileURLToPath(
-      new URL("./fixtures/package-consumer/tsconfig.json", import.meta.url),
+      new URL("../fixtures/package-consumer/tsconfig.json", import.meta.url),
     );
 
     expect(
@@ -42,7 +42,7 @@ describe("published package entrypoints", () => {
 
   test("includes every public entrypoint and its declarations in the npm tarball", async () => {
     const manifest = JSON.parse(
-      await readFile(new URL("../package.json", import.meta.url), "utf8"),
+      await readFile(new URL("../../package.json", import.meta.url), "utf8"),
     ) as {
       exports: Record<
         string,

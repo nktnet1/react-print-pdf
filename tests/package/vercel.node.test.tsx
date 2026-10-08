@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { CSS, compile, Tailwind } from "react-print-pdf";
 import { expect, test } from "vitest";
 
-const serverBundleUrl = new URL("../dist/index.js", import.meta.url);
+const serverBundleUrl = new URL("../../dist/index.js", import.meta.url);
 
 test("compiles plain CSS in a server runtime", async () => {
   const html = await compile(

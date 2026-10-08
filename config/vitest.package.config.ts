@@ -8,11 +8,6 @@ export default defineConfig({
     // This config lives in config/, but test discovery starts at project root.
     dir: process.cwd(),
     environment: "node",
-    include: [
-      "tests/bun.node.test.tsx",
-      "tests/package-entrypoints.node.test.tsx",
-      "tests/package-bundle.node.test.tsx",
-      "tests/vercel.node.test.tsx",
-    ],
+    include: ["tests/package/**/*.node.test.tsx"],
   },
 });

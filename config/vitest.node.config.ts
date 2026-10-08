@@ -42,10 +42,7 @@ export default defineConfig({
     exclude: [
       ...configDefaults.exclude,
       // These test the real built package, not the source aliases.
-      "tests/bun.node.test.tsx",
-      "tests/package-entrypoints.node.test.tsx",
-      "tests/package-bundle.node.test.tsx",
-      "tests/vercel.node.test.tsx",
+      "tests/package/**/*.node.test.tsx",
     ],
   },
 });
