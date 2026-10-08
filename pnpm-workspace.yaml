@@ -1,6 +1,7 @@
 allowBuilds:
   esbuild: false
   keytar: false
+  lefthook: true
   pre-commit: true
   puppeteer: true
   sharp: false
