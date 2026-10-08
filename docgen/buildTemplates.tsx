@@ -39,7 +39,7 @@ export async function buildTemplates() {
         plugins: [
           mdx({
             remarkPlugins: [remarkFrontmatter],
-            providerImportSource: "@fileforge/react-print/mdx",
+            providerImportSource: "react-print-pdf/mdx",
           }) as unknown as TsdownPlugin,
           Raw(),
         ],

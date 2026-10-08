@@ -1,5 +1,5 @@
 {
-  "name": "@fileforge/react-print",
+  "name": "react-print-pdf",
   "version": "0.1.150",
   "description": "Fileforge components for JavaScript React",
   "main": "./dist/index.js",
@@ -43,7 +43,10 @@
     "check": "biome check",
     "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p tsconfig.tools.json",
     "docs:build": "pnpm --dir ./docs build",
-    "test:watch": "playwright install chromium && npm run build && vitest --browser.headless=false"
+    "test:watch": "playwright install chromium && npm run build && vitest --browser.headless=false",
+    "release:beta": "tsx ./scripts/release-beta.ts",
+    "release:validate": "tsx ./scripts/validate-release.ts",
+    "prepublishOnly": "tsx ./scripts/prevent-direct-publish.ts"
   },
   "pre-commit": [
     "build-components-commit"

@@ -179,7 +179,7 @@ You can also use the \`id\` attribute in your headers to link to them directly.`
                 options={{
                   overrides: {
                     PageBreak: {
-                      component: PageBreak, // import { PageBreak } from "@fileforge/react-print";
+                      component: PageBreak, // import { PageBreak } from "react-print-pdf";
                     },
                   },
                 }}

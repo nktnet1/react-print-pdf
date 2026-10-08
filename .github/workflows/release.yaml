@@ -1,52 +1,66 @@
-name: Build and Publish
+name: Release
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #   paths-ignore:
-  #     - "docs/**"
-  #     - "docgen/**"
-  #     - ".gitignore"
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
+  publish:
+    runs-on: ubuntu-24.04
+    environment: Production
     permissions:
-      contents: write
+      contents: read
+      id-token: write
+
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - name: Checkout release commit
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-          registry-url: "https://registry.npmjs.org"
-          cache-dependency-path: ./package-lock.json
-      - run: npm install
-        working-directory: .
-      - run: npm run build
-        working-directory: .
-      - run: npx playwright install --with-deps chromium
-        working-directory: .
-      - run: npm test
-        working-directory: .
-      - run: npm version patch -m "Bump version to %s [skip ci]" --git-tag-version false
-        working-directory: .
-      - run: npm publish --access public
-        working-directory: .
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate release trigger
+        id: release
+        run: pnpm release:validate
+
+      - name: Check formatting and lint
+        run: pnpm check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test
+        run: pnpm test
+
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_options: "--no-verify"
-          commit_message: "Bump version [skip ci]"
+          RELEASE_PUBLISH: "1"
+        run: >-
+          npm publish
+          --access public
+          --provenance
+          --tag "${{ steps.release.outputs.dist-tag }}"

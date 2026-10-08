@@ -1,4 +1,4 @@
-import { compile, Tailwind } from "@fileforge/react-print";
+import { compile, Tailwind } from "react-print-pdf";
 import { expect, test } from "vitest";
 
 test("loads in frontend app", async () => {

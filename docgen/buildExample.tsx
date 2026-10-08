@@ -32,7 +32,7 @@ export const buildExample = async (
 \`\`\`jsx
 import { ${component}${
     example.imports ? `, ${example.imports.join(", ")}` : ""
-  } } from "@fileforge/react-print";${
+  } } from "react-print-pdf";${
     example.externalImports ? `\n${example.externalImports.join("\n")}` : ""
   }
 

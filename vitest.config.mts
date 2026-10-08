@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
-      "@fileforge/react-print": fileURLToPath(
+      "react-print-pdf": fileURLToPath(
         new URL("./dist/index.mjs", import.meta.url),
       ),
     },

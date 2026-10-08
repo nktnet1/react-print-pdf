@@ -120,7 +120,7 @@ ${docConfig.icon ? `icon: ${docConfig.icon}` : ""}
         }
       }
     } else {
-      markdown += `\`\`\`jsx\nimport { ${componentName} } from "@fileforge/react-print";\n\`\`\`\n\n`;
+      markdown += `\`\`\`jsx\nimport { ${componentName} } from "react-print-pdf";\n\`\`\`\n\n`;
     }
   }
 

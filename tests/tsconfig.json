@@ -4,7 +4,7 @@
     "noEmit": true,
     "rootDir": "..",
     "paths": {
-      "@fileforge/react-print": ["../src/index.ts"]
+      "react-print-pdf": ["../src/index.ts"]
     }
   },
   "include": [

@@ -61,19 +61,19 @@ Get the _react-print_ component library.
 ### With npm
 
 ```sh npm
-npm install @fileforge/react-print
+npm install react-print-pdf
 ```
 
 ### With yarn
 
 ```sh yarn
-yarn add @fileforge/react-print
+yarn add react-print-pdf
 ```
 
 ### With pnpm
 
 ```sh pnpm
-pnpm add @fileforge/react-print
+pnpm add react-print-pdf
 ```
 
 ## 2. Import component ↪️
@@ -81,7 +81,7 @@ pnpm add @fileforge/react-print
 Import the components you need to your PDF template from our list of pre-build components :
 
 ```javascript
-import { PageTop, PageBottom, PageBreak } from "@fileforge/react-print";
+import { PageTop, PageBottom, PageBreak } from "react-print-pdf";
 ```
 
 ## 3. Integrate in your document 📄
@@ -109,7 +109,7 @@ export const Document = ({ props }) => {
 ## 4. Generate HTML 💻
 
 ```javascript
-import { compile } from "@fileforge/react-print";
+import { compile } from "react-print-pdf";
 
 const html = await compile(<Document />);
 ```
