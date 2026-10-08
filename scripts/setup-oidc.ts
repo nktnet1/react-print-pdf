@@ -147,7 +147,19 @@ const listTrust = (): TrustConfiguration[] => {
     explainTrustFailure(error);
   }
 
-  const parsed = JSON.parse(output) as unknown;
+  // npm currently emits no stdout for an empty trust list even with --json.
+  // Treat that as the registry's documented empty-array response.
+  if (output === "") return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(output) as unknown;
+  } catch (error) {
+    throw new Error("Unexpected non-JSON response from npm trust list --json", {
+      cause: error,
+    });
+  }
+
   if (!Array.isArray(parsed)) {
     throw new Error("Unexpected response from npm trust list --json");
   }
