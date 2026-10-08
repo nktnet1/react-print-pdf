@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -10,16 +9,8 @@ export default defineConfig({
       ),
     },
   },
-  build: {
-    target: "esnext",
-  },
   test: {
-    exclude: ["tests/**/*.node.test.tsx"],
-    browser: {
-      enabled: true,
-      headless: true,
-      provider: playwright(),
-      instances: [{ browser: "chromium" }],
-    },
+    environment: "node",
+    include: ["tests/**/*.node.test.tsx"],
   },
 });

@@ -29,12 +29,15 @@ export default defineConfig({
   },
   deps: {
     onlyBundle: false,
-    neverBundle: ["react", "react-dom", "playwright"],
-    alwaysBundle: [
-      "@csstools/postcss-is-pseudo-class",
+    neverBundle: [
+      "react",
+      "react-dom",
+      "playwright",
       "@emotion/cache",
       "@emotion/react",
-      "@emotion/server",
+    ],
+    alwaysBundle: [
+      "@csstools/postcss-is-pseudo-class",
       "html-entities",
       "katex",
       "markdown-to-jsx",
