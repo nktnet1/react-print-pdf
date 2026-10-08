@@ -2,6 +2,7 @@ import { compiler, type MarkdownToJSX } from "markdown-to-jsx";
 import {
   Children,
   type ComponentClass,
+  Fragment,
   isValidElement,
   type ReactElement,
   type ReactNode,
@@ -19,14 +20,57 @@ interface TocRendererProps {
 }
 
 interface MarkdownProps {
-  children: string;
+  children: ReactNode;
   tocRenderer?: (props: TocRendererProps) => ReactNode;
   options?: MarkdownToJSX.Options;
 }
 
-export const Markdown = (props: MarkdownProps) => {
-  const content = compiler(props.children, props.options);
+const renderMarkdownChildren = (
+  children: ReactNode,
+  options?: MarkdownToJSX.Options,
+): ReactElement => {
+  const rendered: ReactNode[] = [];
+  let markdown = "";
 
+  // Compile adjacent text together so Markdown syntax can span JSX text nodes.
+  // Keep actual React elements intact instead of coercing them to strings.
+  const flushMarkdown = () => {
+    if (!markdown) return;
+    rendered.push(compiler(markdown, options));
+    markdown = "";
+  };
+
+  const visit = (nodes: ReactNode) => {
+    Children.forEach(nodes, (node) => {
+      if (typeof node === "string" || typeof node === "number") {
+        markdown += String(node);
+      } else if (
+        isValidElement<{ children?: ReactNode }>(node) &&
+        node.type === Fragment
+      ) {
+        visit(node.props.children);
+      } else if (
+        node !== null &&
+        node !== undefined &&
+        typeof node !== "boolean"
+      ) {
+        flushMarkdown();
+        rendered.push(node);
+      }
+    });
+  };
+
+  visit(children);
+  flushMarkdown();
+
+  // A Fragment keeps the component's return type JSX-compatible even when
+  // ReactNode-typed input contains arrays, portals or no content at all.
+  return (
+    <>{rendered.length === 1 ? rendered[0] : Children.toArray(rendered)}</>
+  );
+};
+
+export const Markdown = (props: MarkdownProps) => {
   const headers: TocRendererProps[] = [];
 
   type MarkdownElementProps = { children?: ReactNode; id?: string };
@@ -52,23 +96,22 @@ export const Markdown = (props: MarkdownProps) => {
     );
   };
 
-  const detectHeader = (child: ReactNode) => {
-    if (!child) return;
+  const detectHeader = (nodes: ReactNode) => {
+    Children.forEach(nodes, (child) => {
+      if (!isReactElement(child)) return;
 
-    if (
-      isReactElement(child) &&
-      typeof child.type === "string" &&
-      ["h1", "h2", "h3", "h4", "h5", "h6"].includes(child.type)
-    ) {
-      headers.push({
-        heading: child.type,
-        level: parseInt(child.type[1], 10),
-        children: child.props.children,
-        id: child.props.id,
-      } as TocRendererProps);
-    }
+      if (
+        typeof child.type === "string" &&
+        ["h1", "h2", "h3", "h4", "h5", "h6"].includes(child.type)
+      ) {
+        headers.push({
+          heading: child.type,
+          level: parseInt(child.type[1], 10),
+          children: child.props.children,
+          id: child.props.id,
+        } as TocRendererProps);
+      }
 
-    if (isReactElement(child)) {
       if (isClassComponent(child.type)) {
         const instance = new child.type(child.props);
         detectHeader(instance.render());
@@ -78,18 +121,19 @@ export const Markdown = (props: MarkdownProps) => {
         ) => ReactNode;
         detectHeader(FunctionComponent(child.props));
       } else if (child.props?.children) {
-        Children.forEach(child.props.children, detectHeader);
+        detectHeader(child.props.children);
       }
-    }
+    });
   };
 
   const tocRenderer = props.tocRenderer;
 
-  if (tocRenderer) detectHeader(content);
+  if (tocRenderer)
+    detectHeader(renderMarkdownChildren(props.children, props.options));
 
   const Toc = tocRenderer ? headers.map((header) => tocRenderer(header)) : null;
 
-  return compiler(
+  return renderMarkdownChildren(
     props.children,
     Object.assign({}, props.options, {
       overrides: {
@@ -108,7 +152,7 @@ export const Markdown = (props: MarkdownProps) => {
 export const __docConfig: DocConfig = {
   description: `Render Markdown inside your templates. Provides a simple wrapper around [\`markdown-to-jsx\`](https://github.com/quantizor/markdown-to-jsx).
 
-Markdown allows you to easily separate content from the layout, making it easier to maintain and update your templates. You can pull in content from a CMS or other sources, and use Markdown to format it.
+Markdown allows you to easily separate content from the layout, making it easier to maintain and update your templates. You can pull in content from a CMS or other sources, and use Markdown to format it. ReactNode-typed content is supported: adjacent text is parsed as Markdown, while JSX elements are preserved.
 
 You can also use custom components and variables to make your Markdown more dynamic. For example, you can replace Markdown components with your own components, or use variables to insert dynamic content.`,
   icon: "FileTextIcon",
