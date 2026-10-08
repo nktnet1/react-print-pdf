@@ -21,11 +21,14 @@ import {
 } from "react";
 import { renderToString } from "react-dom/server";
 import { type Config, compile as compileTailwind } from "tailwindcss";
-import preflightCss from "tailwindcss/preflight.css?raw";
-import themeCss from "tailwindcss/theme.css?raw";
-import utilitiesCss from "tailwindcss/utilities.css?raw";
 import { CSS, escapeCss } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
+
+// Replaced with the Tailwind package's CSS text during tsdown compilation.
+// Keeping these sources out of the CSS asset pipeline prevents ?raw imports
+// from becoming empty stylesheets in the published server bundle.
+declare const __REACT_PRINT_TAILWIND_THEME_CSS__: string;
+declare const __REACT_PRINT_TAILWIND_PREFLIGHT_CSS__: string;
 
 type LegacyCorePlugins = string[] | Record<string, boolean>;
 
@@ -74,12 +77,6 @@ const TailwindStyleCollectorContext =
   createContext<TailwindStyleCollector | null>(null);
 
 const VIRTUAL_CONFIG_ID = "react-print-tailwind-config";
-
-const stylesheetMap: Record<string, string> = {
-  "tailwindcss/theme.css": themeCss,
-  "tailwindcss/preflight.css": preflightCss,
-  "tailwindcss/utilities.css": utilitiesCss,
-};
 
 function extractClassNames(markup: string) {
   const classNames = new Set<string>();
@@ -137,9 +134,18 @@ async function buildTailwindStyles(
 
   const input = [
     "@layer theme, base, components, utilities;",
-    '@import "tailwindcss/theme.css" layer(theme);',
-    includePreflight ? '@import "tailwindcss/preflight.css" layer(base);' : "",
-    '@import "tailwindcss/utilities.css" layer(utilities);',
+    // Inline the bundled sources: the standalone Tailwind compiler does not
+    // expand CSS imports itself, even when a loadStylesheet callback exists.
+    __REACT_PRINT_TAILWIND_THEME_CSS__,
+    includePreflight
+      ? `@layer base {\n${__REACT_PRINT_TAILWIND_PREFLIGHT_CSS__}\n}`
+      : "",
+    "@tailwind utilities;",
+    // Explicitly register rendered classes in the compiler input. This also
+    // works when the bundled Tailwind runtime cannot discover source files.
+    ...classNames.map(
+      (className) => `@source inline(${JSON.stringify(className)});`,
+    ),
     legacyConfig ? `@config "${VIRTUAL_CONFIG_ID}";` : "",
     stylesheet ?? "",
   ]
@@ -149,16 +155,7 @@ async function buildTailwindStyles(
   const compiler = await compileTailwind(input, {
     base: "/",
     loadStylesheet: async (id: string) => {
-      const content = stylesheetMap[id];
-      if (content === undefined) {
-        throw new Error(`Unsupported Tailwind stylesheet import: ${id}`);
-      }
-
-      return {
-        path: id,
-        base: "/",
-        content,
-      };
+      throw new Error(`Unsupported Tailwind stylesheet import: ${id}`);
     },
     loadModule: async (id: string) => {
       if (id !== VIRTUAL_CONFIG_ID || !legacyConfig) {

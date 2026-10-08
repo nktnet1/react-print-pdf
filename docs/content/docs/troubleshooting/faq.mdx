@@ -19,6 +19,20 @@ import { PageBreak } from "react-print-pdf/client";
 
 The package does not include or require a hosted server. `compile()` produces HTML locally in your application.
 
+## Next.js or Vercel reports a missing Tailwind module
+
+Current React Print PDF releases compile Tailwind from the package bundle. They do not load Tailwind from your application's `node_modules` directory at runtime, so `compile()` can be used from a Next.js Server Component or Route Handler without installing Tailwind separately just for React Print PDF.
+
+Older upstream releases used a browser JIT package together with deep `node_modules/tailwindcss/...` imports. Those filesystem assumptions could work locally and then fail after a serverless bundler traced or relocated the deployment files. Upgrade rather than adding output-file tracing rules for those old internal paths.
+
+For a Route Handler, keep PDF work on the Node.js runtime:
+
+```ts title="app/api/report/route.ts"
+export const runtime = "nodejs";
+```
+
+`compile()` only produces renderer-ready HTML and does not launch Chromium. React Print PDF and Tailwind styles are inlined; assets that your document references still need URLs the renderer can reach. If you also use `react-print-pdf/playwright` to create the PDF inside the function, the browser binary has its own deployment requirements; see the [Playwright integration](/docs/integrations/playwright). A separately deployed Gotenberg renderer avoids shipping Chromium with the Next.js function.
+
 ## Vite warns that `stream` or `events` was externalized
 
 You should not need Node.js `stream` or `events` polyfills for React Print PDF. Older versions pulled in `@emotion/server` for `compile(..., { emotion: true })`; that package depends on legacy Node stream utilities and caused Vite to emit browser-compatibility warnings even when the Emotion path was not being used.

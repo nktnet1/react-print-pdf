@@ -1,8 +1,22 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import nodePolyfills from "@rolldown/plugin-node-polyfills";
 import { defineConfig } from "tsdown";
 import Raw from "unplugin-raw/rolldown";
 
+const require = createRequire(import.meta.url);
+const bundledTailwindCss = (file: string) =>
+  JSON.stringify(readFileSync(require.resolve(file), "utf8"));
+
 export default defineConfig({
+  define: {
+    __REACT_PRINT_TAILWIND_THEME_CSS__: bundledTailwindCss(
+      "tailwindcss/theme.css",
+    ),
+    __REACT_PRINT_TAILWIND_PREFLIGHT_CSS__: bundledTailwindCss(
+      "tailwindcss/preflight.css",
+    ),
+  },
   entry: {
     index: "src/index.ts",
     mdx: "src/mdx.ts",
