@@ -18,3 +18,11 @@ import { PageBreak } from "react-print-pdf/client";
 ```
 
 The package does not include or require a hosted server. `compile()` produces HTML locally in your application.
+
+## `gap` or `justify-evenly` looks different in the PDF
+
+React Print PDF keeps Tailwind's standard flexbox output, including `gap`, `row-gap`, `column-gap`, and `justify-content: space-evenly`. The final layout is still determined by the PDF renderer's CSS engine.
+
+The built-in [Playwright](/docs/integrations/playwright) and [Gotenberg](/docs/integrations/gotenberg) integrations use Chromium, where these flexbox features are supported. If the same compiled HTML looks correct in a browser but different in a PDF produced by another renderer, check that renderer's support for CSS Box Alignment and flex gaps before replacing the utilities with manual margins.
+
+This matters especially with older paged-media engines, which may accept flexbox while only partially supporting newer alignment and gap features. Upgrading the renderer or using one of the Chromium-backed integrations is preferable to changing the document layout to renderer-specific spacing hacks.

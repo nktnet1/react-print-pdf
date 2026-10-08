@@ -118,3 +118,96 @@ test("supports nested Tailwind regions", async () => {
   expect(html).toContain(".text-blue-500");
   expect(html).not.toContain("data-react-print-tailwind-");
 });
+
+test("preserves Tailwind flex gap and justify-evenly layout in Chromium", async () => {
+  const html = await compile(
+    <Tailwind>
+      <div data-layout="evenly" className="flex w-[400px] justify-evenly">
+        <div className="h-[10px] w-[40px]" />
+        <div className="h-[10px] w-[40px]" />
+        <div className="h-[10px] w-[40px]" />
+      </div>
+      <div data-layout="gap-x" className="flex gap-x-[20px]">
+        <div className="h-[10px] w-[30px]" />
+        <div className="h-[10px] w-[30px]" />
+      </div>
+      <div data-layout="gap-y" className="flex flex-col gap-y-[12px]">
+        <div className="h-[10px] w-[30px]" />
+        <div className="h-[10px] w-[30px]" />
+      </div>
+      <div
+        data-layout="gap-wrap"
+        className="flex w-[95px] flex-wrap gap-x-[10px] gap-y-[12px]"
+      >
+        <div className="h-[10px] w-[40px]" />
+        <div className="h-[10px] w-[40px]" />
+        <div className="h-[10px] w-[40px]" />
+      </div>
+    </Tailwind>,
+  );
+
+  expect(html).toMatch(/justify-content:\s*space-evenly/);
+  expect(html).toMatch(/column-gap:\s*20px/);
+  expect(html).toMatch(/row-gap:\s*12px/);
+
+  const host = document.createElement("div");
+  host.style.position = "fixed";
+  host.style.left = "-10000px";
+  host.innerHTML = html;
+  document.body.append(host);
+
+  try {
+    const evenly = host.querySelector<HTMLElement>('[data-layout="evenly"]');
+    const gapX = host.querySelector<HTMLElement>('[data-layout="gap-x"]');
+    const gapY = host.querySelector<HTMLElement>('[data-layout="gap-y"]');
+    const gapWrap = host.querySelector<HTMLElement>('[data-layout="gap-wrap"]');
+
+    expect(evenly).not.toBeNull();
+    expect(gapX).not.toBeNull();
+    expect(gapY).not.toBeNull();
+    expect(gapWrap).not.toBeNull();
+
+    if (!evenly || !gapX || !gapY || !gapWrap) {
+      throw new Error("Expected flex layout fixtures to render.");
+    }
+
+    const evenlyChildren = Array.from(evenly.children, (child) =>
+      (child as HTMLElement).getBoundingClientRect(),
+    );
+    const evenlyRect = evenly.getBoundingClientRect();
+    const evenlySpaces = [
+      evenlyChildren[0].left - evenlyRect.left,
+      evenlyChildren[1].left - evenlyChildren[0].right,
+      evenlyChildren[2].left - evenlyChildren[1].right,
+      evenlyRect.right - evenlyChildren[2].right,
+    ];
+
+    for (const space of evenlySpaces) {
+      expect(space).toBeCloseTo(70, 1);
+    }
+
+    const gapXChildren = Array.from(gapX.children, (child) =>
+      (child as HTMLElement).getBoundingClientRect(),
+    );
+    expect(gapXChildren[1].left - gapXChildren[0].right).toBeCloseTo(20, 1);
+
+    const gapYChildren = Array.from(gapY.children, (child) =>
+      (child as HTMLElement).getBoundingClientRect(),
+    );
+    expect(gapYChildren[1].top - gapYChildren[0].bottom).toBeCloseTo(12, 1);
+
+    const gapWrapChildren = Array.from(gapWrap.children, (child) =>
+      (child as HTMLElement).getBoundingClientRect(),
+    );
+    expect(gapWrapChildren[1].left - gapWrapChildren[0].right).toBeCloseTo(
+      10,
+      1,
+    );
+    expect(gapWrapChildren[2].top - gapWrapChildren[0].bottom).toBeCloseTo(
+      12,
+      1,
+    );
+  } finally {
+    host.remove();
+  }
+});
