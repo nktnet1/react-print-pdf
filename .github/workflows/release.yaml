@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Set up Bun for compatibility tests
+        uses: oven-sh/setup-bun@v2
+
       - name: Validate release trigger
         id: release
         run: pnpm release:validate
