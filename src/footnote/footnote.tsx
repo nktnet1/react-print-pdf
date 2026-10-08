@@ -15,7 +15,10 @@ export const Footnote = ({
   children: React.ReactNode;
 }) => {
   return (
-    <span className="onedoc-footnote text-left text-xs font-normal" {...props}>
+    <span
+      className="react-print-footnote text-left text-xs font-normal"
+      {...props}
+    >
       {children}
     </span>
   );

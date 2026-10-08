@@ -1,17 +1,12 @@
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { pipeline } from "node:stream/promises";
 import { pathToFileURL } from "node:url";
-import { FileforgeClient } from "@fileforge/client";
-import { config } from "dotenv";
 import { glob } from "glob";
 import { fromBuffer } from "pdf2pic";
+import { chromium } from "playwright";
 import type React from "react";
 import type { CompileOptions } from "#/compile/compile";
-
-config({ path: ".env.local" });
-config();
 
 type CompileModule = Pick<typeof import("#/compile/compile"), "compile">;
 
@@ -21,18 +16,6 @@ const loadCompileModule = async (): Promise<CompileModule> => {
   ).href;
 
   return (await import(distEntry)) as CompileModule;
-};
-
-const getFileforgeClient = () => {
-  const apiKey = process.env.FILEFORGE_API_KEY ?? process.env.ONEDOC_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      "FILEFORGE_API_KEY (or legacy ONEDOC_API_KEY) is required to generate documentation previews.",
-    );
-  }
-
-  return new FileforgeClient({ apiKey });
 };
 
 export const baseCss = fs.readFileSync(
@@ -51,10 +34,12 @@ export async function renderPreview(
   const Component = component;
   const Element = <>{Component}</>;
   const { compile } = await loadCompileModule();
+  const documentCss = useBaseCss ? baseCss.toString() : "@page { size: A4; }";
 
   const html = `<!doctype html><html><head>
-          <link rel="stylesheet" href="base.css" />
-          <link rel="stylesheet" href="index.css" />
+          <meta charset="utf-8" />
+          <style>${documentCss}</style>
+          <style>${indexCss.toString()}</style>
           </head><body>${await compile(Element, compileOptions)}</body></html>`;
 
   const hash = crypto.createHash("sha256");
@@ -68,37 +53,30 @@ export async function renderPreview(
     `../docs/public/docs/images/previews/${id}/`,
   );
 
-  // If the file doesn't exist, create it by generating the document with Fileforge.
   if (!fs.existsSync(targetFolder)) {
-    const ff = getFileforgeClient();
-    const file = await ff.pdf.generate(
-      [
-        new File([html], "index.html", { type: "text/html" }),
-        useBaseCss
-          ? new File([baseCss], "base.css", { type: "text/css" })
-          : new File([`@page { size: A4; }`], "base.css", { type: "text/css" }),
-        new File([indexCss], "index.css", { type: "text/css" }),
-      ],
-      {
-        options: {
-          host: false,
-          test: false,
-        },
-      },
-    );
-
-    // Create the directory
     fs.mkdirSync(targetFolder, { recursive: true });
 
-    // Write the HTML to a file
-    fs.writeFileSync(path.join(targetFolder, "index.html"), html);
+    const htmlPath = path.join(targetFolder, "index.html");
+    const pdfPath = path.join(targetFolder, "document.pdf");
 
-    await pipeline(
-      file,
-      fs.createWriteStream(path.join(targetFolder, "document.pdf")),
-    );
+    fs.writeFileSync(htmlPath, html);
 
-    const buffer = fs.readFileSync(path.join(targetFolder, "document.pdf"));
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle" });
+      await page.emulateMedia({ media: "print" });
+      await page.pdf({
+        path: pdfPath,
+        format: "A4",
+        preferCSSPageSize: true,
+        printBackground: true,
+      });
+    } finally {
+      await browser.close();
+    }
+
+    const buffer = fs.readFileSync(pdfPath);
 
     const pdf2pic = fromBuffer(buffer, {
       density: 300,

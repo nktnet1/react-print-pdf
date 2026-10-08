@@ -15,7 +15,7 @@ import shellStyles from "../shell/shell.css?raw";
 import headingStyles from "../variables/headings.css?raw";
 import variableStyles from "../variables/variables.css?raw";
 
-const onedocStyles = [
+const printStyles = [
   genericStyles,
   footnoteStyles,
   shellStyles,
@@ -45,7 +45,7 @@ export const compile = async (
 
   let Element = (
     <>
-      <CSS>{onedocStyles}</CSS>
+      <CSS>{printStyles}</CSS>
       {node}
     </>
   );
@@ -107,14 +107,14 @@ export const __docConfig: DocConfig = {
   name: "compile",
   icon: "CodeXmlIcon",
   description:
-    "Compile a React component to a string with the Onedoc print styles.",
+    "Compile a React component to a string with the React Print styles.",
   components: {
     compile: {
       server: true,
       client: true,
       examples: {
         default: {
-          description: `A simple function to compile a React component to an HTML string with the Onedoc print styles.
+          description: `A simple function to compile a React component to an HTML string with the React Print styles.
           \`\`\`jsx
           const html = await compile(<Component />);
           \`\`\``,

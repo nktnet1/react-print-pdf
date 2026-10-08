@@ -1,58 +1,58 @@
 h1 {
-  string-set: onedocH1Contents content(text);
+  string-set: reactPrintH1Contents content(text);
 }
 
 h2 {
-  string-set: onedocH2Contents content(text) onedocH3Contents ""
-    onedocH4Contents "" onedocH5Contents "" onedocH6Contents "";
+  string-set: reactPrintH2Contents content(text) reactPrintH3Contents ""
+    reactPrintH4Contents "" reactPrintH5Contents "" reactPrintH6Contents "";
 }
 
 h3 {
-  string-set: onedocH3Contents content(text) onedocH4Contents ""
-    onedocH5Contents "" onedocH6Contents "";
+  string-set: reactPrintH3Contents content(text) reactPrintH4Contents ""
+    reactPrintH5Contents "" reactPrintH6Contents "";
 }
 
 h4 {
-  string-set: onedocH4Contents content(text) onedocH5Contents ""
-    onedocH6Contents "";
+  string-set: reactPrintH4Contents content(text) reactPrintH5Contents ""
+    reactPrintH6Contents "";
 }
 
 h5 {
-  string-set: onedocH5Contents content(text) onedocH6Contents "";
+  string-set: reactPrintH5Contents content(text) reactPrintH6Contents "";
 }
 
 h6 {
-  string-set: onedocH6Contents content(text);
+  string-set: reactPrintH6Contents content(text);
 }
 
-.onedoc-heading-contents:not(:empty)::before {
+.react-print-heading-contents:not(:empty)::before {
   content: attr(data-before);
 }
 
-.onedoc-heading-contents:not(:empty)::after {
+.react-print-heading-contents:not(:empty)::after {
   content: attr(data-after);
 }
 
-.onedoc-h1-contents:before {
-  content: string(onedocH1Contents);
+.react-print-h1-contents:before {
+  content: string(reactPrintH1Contents);
 }
 
-.onedoc-h2-contents:before {
-  content: string(onedocH2Contents);
+.react-print-h2-contents:before {
+  content: string(reactPrintH2Contents);
 }
 
-.onedoc-h3-contents:before {
-  content: string(onedocH3Contents);
+.react-print-h3-contents:before {
+  content: string(reactPrintH3Contents);
 }
 
-.onedoc-h4-contents:before {
-  content: string(onedocH4Contents);
+.react-print-h4-contents:before {
+  content: string(reactPrintH4Contents);
 }
 
-.onedoc-h5-contents:before {
-  content: string(onedocH5Contents);
+.react-print-h5-contents:before {
+  content: string(reactPrintH5Contents);
 }
 
-.onedoc-h6-contents:before {
-  content: string(onedocH6Contents);
+.react-print-h6-contents:before {
+  content: string(reactPrintH6Contents);
 }

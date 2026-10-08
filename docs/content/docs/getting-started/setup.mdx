@@ -1,33 +1,16 @@
 ---
 title: "Setup"
 sidebarTitle: "Setup"
-description: "Create a brand-new folder with packages powered by React Print."
+description: "Install React Print and compile your first printable document."
 ---
 
-import { CodeXmlIcon, FileTextIcon, GitBranchIcon, PanelsTopLeftIcon } from "lucide-react";
+import { CodeXmlIcon, FileTextIcon, PanelsTopLeftIcon } from "lucide-react";
 
-# Fast Set Up ⚡️
+# Set Up
 
-Clone this repository ⬇️
-<Card
-  title='dev-local'
-  icon={<GitBranchIcon />}
-  href='https://github.com/OnedocLabs/dev-local'
->
-Clone our dev-local repository and follow the instructions in the readMe to get started quickly.
-</Card>
+## 1. Create a project
 
-![dev-local view](https://github.com/OnedocLabs/dev-local/blob/main/src/images/screenshot-dev-local.png?raw=true)
-
-<Callout intent='tip' title='Using dev-local'>
-We recommed splitting your editor into two windows, one for the code and the other for the PDF viewing integration.
-</Callout>
-
-# Manual Set Up 🛠️
-
-## 1. Create directory
-
-Create a new folder called `react-print-starter` and initialize a new npm project
+Create a new folder and initialize an npm project, or use an existing React application.
 
 ```sh
 mkdir react-print-starter
@@ -35,36 +18,32 @@ cd react-print-starter
 npm init -y
 ```
 
-## 2. Install the dependencies
-
-Get the react-print package locally
+## 2. Install the package
 
 <CodeBlocks>
 
 ```sh title="npm"
-npm install @fileforge/react-print
+npm install react-print-pdf
 ```
 
 ```sh title="yarn"
-yarn add @fileforge/react-print
+yarn add react-print-pdf
 ```
 
 ```sh title="pnpm"
-pnpm add @fileforge/react-print
+pnpm add react-print-pdf
 ```
 
 </CodeBlocks>
 
-## 3. Create your first PDF Component
+## 3. Create your first document component
 
-Create a new `documents` folder, then create a new file inside called `index.jsx` and copy the following code:
+Create `document/index.tsx`:
 
+```tsx title="document/index.tsx"
+import { PageBottom, PageBreak, PageTop } from "react-print-pdf";
 
-```jsx document/index.tsx
-import { PageTop, PageBottom, PageBreak } from "@fileforge/react-print";
-import * as React from "react";
-
-export const Document = ({ props }) => {
+export const Document = () => {
   return (
     <div>
       <PageTop>
@@ -72,21 +51,21 @@ export const Document = ({ props }) => {
       </PageTop>
       <div>Hello #2</div>
       <PageBottom>
-        <div className="text-gray-400 text-sm">Hello #3</div>
+        <div>Hello #3</div>
       </PageBottom>
       <PageBreak />
-      <span>Hello #4, but on a new page ! </span>
+      <span>Hello #4, but on a new page!</span>
     </div>
   );
 };
 ```
 
-## 4. Compile your document to HTML
+## 4. Compile the document to HTML
 
-Back in your parent folder, create a `main.jsx` file that imports your document an renders it using the `compile` function.
+Create an entry file that renders the document with `compile`:
 
-```js index.tsx
-import { compile } from "@fileforge/react-print";
+```tsx
+import { compile } from "react-print-pdf";
 import { Document } from "./document";
 
 const html = await compile(<Document />);
@@ -94,27 +73,22 @@ const html = await compile(<Document />);
 console.log(html);
 ```
 
-## 5. Generate your document with FileForge
+## 5. Render the HTML
 
-We recommend generating your PDF using the [FileForge API](/docs/integrations/onedoc), as it is specifically designed to integrate seamlessly with react-print. However, you are welcome to choose any external renderer that better meets your needs.
-[How to generate my PDF from my react-print component.](/docs/integrations/onedoc)
+`compile()` returns renderer-ready HTML. Save it, send it to a print pipeline, or pass it to a PDF renderer that supports the CSS features your document uses. React Print does not require a hosted rendering service.
 
 ## 6. Next steps
 
-Try to modify your PDF by using our different pre-built components.
-
 <Cards>
   <Card title="Compile" icon={<CodeXmlIcon />} href="/docs/components/compile">
-    A React component to help compile your React code for PDF rendering.
+    Compile React document components to HTML.
   </Card>
 
-{" "}
-
-<Card title="Footnote" icon={<FileTextIcon />} href="/docs/components/footnote">
-  A React component to help you build beautiful foot-notes.
-</Card>
+  <Card title="Footnote" icon={<FileTextIcon />} href="/docs/components/footnote">
+    Add automatically numbered footnotes.
+  </Card>
 
   <Card title="Shell" icon={<PanelsTopLeftIcon />} href="/docs/components/shell/pagetop">
-    A suite of React components for structured document layout management.
+    Build headers, footers, and page-aware layouts.
   </Card>
 </Cards>

@@ -1,41 +1,41 @@
 @page {
   @top-left {
-    content: flow(FileforgePageTop);
-    content: element(FileforgePageTop);
+    content: flow(ReactPrintPageTop);
+    content: element(ReactPrintPageTop);
     position: relative;
   }
 
   @bottom-left {
-    content: flow(FileforgePageBottom);
-    content: element(FileforgePageBottom);
+    content: flow(ReactPrintPageBottom);
+    content: element(ReactPrintPageBottom);
     position: relative;
   }
 }
 
-.onedoc-page-top {
-  position: running(FileforgePageTop) !important;
-  -prince-flow: static(FileforgePageTop);
+.react-print-page-top {
+  position: running(ReactPrintPageTop) !important;
+  -prince-flow: static(ReactPrintPageTop);
   width: 100%;
   height: 100%;
 }
 
-.onedoc-current-page-top {
-  position: FileforgePageTop;
+.react-print-current-page-top {
+  position: ReactPrintPageTop;
   width: 100%;
   height: 100%;
 }
 
-.onedoc-page-bottom {
-  position: running(FileforgePageBottom) !important;
-  -prince-flow: static(FileforgePageBottom);
+.react-print-page-bottom {
+  position: running(ReactPrintPageBottom) !important;
+  -prince-flow: static(ReactPrintPageBottom);
   width: 100%;
   height: 100%;
 }
 
-.onedoc-page-break {
+.react-print-page-break {
   page-break-after: always;
 }
 
-.onedoc-no-break {
+.react-print-no-break {
   page-break-inside: avoid;
 }

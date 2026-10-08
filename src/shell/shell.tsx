@@ -9,7 +9,10 @@ import type { DocConfig } from "#/docgen/types";
  */
 export const PageTop = (props: React.HTMLProps<HTMLDivElement>) => {
   return (
-    <div {...props} className={`onedoc-page-top ${props?.className || ""}`} />
+    <div
+      {...props}
+      className={`react-print-page-top ${props?.className || ""}`}
+    />
   );
 };
 
@@ -22,7 +25,7 @@ export const CurrentPageTop = (props: React.HTMLProps<HTMLDivElement>) => {
   return (
     <div
       {...props}
-      className={`onedoc-current-page-top ${props?.className || ""}`}
+      className={`react-print-current-page-top ${props?.className || ""}`}
     />
   );
 };
@@ -34,7 +37,7 @@ export const PageBottom = (props: React.HTMLProps<HTMLDivElement>) => {
   return (
     <div
       {...props}
-      className={`onedoc-page-bottom ${props?.className || ""}`}
+      className={`react-print-page-bottom ${props?.className || ""}`}
     />
   );
 };
@@ -44,7 +47,10 @@ export const PageBottom = (props: React.HTMLProps<HTMLDivElement>) => {
  */
 export const PageBreak = (props: React.HTMLProps<HTMLDivElement>) => {
   return (
-    <div {...props} className={`onedoc-page-break ${props?.className || ""}`} />
+    <div
+      {...props}
+      className={`react-print-page-break ${props?.className || ""}`}
+    />
   );
 };
 
@@ -53,7 +59,10 @@ export const PageBreak = (props: React.HTMLProps<HTMLDivElement>) => {
  */
 export const NoBreak = (props: React.HTMLProps<HTMLDivElement>) => {
   return (
-    <div {...props} className={`onedoc-no-break ${props?.className || ""}`} />
+    <div
+      {...props}
+      className={`react-print-no-break ${props?.className || ""}`}
+    />
   );
 };
 

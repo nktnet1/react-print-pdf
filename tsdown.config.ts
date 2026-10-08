@@ -7,7 +7,6 @@ export default defineConfig({
     index: "src/index.ts",
     mdx: "src/mdx.ts",
     "client/index": "src/client.ts",
-    "server/index": "src/server.ts",
   },
   format: ["esm", "cjs"],
   platform: "browser",

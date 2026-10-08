@@ -2,7 +2,7 @@
   "name": "react-print-pdf",
   "version": "0.1.150",
   "type": "module",
-  "description": "Fileforge components for JavaScript React",
+  "description": "Open-source React components and utilities for building printable PDF documents",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -25,16 +25,6 @@
       "require": {
         "types": "./dist/client/index.d.cts",
         "default": "./dist/client/index.cjs"
-      }
-    },
-    "./server": {
-      "import": {
-        "types": "./dist/server/index.d.ts",
-        "default": "./dist/server/index.js"
-      },
-      "require": {
-        "types": "./dist/server/index.d.cts",
-        "default": "./dist/server/index.cjs"
       }
     },
     "./mdx": {
@@ -79,7 +69,6 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@chakra-ui/react": "^2.10.10",
-    "@fileforge/client": "^0.1.18",
     "@heroicons/react": "^2.2.0",
     "@mdx-js/rollup": "^3.1.1",
     "@rolldown/plugin-node-polyfills": "^1.0.3",
@@ -89,7 +78,6 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitest/browser-playwright": "^4.1.11",
-    "dotenv": "^18.0.6",
     "front-matter": "^4.0.2",
     "glob": "^13.0.6",
     "pdf2pic": "^3.2.0",

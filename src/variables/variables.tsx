@@ -20,12 +20,12 @@ export const PageNumber = ({
     <>
       <CSS>
         {`
-.onedoc-page-number-${counterStyle}:before {
+.react-print-page-number-${counterStyle}:before {
   content: counter(page, ${counterStyle});
 }
         `}
       </CSS>
-      <span className={`onedoc-page-number-${counterStyle}`} />
+      <span className={`react-print-page-number-${counterStyle}`} />
     </>
   );
 };
@@ -45,12 +45,12 @@ export const PagesNumber = ({
     <>
       <CSS>
         {`
-.onedoc-pages-number-${counterStyle}:before {
+.react-print-pages-number-${counterStyle}:before {
   content: counter(pages, ${counterStyle});
 }
         `}
       </CSS>
-      <span className={`onedoc-pages-number-${counterStyle}`} />
+      <span className={`react-print-pages-number-${counterStyle}`} />
     </>
   );
 };
@@ -59,7 +59,7 @@ const RunningHeader = (level: number) => {
   return ({ before = "", after = "" }: { before?: string; after?: string }) => {
     return (
       <span
-        className={`onedoc-heading-contents onedoc-h${level}-contents`}
+        className={`react-print-heading-contents react-print-h${level}-contents`}
         data-before={before}
         data-after={after}
       />

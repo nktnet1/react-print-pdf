@@ -46,8 +46,9 @@ export const Field = ({ type, signee, ...props }: FieldProps) => {
       type={
         type === "radio" ? "radio" : type === "checkbox" ? "checkbox" : "text"
       }
-      data-onedoc-sign={type}
-      className={`onedoc-signature-field onedoc-signature-field-${type} ${props.className || ""}`}
+      data-react-print-sign={type}
+      data-react-print-signee={signee}
+      className={`react-print-signature-field react-print-signature-field-${type} ${props.className || ""}`}
     />
   );
 };
@@ -56,19 +57,14 @@ export const Field = ({ type, signee, ...props }: FieldProps) => {
 export const __docConfig: DocConfig = {
   name: "Signature",
   icon: "SignatureIcon",
-  description: `Add signature fields to your document. You can specify various types of fields like signature, initials, date, and more.
-
-<Warning>
-Signature and form filling are currently only available to select customers. If you would like to use these features in your project, please reach out at contact@onedoclabs.com.
-</Warning>
-`,
+  description: `Add signature fields to your document. You can specify various types of fields like signature, initials, date, and more.`,
   components: {
     Field: {
       client: true,
       server: true,
       examples: {
         default: {
-          description: `The created fields can be signed as-is in Acrobat Reader or other PDF viewers, using Onedoc's signature API, or through other e-signature services like [DocuSign](https://developers.docusign.com/docs/esign-rest-api/esign101/concepts/tabs/pdf-transform/).
+          description: `The created fields can be signed in compatible PDF viewers or used with e-signature services such as [DocuSign](https://developers.docusign.com/docs/esign-rest-api/esign101/concepts/tabs/pdf-transform/).
 
 Supported fields:
 

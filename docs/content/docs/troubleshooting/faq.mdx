@@ -5,6 +5,16 @@ description: "Troubleshoot common React Print setup, rendering, and module issue
 
 ## Issues with Node.js modules
 
-`react-print` ships both for server and client side. Some components are only available for the server side such as `Tailwind`.
+Use the default `react-print-pdf` entrypoint in Node.js, SSR, and build-time document generation:
 
-If you plan to use `react-print` on the client side, you should import your components from `@fileforge/react-print/client` instead of `@fileforge/react-print` or `@fileforge/react-print/server`.
+```ts
+import { compile, PageBreak } from "react-print-pdf";
+```
+
+For browser-only usage, the explicit client entrypoint is also available:
+
+```ts
+import { PageBreak } from "react-print-pdf/client";
+```
+
+The package does not include or require a hosted server. `compile()` produces HTML locally in your application.
