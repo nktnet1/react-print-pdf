@@ -55,7 +55,7 @@
   "scripts": {
     "build": "tsdown",
     "test": "playwright install chromium && npm run build && vitest run --config vitest.node.config.ts && vitest run",
-    "test:coverage": "playwright install chromium && npm run build && vitest run --config vitest.node.config.ts --coverage && vitest run --coverage",
+    "test:coverage": "playwright install chromium && npm run build && vitest run --config vitest.node.config.ts --coverage && tsx scripts/check-source-coverage.ts coverage/node/coverage-summary.json && vitest run --coverage && tsx scripts/check-source-coverage.ts coverage/browser/coverage-summary.json",
     "dev": "pnpm --dir ./docs dev",
     "build-components": "npm run build && tsx ./docgen/index.ts",
     "prune-docs": "tsx ./docgen/prune.ts",

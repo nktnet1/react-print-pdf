@@ -104,12 +104,16 @@ pnpm test:coverage
 ```
 
 `test:coverage` builds the package and runs both Node and Chromium suites with
-V8 coverage. Each environment enforces initial source coverage floors of 20%
-lines/statements, 15% functions, and 10% branches. Reports are written to
-`coverage/node/` and `coverage/browser/` (HTML, LCOV, and JSON summaries). CI
-runs the coverage command for PRs and pushes to `main`, then uploads both
-reports as artifacts. These are conservative starting floors; raise them once
-the measured coverage supports stronger thresholds.
+V8 coverage. The suites test the built `dist/` package; the coverage collector
+includes those executed modules and remaps them to `src/` with source maps. A
+post-run check enforces **source-only** floors of 20% lines/statements, 15%
+functions, and 10% branches independently in each environment, rejecting empty
+source coverage or percentages inflated by bundled dependencies. Reports are
+written to `coverage/node/` and `coverage/browser/` (HTML, LCOV, and JSON
+summaries). CI runs this command on PRs and pushes to `main`, then uploads both
+reports as artifacts. Use `pnpm test:coverage` rather than `pnpm test --coverage`:
+with the latter, the flag reaches only the final Chromium runner. Raise the
+floors after examining measured coverage.
 
 PDF integration tests use Playwright Chromium and Poppler's `pdfinfo`/`pdftotext` to verify rendered documents. Install `poppler-utils` locally before running `pnpm test` (CI installs it automatically).
 
