@@ -9,6 +9,7 @@ import SearchDialog from "#/components/fumadocs/search";
 import { withBasePath } from "#/lib/basePath";
 import appCss from "#/styles/app.css?url";
 
+/** @internal TanStack Router consumes this file-route export indirectly. */
 export const Route = createRootRoute({
   head: () => ({
     meta: [

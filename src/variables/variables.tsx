@@ -97,6 +97,7 @@ export const RunningH5 = RunningHeader(5);
  */
 export const RunningH6 = RunningHeader(6);
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "Variables",
   icon: "VariableIcon",

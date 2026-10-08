@@ -47,6 +47,7 @@ export const Margins = ({
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "CSS",
   icon: "PaletteIcon",

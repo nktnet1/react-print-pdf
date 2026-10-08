@@ -122,24 +122,6 @@ ${docConfig.icon ? `icon: ${docConfig.icon}` : ""}
     } else {
       markdown += `\`\`\`jsx\nimport { ${componentName} } from "@fileforge/react-print";\n\`\`\`\n\n`;
     }
-
-    // if (
-    //   component &&
-    //   component.props &&
-    //   Object.keys(component.props).length > 0
-    // ) {
-    //   markdown += `### API\n\n<ResponseField name="Props">\n<Expandable defaultOpen={true} title="Show available props">\n`;
-
-    //   Object.entries(component.props).forEach(([propName, prop]) => {
-    //     markdown += `<ResponseField name="${propName}" type="${safePropType(
-    //       prop.type.name
-    //     )}" required={${prop.required}}>\n\n${
-    //       prop.description
-    //     }\n\n${prop.defaultValue ? `Default: \`${JSON.stringify(prop.defaultValue.value)}\`\n\n` : ""}</ResponseField>\n`;
-    //   });
-
-    //   markdown += `</Expandable></ResponseField>\n`;
-    // }
   }
 
   return markdown;

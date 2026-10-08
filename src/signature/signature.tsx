@@ -52,6 +52,7 @@ export const Field = ({ type, signee, ...props }: FieldProps) => {
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "Signature",
   icon: "SignatureIcon",

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import type { CompileOptions } from "../compile/compile";
 
-export interface Example {
+interface Example {
   description?: string;
   name?: string;
   template: ReactElement;

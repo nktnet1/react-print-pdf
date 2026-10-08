@@ -102,8 +102,3 @@ export const formatSnippet = (snippet: string) => {
     parser: "typescript",
   });
 };
-
-export const safePropType = (str: string) => {
-  // Replace all " by ' to avoid conflicts with markdown
-  return str.replace(/"/g, "'");
-};

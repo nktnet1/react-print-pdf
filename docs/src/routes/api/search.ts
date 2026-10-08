@@ -13,6 +13,7 @@ const server = createSearchAPI("advanced", {
   })),
 });
 
+/** @internal TanStack Router consumes this file-route export indirectly. */
 export const Route = createFileRoute("/api/search")({
   server: {
     handlers: {

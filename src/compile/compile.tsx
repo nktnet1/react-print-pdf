@@ -102,6 +102,7 @@ export const compile = async (
   return `<style>${result.css}</style>${html}`;
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "compile",
   icon: "CodeXmlIcon",

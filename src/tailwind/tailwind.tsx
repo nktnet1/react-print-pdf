@@ -29,7 +29,7 @@ import type { DocConfig } from "../docgen/types";
 
 type LegacyCorePlugins = string[] | Record<string, boolean>;
 
-export type TailwindConfig = Config & {
+type TailwindConfig = Config & {
   corePlugins?: LegacyCorePlugins;
   content?: unknown;
 };
@@ -321,6 +321,7 @@ export const Tailwind = ({
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "Tailwind",
   icon: "WindIcon",

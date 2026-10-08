@@ -36,9 +36,7 @@ const getFileforgeClient = () => {
 };
 
 export const baseCss = fs.readFileSync(path.join(__dirname, "./base.css"));
-export const indexCss = fs.readFileSync(
-  path.join(__dirname, "../dist/index.css"),
-);
+const indexCss = fs.readFileSync(path.join(__dirname, "../dist/index.css"));
 
 export async function renderPreview(
   component: React.ReactElement,

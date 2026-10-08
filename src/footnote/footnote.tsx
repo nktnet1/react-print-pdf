@@ -21,6 +21,7 @@ export const Footnote = ({
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   icon: "InfoIcon",
   description: "Create automatically numbered footnotes.",

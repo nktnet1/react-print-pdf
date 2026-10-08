@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "tags": ["-internal"],
+  "workspaces": {
+    ".": {
+      "entry": ["src/ui/templates/**/*.mdx"]
+    },
+    "docs": {}
+  }
+}

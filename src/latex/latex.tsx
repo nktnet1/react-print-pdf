@@ -19,6 +19,7 @@ export const Latex = ({ children }: { children: string }) => {
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   name: "LaTeX",
   icon: "RadicalIcon",

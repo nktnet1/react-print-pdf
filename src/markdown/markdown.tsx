@@ -102,6 +102,7 @@ export const Markdown = (props: MarkdownProps) => {
   );
 };
 
+/** @internal */
 export const __docConfig: DocConfig = {
   description: `Render Markdown inside your templates. Provides a simple wrapper around [\`markdown-to-jsx\`](https://github.com/quantizor/markdown-to-jsx).
 

@@ -63,9 +63,6 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitest/browser-playwright": "^4.1.11",
-    "acorn": "^8.19.0",
-    "acorn-typescript": "^1.4.13",
-    "autoprefixer": "^10.6.1",
     "dotenv": "^18.0.6",
     "front-matter": "^4.0.2",
     "glob": "^13.0.6",
@@ -102,5 +99,10 @@
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.64.0"
   },
-  "packageManager": "pnpm@12.10.1"
+  "packageManager": "pnpm@12.10.1",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ]
 }

@@ -16,6 +16,7 @@ import { baseOptions } from "#/lib/layout.shared";
 import { source } from "#/lib/source";
 import { staticFunctionMiddleware } from "#/lib/staticMiddlewareFunction";
 
+/** @internal TanStack Router consumes this file-route export indirectly. */
 export const Route = createFileRoute("/docs/$")({
   component: Page,
   loader: async ({ params }) => {
