@@ -99,23 +99,32 @@ The source documentation lives under [`docs/content/docs`](docs/content/docs).
 pnpm build
 pnpm typecheck
 pnpm check
-pnpm test
+pnpm test:source
 pnpm test:coverage
+pnpm test:package
+pnpm test
 ```
 
-`test:coverage` builds the package and runs both Node and Chromium suites with
-V8 coverage. The suites test the built `dist/` package; the coverage collector
-includes those executed modules and remaps them to `src/` with source maps. A
-post-run check enforces **source-only** floors of 20% lines/statements, 15%
-functions, and 10% branches independently in each environment, rejecting empty
-source coverage or percentages inflated by bundled dependencies. Reports are
-written to `coverage/node/` and `coverage/browser/` (HTML, LCOV, and JSON
-summaries). CI runs this command on PRs and pushes to `main`, then uploads both
-reports as artifacts. Use `pnpm test:coverage` rather than `pnpm test --coverage`:
-with the latter, the flag reaches only the final Chromium runner. Raise the
-floors after examining measured coverage.
+`test:source` runs the Node and Chromium tests **directly from `src/`** using
+Vitest projects, without a package build. The test configuration uses the same
+Tailwind theme and Preflight CSS definitions as `tsdown`. `test:package` builds
+`dist/` and runs the separate Bun, Vercel, export/declaration, and bundle
+compatibility checks against the **actual published entrypoints**.
+`test` runs both suites in that order.
 
-PDF integration tests use Playwright Chromium and Poppler's `pdfinfo`/`pdftotext` to verify rendered documents. Install `poppler-utils` locally before running `pnpm test` (CI installs it automatically).
+`test:coverage` runs the source projects with combined V8 coverage, checks the
+result once, then runs the published-package tests. Node and Chromium hits are
+merged by Vitest into a single `coverage/combined/` report (HTML, LCOV, and
+JSON summary); build artifacts and vendor runtime code do not count towards
+source coverage. Minimum thresholds are 20% lines/statements, 15% functions,
+and 10% branches. The post-run guard rejects empty `src/` coverage. CI uses
+this command on pull requests and pushes to `main` and uploads the report.
+
+Chromium is required for the browser suite and PDF integration tests. Install
+it with `pnpm exec playwright install chromium`; the PDF integration tests also
+use Poppler's `pdfinfo` and `pdftotext` (`poppler-utils`). CI installs these
+prerequisites. `test:source` does not build `dist/` or download Chromium at
+every run.
 
 See [`docs/content/docs/contributing.mdx`](docs/content/docs/contributing.mdx) for the contribution workflow.
 

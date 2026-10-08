@@ -36,6 +36,17 @@ test("Font emits a stylesheet import", () => {
   expect(html).toContain("@import url('https://example.test/font.css');");
 });
 
+test("source compilation includes real print CSS instead of Vitest CSS stubs", async () => {
+  const html = await compile(<main>Print stylesheet</main>);
+
+  expect(html).toContain(".hyphenate {");
+  expect(html).toMatch(/\.react-print-footnote\s*\{[^}]*float:\s*footnote/);
+  expect(html).toMatch(
+    /\.react-print-page-break\s*\{[^}]*page-break-after:\s*always/,
+  );
+  expect(html).toContain("string-set: reactPrintH1Contents");
+});
+
 test("Margins produces a complete @page rule with every margin", () => {
   const html = renderToStaticMarkup(
     <Margins

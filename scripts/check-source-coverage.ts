@@ -30,7 +30,7 @@ if (
   !sourceFiles.some(([, counts]) => counts.lines.covered > 0)
 ) {
   throw new Error(
-    `No executed src/ code found in ${reportPath}. Check that V8 coverage includes the executed dist/ files and that tsdown source maps are remapped.`,
+    `No executed src/ code found in ${reportPath}. Check that Vitest source tests ran with V8 coverage enabled.`,
   );
 }
 

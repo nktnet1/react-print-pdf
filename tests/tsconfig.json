@@ -18,6 +18,8 @@
     "./**/*.tsx",
     "../vitest.config.ts",
     "../vitest.node.config.ts",
+    "../vitest.browser.config.ts",
+    "../vitest.package.config.ts",
     "../src/raw.d.ts"
   ]
 }
