@@ -2,6 +2,7 @@ import { Button, ChakraProvider } from "@chakra-ui/react";
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import postcss from "postcss";
 import type React from "react";
+import { renderToString } from "react-dom/server";
 import { CSS } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
 import {
@@ -57,8 +58,6 @@ export const compile = async (
     options || {},
   );
 
-  const ReactDOMServer = await import("react-dom/server");
-
   let Element = (
     <>
       <CSS>{printStyles}</CSS>
@@ -69,7 +68,7 @@ export const compile = async (
   const tailwindCollector = createTailwindStyleCollector();
 
   if (!emotion) {
-    const html = ReactDOMServer.renderToString(
+    const html = renderToString(
       <TailwindStyleCollectorProvider collector={tailwindCollector}>
         {Element}
       </TailwindStyleCollectorProvider>,
@@ -104,9 +103,7 @@ export const compile = async (
     </TailwindStyleCollectorProvider>
   );
 
-  const renderedHtml = await tailwindCollector.resolve(
-    ReactDOMServer.renderToString(Element),
-  );
+  const renderedHtml = await tailwindCollector.resolve(renderToString(Element));
   const { html, css: inlineEmotionCss } = extractEmotionStyleTags(renderedHtml);
   const cachedEmotionCss = styleContainer
     ? Array.from(

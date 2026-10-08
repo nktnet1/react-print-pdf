@@ -4,11 +4,18 @@ import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "react-print-pdf": fileURLToPath(
-        new URL("./dist/index.js", import.meta.url),
-      ),
-    },
+    alias: [
+      {
+        find: /^react-print-pdf\/client$/,
+        replacement: fileURLToPath(
+          new URL("./dist/client/index.js", import.meta.url),
+        ),
+      },
+      {
+        find: /^react-print-pdf$/,
+        replacement: fileURLToPath(new URL("./dist/index.js", import.meta.url)),
+      },
+    ],
   },
   build: {
     target: "esnext",
