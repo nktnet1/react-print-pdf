@@ -62,7 +62,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p tsconfig.tools.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p docgen/tsconfig.json && tsc --noEmit -p tests/tsconfig.json && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p tsconfig.tools.json",
     "docs:build": "pnpm --dir ./docs build",
     "test:watch": "playwright install chromium && npm run build && vitest --browser.headless=false",
     "release:beta": "tsx ./scripts/release-beta.ts",
