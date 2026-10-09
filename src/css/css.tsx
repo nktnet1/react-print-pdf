@@ -15,8 +15,27 @@ export const CSS = ({ children }: { children: string }) => {
   return <style dangerouslySetInnerHTML={{ __html: escapeCss(children) }} />;
 };
 
+// CSS strings need their own escaping: HTML escaping cannot prevent a quote
+// inside a font URL from terminating url(...) and introducing new CSS rules.
+// Escape controls as hex code points followed by a separator, and escape the
+// quotation mark and backslash without changing ordinary URL characters.
+const quoteCssUrl = (url: string): string => {
+  let escaped = "";
+  for (const character of url) {
+    if (character === '"' || character === "\\") {
+      escaped += `\\${character}`;
+      continue;
+    }
+
+    const code = character.charCodeAt(0);
+    escaped +=
+      code < 0x20 || code === 0x7f ? `\\${code.toString(16)} ` : character;
+  }
+  return `"${escaped}"`;
+};
+
 export const Font = ({ url }: { url: string }) => {
-  return <CSS>{`@import url('${url}');`}</CSS>;
+  return <CSS>{`@import url(${quoteCssUrl(url)});`}</CSS>;
 };
 
 type MarginsProps = {

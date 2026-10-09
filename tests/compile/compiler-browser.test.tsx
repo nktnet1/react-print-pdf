@@ -1,7 +1,7 @@
 import { Global, jsx } from "@emotion/react";
 import { useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CSS, compile, Tailwind } from "react-print-pdf";
+import { CSS, compile, Font, Tailwind } from "react-print-pdf";
 import { expect, test, vi } from "vitest";
 
 const createHost = () => {
@@ -51,6 +51,73 @@ test("CSS preserves the zero specificity of :where selectors in Chromium", async
       expect(getComputedStyle(is as HTMLElement).color).toBe("rgb(255, 0, 0)");
     });
     expect(host.querySelector("style")?.textContent).toContain(":where(");
+  } finally {
+    cleanup();
+  }
+});
+
+test("Font loads a CSS URL with quotes and keeps the import intact", async () => {
+  const { host, root, cleanup } = createHost();
+  const url = `data:text/css,.from-font-import%7Bcolor%3Argb(17%2C34%2C51)%7D#Jane's"font`;
+
+  try {
+    root.render(
+      <>
+        <Font url={url} />
+        <p className="from-font-import" data-font-import>
+          Imported stylesheet
+        </p>
+      </>,
+    );
+
+    await vi.waitFor(() => {
+      const element = host.querySelector<HTMLElement>("[data-font-import]");
+      expect(element).not.toBeNull();
+      expect(getComputedStyle(element as HTMLElement).color).toBe(
+        "rgb(17, 34, 51)",
+      );
+    });
+    const rules = host.querySelector("style")?.sheet?.cssRules;
+    expect(rules).toHaveLength(1);
+    expect(rules?.[0]?.cssText).toContain("#Jane's");
+  } finally {
+    cleanup();
+  }
+});
+
+test("Font URLs cannot inject additional CSS rules", async () => {
+  const { host, root, cleanup } = createHost();
+  const url = `data:text/css,.from-font-import%7Bcolor%3Argb(17%2C34%2C51)%7D'); .font-injected { color: rgb(255, 0, 0) } /*`;
+
+  try {
+    root.render(
+      <>
+        <Font url={url} />
+        <p className="from-font-import" data-font-import>
+          Expected import
+        </p>
+        <p className="font-injected" data-font-injected>
+          Should not receive injected styles
+        </p>
+      </>,
+    );
+
+    await vi.waitFor(() => {
+      const element = host.querySelector<HTMLElement>("[data-font-import]");
+      expect(element).not.toBeNull();
+      expect(getComputedStyle(element as HTMLElement).color).toBe(
+        "rgb(17, 34, 51)",
+      );
+    });
+
+    const rules = host.querySelector("style")?.sheet?.cssRules;
+    expect(rules).toHaveLength(1);
+    expect(rules?.[0]).toBeInstanceOf(CSSImportRule);
+    const injected = host.querySelector<HTMLElement>("[data-font-injected]");
+    expect(injected).not.toBeNull();
+    expect(getComputedStyle(injected as HTMLElement).color).not.toBe(
+      "rgb(255, 0, 0)",
+    );
   } finally {
     cleanup();
   }

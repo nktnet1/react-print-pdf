@@ -65,7 +65,7 @@ test("Font emits a stylesheet import", () => {
   const html = renderToStaticMarkup(
     <Font url="https://example.test/font.css" />,
   );
-  expect(html).toContain("@import url('https://example.test/font.css');");
+  expect(html).toContain('@import url("https://example.test/font.css");');
 });
 
 test("Font keeps query parameters intact when importing an external stylesheet", () => {
@@ -73,8 +73,18 @@ test("Font keeps query parameters intact when importing an external stylesheet",
     "https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap";
   const html = renderToStaticMarkup(<Font url={url} />);
 
-  expect(html).toContain(`@import url('${url}');`);
+  expect(html).toContain(`@import url("${url}");`);
   expect(html).not.toContain("&amp;");
+});
+
+test("Font quotes CSS string delimiters and escapes control characters", () => {
+  const url = `https://fonts.example.test/Jane's"font\\family\nnext\u007f.css`;
+  const html = renderToStaticMarkup(<Font url={url} />);
+
+  expect(html).toContain(
+    `@import url("https://fonts.example.test/Jane's\\"font\\\\family\\a next\\7f .css");`,
+  );
+  expect(html.match(/<\/style>/g)).toHaveLength(1);
 });
 
 test("source compilation includes real print CSS instead of Vitest CSS stubs", async () => {
