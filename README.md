@@ -133,6 +133,19 @@ use Poppler's `pdfinfo` and `pdftotext` (`poppler-utils`). CI installs these
 prerequisites. `test:source` does not build `dist/` or download Chromium at
 every run.
 
+For a real Gotenberg integration check, run `pnpm test:gotenberg`. This
+builds the distributable package, launches a disposable Chromium-only Gotenberg
+container on a random **localhost-only** port, and validates its generated PDFs
+using Poppler's `pdfinfo`, `pdftotext`, and `pdfimages`. It checks pagination,
+page size, extracted text, and a separately uploaded PNG asset, then stops the
+container. It requires a running Docker daemon and `poppler-utils`; it does not
+run as part of the normal Vitest/coverage suite. To test an existing service
+instead, set `GOTENBERG_BASE_URL` (this skips Docker startup); the default
+image is `gotenberg/gotenberg:8.37.0-chromium` and can be overridden with
+`GOTENBERG_IMAGE`. If the container exits during startup, the test reports its
+exit status and logs before removing it. CI runs this integration check
+in a separate job on `main` pushes, after the regular test job, not on PRs.
+
 See [`docs/content/docs/contributing.mdx`](docs/content/docs/contributing.mdx) for the contribution workflow.
 
 ## License

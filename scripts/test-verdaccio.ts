@@ -29,6 +29,7 @@ const manifest = JSON.parse(
   name: string;
   version: string;
   dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
 };
 const { distTag } = parseReleaseVersion(manifest.version);
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -286,12 +287,23 @@ const main = async (): Promise<void> => {
       if (!version) throw new Error(`Missing ${name} consumer-test version`);
       return `${name}@${version}`;
     });
+    const typecheckDependencies = [
+      "typescript",
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+    ].map((name) => {
+      const version = manifest.devDependencies[name];
+      if (!version) throw new Error(`Missing ${name} consumer-test version`);
+      return `${name}@${version}`;
+    });
     run(
       npm,
       [
         "install",
         `${manifest.name}@${manifest.version}`,
         ...consumerDependencies,
+        ...typecheckDependencies,
         `playwright@${playwrightVersion}`,
         `vite@${VITE_VERSION}`,
         "--registry",
@@ -322,6 +334,86 @@ const main = async (): Promise<void> => {
       run(process.execPath, [fixture], consumerRoot, npmEnv);
     }
 
+    // Typecheck the exact published declarations, not the source aliases used
+    // by the repository tests. Reuse their real consumer code for both formats.
+    const typesRoot = join(consumerRoot, "types");
+    mkdirSync(typesRoot, { recursive: true });
+    for (const fixture of ["consumer.mts", "consumer.cts"]) {
+      copyFileSync(
+        join(root, "tests", "fixtures", "package-consumer", fixture),
+        join(typesRoot, fixture),
+      );
+    }
+    const tscPath = join(
+      consumerRoot,
+      "node_modules",
+      "typescript",
+      "bin",
+      "tsc",
+    );
+    for (const config of ["tsconfig.nodenext.json", "tsconfig.bundler.json"]) {
+      copyFileSync(
+        join(root, "tests", "fixtures", "verdaccio-consumer", "types", config),
+        join(typesRoot, config),
+      );
+      console.log(
+        `${styleText("cyan", "Typechecking")} ${styleText("bold", config)} against installed declarations`,
+      );
+      run(
+        process.execPath,
+        [tscPath, "--project", join("types", config)],
+        consumerRoot,
+        npmEnv,
+      );
+    }
+
+    // Prove that root and /client do not eagerly import the optional Playwright
+    // peer. This consumer never installs Playwright (or optional packages).
+    const noPlaywrightRoot = join(temporaryRoot, "no-playwright");
+    mkdirSync(noPlaywrightRoot, { recursive: true });
+    writeFileSync(
+      join(noPlaywrightRoot, "package.json"),
+      JSON.stringify({
+        name: "verdaccio-no-playwright",
+        private: true,
+        version: "0.0.0",
+      }),
+    );
+    console.log(
+      `${styleText("cyan", "Installing")} a consumer without the optional ${styleText("bold", "playwright")} peer`,
+    );
+    run(
+      npm,
+      [
+        "install",
+        `${manifest.name}@${manifest.version}`,
+        ...consumerDependencies,
+        "--registry",
+        registry,
+        "--omit=optional",
+        "--ignore-scripts",
+        "--package-lock=false",
+        "--no-audit",
+        "--no-fund",
+      ],
+      noPlaywrightRoot,
+      npmEnv,
+    );
+    copyFileSync(
+      join(
+        root,
+        "tests",
+        "fixtures",
+        "verdaccio-consumer",
+        "without-playwright.mjs",
+      ),
+      join(noPlaywrightRoot, "without-playwright.mjs"),
+    );
+    console.log(
+      `${styleText("cyan", "Verifying")} ${styleText("bold", "require/import")} without Playwright`,
+    );
+    run(process.execPath, ["without-playwright.mjs"], noPlaywrightRoot, npmEnv);
+
     const viteFixtures = join(root, "tests", "fixtures", "verdaccio-consumer");
     mkdirSync(join(consumerRoot, "vite"), { recursive: true });
     for (const fixture of ["index.html", "main.js"]) {
@@ -339,7 +431,7 @@ const main = async (): Promise<void> => {
     );
     run(process.execPath, ["verify-vite-browser.mjs"], consumerRoot, npmEnv);
     console.log(
-      `Verdaccio CJS/ESM and Vite/Chromium tests ${styleText("green", "passed")}`,
+      `Verdaccio CJS/ESM, TypeScript, optional-peer, and Vite/Chromium tests ${styleText("green", "passed")}`,
     );
   } catch (error) {
     if (existsSync(logPath)) {
