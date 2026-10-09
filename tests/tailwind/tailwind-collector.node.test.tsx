@@ -206,3 +206,77 @@ test("does not rewrite unrelated CSS variable values that match keyframes", asyn
   expect(result).toMatch(/--motion:\s*var\(--motion-actual\)/);
   expect(result).toMatch(/--motion-actual:\s*react-print-[\w-]+-wiggle/);
 });
+
+test("does not rewrite font shorthand style keywords that match registered font families", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: "italic"; src: url(italic.woff2); }
+      @font-face { font-family: "bold"; src: url(bold.woff2); }
+      .example { font: italic bold 16px/1.5 serif; }
+      .actual-family { font: italic 16px "italic", serif; }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="example actual-family">Hi</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(html);
+  const css = result.split("</style>")[0];
+  expect(css).toMatch(/font:\s*italic bold 16px\/1\.5 serif/);
+  expect(css).toMatch(/font:\s*italic 16px "react-print-[^"]+-font-0", serif/);
+});
+
+test("preserves unquoted generic families even if a custom font has that name", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: "serif"; src: url(custom.woff2); }
+      .generic { font-family: serif; font: normal 16px serif; }
+      .named { font-family: "serif"; font: 16px "serif"; }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="generic named">Hi</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(html);
+  const css = result.split("</style>")[0];
+  expect(css).toMatch(/font-family:\s*serif\s*;/);
+  expect(css).toMatch(/font:\s*normal 16px serif/);
+  expect(css).toMatch(/font-family:\s*"react-print-[^"]+-font-0"/);
+  expect(css).toMatch(/font:\s*16px "react-print-[^"]+-font-0"/);
+});
+
+test("renames font families after variable font sizes without changing style keywords", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: "italic"; src: url(italic.woff2); }
+      .variable-size { font: italic var(--text-size) "italic", serif; }
+      .variable-weight-and-size { font: var(--font-weight) var(--text-size) "italic", serif; }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="variable-size variable-weight-and-size">Hi</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const css = (await collector.resolve(html)).split("</style>")[0];
+  expect(css).toMatch(
+    /font:\s*italic var\(--text-size\) "react-print-[^"]+-font-0", serif/,
+  );
+  expect(css).toMatch(
+    /font:\s*var\(--font-weight\) var\(--text-size\) "react-print-[^"]+-font-0", serif/,
+  );
+});
+
+test("does not rewrite non-family custom properties that share a font name", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: "italic"; src: url(italic.woff2); }
+      .example {
+        --font-style: italic;
+        --button-font-style: italic;
+        --family: italic;
+        --font-alias: var(--family);
+        font-style: var(--font-style);
+        font-family: var(--font-alias);
+      }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="example">Hi</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const css = (await collector.resolve(html)).split("</style>")[0];
+  expect(css).toMatch(/--font-style:\s*italic\s*;/);
+  expect(css).toMatch(/--button-font-style:\s*italic\s*;/);
+  expect(css).toMatch(/--family:\s*react-print-[^;]+-font-0\s*;/);
+  expect(css).toMatch(/--font-alias:\s*var\(--family\)/);
+  expect(css).toMatch(/font-family:\s*var\(--font-alias\)/);
+});

@@ -318,6 +318,77 @@ async function buildTailwindStyles(
   return result.css;
 }
 
+// Unquoted generic family names and CSS-wide keywords must retain their CSS
+// meaning even if a document also declares @font-face { font-family: "serif" }.
+// A custom font with such a name can still be selected by quoting it.
+const genericFontFamilyKeywords = new Set([
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "math",
+  "emoji",
+  "fangsong",
+  "inherit",
+  "initial",
+  "unset",
+  "revert",
+  "revert-layer",
+]);
+
+// In the `font` shorthand the style, weight, stretch, size and line-height
+// precede the family. Only family names after the size can be renamed: a font
+// named "italic" must not alter `font: italic 16px Arial`, for example.
+const fontShorthandFamilyOffset = (
+  nodes: ReturnType<typeof parseCssValue>["nodes"],
+): number => {
+  const fontSizeKeyword =
+    /^(?:xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large|smaller|larger)$/i;
+  const fontSizeLength =
+    /^(?:0(?:\.0+)?|(?:\d+(?:\.\d+)?|\.\d+)(?:%|[a-z]{1,7}))$/i;
+  const literalSizeIndex = nodes.findIndex(
+    (node) =>
+      (node.type === "word" &&
+        (fontSizeKeyword.test(node.value) ||
+          fontSizeLength.test(node.value))) ||
+      (node.type === "function" &&
+        /^(?:calc|min|max|clamp)$/i.test(node.value)),
+  );
+  // A CSS variable may also supply the font size. When no literal size is
+  // present, the last var() with a following token is the only candidate we
+  // can distinguish from `font: var(--whole-shorthand)`.
+  const sizeIndex =
+    literalSizeIndex >= 0
+      ? literalSizeIndex
+      : nodes.findLastIndex(
+          (node, index) =>
+            node.type === "function" &&
+            node.value.toLowerCase() === "var" &&
+            nodes.slice(index + 1).some((part) => part.type !== "space"),
+        );
+  if (sizeIndex < 0) return Number.POSITIVE_INFINITY;
+
+  let index = sizeIndex + 1;
+  while (nodes[index]?.type === "space") index++;
+  if (nodes[index]?.type === "div" && nodes[index].value === "/") {
+    index++;
+    while (nodes[index]?.type === "space") index++;
+    // The token after `/` is the line-height, not a font family.
+    if (nodes[index]?.type !== "word" && nodes[index]?.type !== "function") {
+      return Number.POSITIVE_INFINITY;
+    }
+    index++;
+  }
+  while (nodes[index]?.type === "space") index++;
+  return nodes[index]?.sourceIndex ?? Number.POSITIVE_INFINITY;
+};
+
 // The rendered children can have any valid HTML shape (including table rows or
 // multiple roots), so a wrapper element would break layouts. In Chromium, @scope
 // can instead use two inert template siblings as a region boundary. The CSS
@@ -381,10 +452,12 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
     // animation-related variables, following var() dependencies so custom
     // animation shorthands keep working without corrupting unrelated values.
     const animationVariables = new Set<string>();
+    const fontFamilyVariables = new Set<string>();
     const variableReferences = new Map<string, Set<string>>();
-    const references = (value: string): Set<string> => {
+    const references = (value: string, afterOffset = 0): Set<string> => {
       const found = new Set<string>();
       parseCssValue(value).walk((node) => {
+        if (node.sourceIndex < afterOffset) return false;
         if (node.type !== "function" || node.value.toLowerCase() !== "var") {
           return;
         }
@@ -405,18 +478,37 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
         for (const name of references(declaration.value)) {
           animationVariables.add(name);
         }
+      } else if (/^font-family$/i.test(property)) {
+        for (const name of references(declaration.value)) {
+          fontFamilyVariables.add(name);
+        }
+      } else if (/^font$/i.test(property)) {
+        const afterOffset = fontShorthandFamilyOffset(
+          parseCssValue(declaration.value).nodes,
+        );
+        for (const name of references(declaration.value, afterOffset)) {
+          fontFamilyVariables.add(name);
+        }
       }
     });
 
-    const pending = [...animationVariables];
-    for (let index = 0; index < pending.length; index++) {
-      for (const name of variableReferences.get(pending[index]) ?? []) {
-        if (!animationVariables.has(name)) {
-          animationVariables.add(name);
-          pending.push(name);
+    // Rewrite only variables used as animation/family values, plus any
+    // transitively referenced aliases. A variable like `--font-style: italic`
+    // used by font-style must not be changed merely because its name contains
+    // "font" and a registered family also happens to be named "italic".
+    const includeReferencedVariables = (variables: Set<string>) => {
+      const pending = [...variables];
+      for (let index = 0; index < pending.length; index++) {
+        for (const name of variableReferences.get(pending[index]) ?? []) {
+          if (!variables.has(name)) {
+            variables.add(name);
+            pending.push(name);
+          }
         }
       }
-    }
+    };
+    includeReferencedVariables(animationVariables);
+    includeReferencedVariables(fontFamilyVariables);
 
     root.walkDecls((declaration) => {
       const property = declaration.prop.toLowerCase();
@@ -425,7 +517,8 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
       const isVariable = declaration.prop.startsWith("--");
       const isAnimationVariable =
         isVariable && animationVariables.has(declaration.prop);
-      const isFontVariable = isVariable && property.includes("font");
+      const isFontVariable =
+        isVariable && fontFamilyVariables.has(declaration.prop);
       if (!isAnimation && !isFont && !isFontVariable && !isAnimationVariable)
         return;
       // @font-face family descriptors have already been renamed above.
@@ -440,6 +533,8 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
       }
 
       const parsedValue = parseCssValue(declaration.value);
+      const familyOffset =
+        property === "font" ? fontShorthandFamilyOffset(parsedValue.nodes) : 0;
       // Process multiword families before single identifiers. Otherwise a
       // registered one-word family can mask a longer family with that prefix.
       // In a `font` shorthand, style/size tokens may precede the family, so
@@ -447,7 +542,10 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
       if (isFont || isFontVariable) {
         const nodes = parsedValue.nodes;
         for (let index = 0; index < nodes.length; ) {
-          if (nodes[index].type !== "word") {
+          if (
+            nodes[index].type !== "word" ||
+            nodes[index].sourceIndex < familyOffset
+          ) {
             index++;
             continue;
           }
@@ -493,6 +591,7 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
       }
 
       parsedValue.walk((node) => {
+        if (isFont && node.sourceIndex < familyOffset) return false;
         // Do not rewrite URL contents or arbitrary quoted animation strings.
         if (node.type === "function" && node.value.toLowerCase() === "url") {
           return false;
@@ -501,7 +600,10 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
           if (isAnimation || isAnimationVariable) {
             node.value = keyframes.get(node.value) ?? node.value;
           }
-          if (isFont || isFontVariable) {
+          if (
+            (isFont || isFontVariable) &&
+            !genericFontFamilyKeywords.has(node.value.toLowerCase())
+          ) {
             node.value =
               fontFamilies.get(node.value.toLowerCase()) ?? node.value;
           }
