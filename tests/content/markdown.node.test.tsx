@@ -10,7 +10,7 @@ import {
 } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Markdown } from "react-print-pdf";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 
 // Regression for #51: a CMS description is often typed as ReactNode, even
 // when its runtime value is a Markdown string.
@@ -124,27 +124,43 @@ test("TOC collects nested JSX headings without evaluating custom components", ()
   expect(html).toContain('data-toc-level="3"');
 });
 
-test("TOC renderers receive keyed children from rich Markdown and JSX headings", () => {
+test("TOC renderers receive keyed children without React key warnings", () => {
   const observedKeys: Array<string | null> = [];
+  // Give this renderer its own name so React's per-component warning
+  // deduplication cannot make an earlier test mask a regression.
+  const KeyedTocRenderer = ({ children }: { children: ReactNode }) => {
+    if (Array.isArray(children)) {
+      for (const child of children) {
+        if (isValidElement(child)) observedKeys.push(child.key);
+      }
+    }
+    return <span data-toc-entry="true">{children}</span>;
+  };
 
-  const html = renderToStaticMarkup(
-    <Markdown
-      tocRenderer={({ children }) => {
-        if (Array.isArray(children)) {
-          for (const child of children) {
-            if (isValidElement(child)) observedKeys.push(child.key);
-          }
-        }
-        return <span data-toc-entry="true">{children}</span>;
-      }}
-    >
-      {"# Markdown **bold** and [link](#next)\n\n<Toc />\n\n"}
-      <h2 id="next">
-        JSX <strong>bold</strong> and <em>italic</em>
-      </h2>
-    </Markdown>,
-  );
+  const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+  let html = "";
+  let keyWarnings: unknown[][] = [];
+  try {
+    html = renderToStaticMarkup(
+      <Markdown tocRenderer={KeyedTocRenderer}>
+        {"# Markdown **bold** and [link](#next)\n\n<Toc />\n\n"}
+        <h2 id="next">
+          JSX <strong>bold</strong> and <em>italic</em>
+        </h2>
+      </Markdown>,
+    );
+    keyWarnings = errors.mock.calls.filter(
+      ([message]) =>
+        typeof message === "string" &&
+        message.includes(
+          'Each child in a list should have a unique "key" prop.',
+        ),
+    );
+  } finally {
+    errors.mockRestore();
+  }
 
+  expect(keyWarnings).toEqual([]);
   expect(observedKeys.length).toBeGreaterThan(0);
   expect(observedKeys.every((key) => key !== null)).toBe(true);
   expect(html).toContain("<strong>bold</strong>");

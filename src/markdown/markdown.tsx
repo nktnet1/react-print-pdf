@@ -1,6 +1,7 @@
 import { compiler, type MarkdownToJSX } from "markdown-to-jsx";
 import {
   Children,
+  cloneElement,
   createElement,
   Fragment,
   isValidElement,
@@ -70,6 +71,21 @@ const renderMarkdownChildren = (
   );
 };
 
+// React 19 retains missing-key validation when Children.toArray adds implicit
+// keys to unkeyed elements. Clone each heading child with an explicit key
+// before passing it to a separately rendered TOC entry.
+const keyTocChildren = (children: ReactNode): ReactNode => {
+  if (!Array.isArray(children)) return children;
+
+  return children.map((child, index) =>
+    Array.isArray(child)
+      ? keyTocChildren(child)
+      : isValidElement(child)
+        ? cloneElement(child, { key: child.key ?? index })
+        : child,
+  );
+};
+
 export const Markdown = (props: MarkdownProps) => {
   const headers: TocRendererProps[] = [];
 
@@ -116,17 +132,16 @@ export const Markdown = (props: MarkdownProps) => {
   // Let React invoke each renderer in its own component lifecycle. Calling the
   // renderer here would associate its hooks with Markdown and render it early.
   const Toc = tocRenderer
-    ? Children.toArray(
-        headers.map((header) =>
-          createElement(
-            tocRenderer,
-            header,
-            // Markdown-to-JSX may produce an array of unkeyed heading children.
-            // Passing that array to a new component triggers React's key warning.
-            Array.isArray(header.children)
-              ? Children.toArray(header.children)
-              : header.children,
-          ),
+    ? headers.map((header, index) =>
+        createElement(
+          tocRenderer,
+          {
+            ...header,
+            // Apply the key when creating the element; Children.toArray alone
+            // cannot clear React's missing-key validation state afterwards.
+            key: `${header.id ?? header.heading}-${index}`,
+          },
+          keyTocChildren(header.children),
         ),
       )
     : null;
