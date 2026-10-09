@@ -268,6 +268,41 @@ const main = async (): Promise<void> => {
   let registryProcess: ChildProcess | undefined;
   let registryLogFd: number | undefined;
   let startupError: Error | undefined;
+  let cleanupPromise: Promise<void> | undefined;
+
+  const cleanup = (): Promise<void> => {
+    cleanupPromise ??= (async () => {
+      try {
+        await stopRegistry(registryProcess);
+      } finally {
+        try {
+          if (registryLogFd !== undefined) {
+            closeSync(registryLogFd);
+            registryLogFd = undefined;
+          }
+        } finally {
+          rmSync(temporaryRoot, { recursive: true, force: true });
+        }
+      }
+    })();
+    return cleanupPromise;
+  };
+
+  // A detached Verdaccio process group does not receive terminal SIGINT/SIGTERM
+  // with this CLI. Stop it explicitly before exiting on user interruption.
+  const handleSignal = (signal: "SIGINT" | "SIGTERM"): void => {
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
+    console.error(`${styleText("yellow", signal)}: stopping local Verdaccio`);
+    void cleanup()
+      .catch((error: unknown) => console.error(error))
+      .finally(() => process.exit(signal === "SIGINT" ? 130 : 143));
+  };
+  const onSigint = (): void => handleSignal("SIGINT");
+  const onSigterm = (): void => handleSignal("SIGTERM");
+  process.once("SIGINT", onSigint);
+  process.once("SIGTERM", onSigterm);
+
   try {
     for (const entry of ["index", "client/index", "playwright/index", "mdx"]) {
       for (const extension of ["js", "cjs"]) {
@@ -547,9 +582,12 @@ const main = async (): Promise<void> => {
     }
     throw error;
   } finally {
-    await stopRegistry(registryProcess);
-    if (registryLogFd !== undefined) closeSync(registryLogFd);
-    rmSync(temporaryRoot, { recursive: true, force: true });
+    try {
+      await cleanup();
+    } finally {
+      process.off("SIGINT", onSigint);
+      process.off("SIGTERM", onSigterm);
+    }
   }
 };
 
