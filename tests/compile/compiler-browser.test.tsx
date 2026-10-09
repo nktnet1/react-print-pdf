@@ -225,7 +225,12 @@ test("Tailwind generates and applies utility CSS when mounted directly in a brow
       (style) => style.textContent ?? "",
     ).join("\n");
     expect(styles).toContain(".bg-direct");
-    expect(host.innerHTML).not.toContain("data-react-print-tailwind-");
+    expect(
+      host.querySelectorAll("template[data-react-print-tailwind-start]"),
+    ).toHaveLength(1);
+    expect(
+      host.querySelectorAll("template[data-react-print-tailwind-end]"),
+    ).toHaveLength(1);
   } finally {
     cleanup();
   }
@@ -358,7 +363,8 @@ test("browser Emotion compilation also resolves Tailwind render markers", async 
   expect(html).toMatch(/\.bg-emotion-mixed\s*\{[^}]*background-color:/);
   expect(html).toContain("#124578");
   expect(html).toContain("#547698");
-  expect(html).not.toContain("data-react-print-tailwind-");
+  expect(html).toContain("data-react-print-tailwind-start");
+  expect(html).toContain("data-react-print-tailwind-end");
 }, 30_000);
 
 test("concurrent browser Emotion compilations keep their styles separate", async () => {

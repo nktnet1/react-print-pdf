@@ -6,12 +6,12 @@ test.each([
   {
     name: "start",
     markup:
-      '<style data-react-print-tailwind-end="react-print-tailwind-0"></style>',
+      '<template data-react-print-tailwind-end="react-print-tailwind-0"></template>',
   },
   {
     name: "end",
     markup:
-      '<style data-react-print-tailwind-start="react-print-tailwind-0"></style>',
+      '<template data-react-print-tailwind-start="react-print-tailwind-0"></template>',
   },
 ])(
   "rejects Tailwind regions missing their $name marker",
@@ -36,7 +36,7 @@ test("reusing a collector does not reuse candidates from previous HTML", async (
   const collector = createTailwindStyleCollector();
   const id = collector.register({ preflight: false });
   const wrap = (className: string) =>
-    `<style data-react-print-tailwind-start="${id}"></style><span class="${className}">Content</span><style data-react-print-tailwind-end="${id}"></style>`;
+    `<template data-react-print-tailwind-start="${id}"></template><span class="${className}">Content</span><template data-react-print-tailwind-end="${id}"></template>`;
 
   const first = await collector.resolve(wrap("text-[#123456]"));
   const second = await collector.resolve(wrap("text-[#654321]"));
@@ -45,14 +45,17 @@ test("reusing a collector does not reuse candidates from previous HTML", async (
   expect(first).not.toContain("#654321");
   expect(second).toContain("#654321");
   expect(second).not.toContain("#123456");
-  expect(first).not.toContain("data-react-print-tailwind-");
-  expect(second).not.toContain("data-react-print-tailwind-");
+  for (const markup of [first, second]) {
+    expect(markup).toContain(`data-react-print-tailwind-start="${id}"`);
+    expect(markup).toContain(`data-react-print-tailwind-end="${id}"`);
+    expect(markup).not.toContain(`<style data-react-print-tailwind-`);
+  }
 });
 
 test("collects actual class attributes without matching data-class attributes", async () => {
   const collector = createTailwindStyleCollector();
   const id = collector.register({ preflight: false });
-  const html = `<style data-react-print-tailwind-start="${id}"></style><main data-class="bg-red-600" aria-class="p-7" class="text-blue-600">Content</main><style data-react-print-tailwind-end="${id}"></style>`;
+  const html = `<template data-react-print-tailwind-start="${id}"></template><main data-class="bg-red-600" aria-class="p-7" class="text-blue-600">Content</main><template data-react-print-tailwind-end="${id}"></template>`;
 
   const result = await collector.resolve(html);
 

@@ -29,7 +29,8 @@ test("compiles Tailwind in a server runtime", async () => {
   expect(html).toMatch(/\.rounded-lg\s*\{[^}]*border-radius:/);
   expect(html).toMatch(/\.p-4\s*\{[^}]*padding:/);
   expect(html).toContain("box-sizing");
-  expect(html).not.toContain("data-react-print-tailwind-");
+  expect(html).toContain("data-react-print-tailwind-start");
+  expect(html).toContain("data-react-print-tailwind-end");
 });
 
 test("server bundle does not resolve Tailwind from the consumer filesystem", async () => {

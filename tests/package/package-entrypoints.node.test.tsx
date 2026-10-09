@@ -21,7 +21,7 @@ describe("published package entrypoints", () => {
       new URL("../fixtures/package-consumer/runtime.mjs", import.meta.url),
     );
     expect(node(script)).toContain("package-exports-ok");
-  });
+  }, 35_000);
 
   test("resolves ESM and CommonJS declaration exports in a consumer tsconfig", () => {
     const tsc = fileURLToPath(

@@ -40,6 +40,7 @@ export default defineConfig({
       "@emotion/react",
       "@emotion/cache",
       "postcss-css-variables",
+      "postcss-selector-parser",
       "postcss-logical",
       "tailwindcss",
     ],

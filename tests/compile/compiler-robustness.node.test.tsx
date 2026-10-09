@@ -26,7 +26,8 @@ test("concurrent Tailwind compilations do not leak candidates or themes", async 
     const fixture = fixtures[index];
     expect(html).toContain(`.bg-${fixture.name}`);
     expect(html).toContain(fixture.color);
-    expect(html).not.toContain("data-react-print-tailwind-");
+    expect(html).toContain("data-react-print-tailwind-start");
+    expect(html).toContain("data-react-print-tailwind-end");
 
     for (const other of fixtures.filter((item) => item !== fixture)) {
       expect(html).not.toContain(`.bg-${other.name}`);
@@ -63,7 +64,8 @@ test("sibling Tailwind regions keep conflicting theme definitions separate", asy
   expect(regionStyles[0]).not.toContain("#654321");
   expect(regionStyles[1]).toContain("#654321");
   expect(regionStyles[1]).not.toContain("#123456");
-  expect(html).not.toContain("data-react-print-tailwind-");
+  expect(html).toContain("data-react-print-tailwind-start");
+  expect(html).toContain("data-react-print-tailwind-end");
 }, 15_000);
 
 test("legacy theme extensions work without the default Preflight reset", async () => {
@@ -117,7 +119,8 @@ test("Tailwind and Emotion compile together without leaving render markers", asy
   expect(html).toContain("#196482");
   expect(html).toMatch(/\.react-print-pdf-[a-z0-9-]+/);
   expect(html).toContain("border-width:3px");
-  expect(html).not.toContain("data-react-print-tailwind-");
+  expect(html).toContain("data-react-print-tailwind-start");
+  expect(html).toContain("data-react-print-tailwind-end");
   expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
 }, 15_000);
 

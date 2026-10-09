@@ -11,11 +11,13 @@ import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import { decode } from "html-entities";
 import postcss from "postcss";
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
+import selectorParser from "postcss-selector-parser";
 import {
   createContext,
   type ReactNode,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -220,6 +222,67 @@ async function buildTailwindStyles(
   return result.css;
 }
 
+// The rendered children can have any valid HTML shape (including table rows or
+// multiple roots), so a wrapper element would break layouts. In Chromium, @scope
+// can instead use two inert template siblings as a region boundary. The CSS
+// compiler's global theme variables must be placed on each scoped root rather
+// than the document root, or sibling configurations overwrite one another.
+function scopeTailwindStyles(css: string, registrationId: string): string {
+  const root = postcss.parse(css);
+  root.walkRules((rule) => {
+    // @keyframes selectors are percentages, not element selectors.
+    if (
+      rule.parent?.type === "atrule" &&
+      /keyframes$/i.test(rule.parent.name)
+    ) {
+      return;
+    }
+
+    const parsed = selectorParser().astSync(rule.selector);
+    const scopedSelectors = parsed.nodes.flatMap((selector) => {
+      const original = selector.toString();
+      if ([":root", ":host", "html"].includes(original.trim())) {
+        return [":scope"];
+      }
+
+      // Rules inside @scope target descendants but not the scope root. Match
+      // both so direct children (including multiple sibling roots) still work.
+      // Pseudo-elements cannot occur inside :is(), so keep their suffix out.
+      const pseudoElementIndex = selector.nodes.findIndex(
+        (part) => part.type === "pseudo" && part.value.startsWith("::"),
+      );
+      const base =
+        pseudoElementIndex < 0
+          ? original
+          : selector.nodes
+              .slice(0, pseudoElementIndex)
+              .map((part) => part.toString())
+              .join("");
+      const pseudoElementSuffix =
+        pseudoElementIndex < 0
+          ? ""
+          : selector.nodes
+              .slice(pseudoElementIndex)
+              .map((part) => part.toString())
+              .join("");
+      return [
+        `:where(:scope):is(${base.trim() || "*"})${pseudoElementSuffix}`,
+        original,
+      ];
+    });
+    rule.selector = scopedSelectors.join(", ");
+  });
+
+  const start = `template[data-react-print-tailwind-start="${registrationId}"]`;
+  const end = `template[data-react-print-tailwind-end="${registrationId}"]`;
+  const scoped = postcss.atRule({
+    name: "scope",
+    params: `(:where(${start} ~ :not(${end} ~ *)))`,
+  });
+  scoped.append(root.nodes);
+  return scoped.toString();
+}
+
 export function createTailwindStyleCollector(): TailwindStyleCollector {
   let id = 0;
   const registrations = new Map<string, TailwindCompileOptions>();
@@ -235,8 +298,8 @@ export function createTailwindStyleCollector(): TailwindStyleCollector {
 
       const compiledStyles = await Promise.all(
         [...registrations.entries()].map(async ([registrationId, options]) => {
-          const startMarker = `<style data-react-print-tailwind-start="${registrationId}"></style>`;
-          const endMarker = `<style data-react-print-tailwind-end="${registrationId}"></style>`;
+          const startMarker = `<template data-react-print-tailwind-start="${registrationId}"></template>`;
+          const endMarker = `<template data-react-print-tailwind-end="${registrationId}"></template>`;
           const start = html.indexOf(startMarker);
           const end = html.indexOf(endMarker, start + startMarker.length);
 
@@ -252,20 +315,18 @@ export function createTailwindStyleCollector(): TailwindStyleCollector {
             options,
           );
 
-          return { registrationId, css };
+          return {
+            registrationId,
+            css: scopeTailwindStyles(css, registrationId),
+          };
         }),
       );
 
       for (const { registrationId, css } of compiledStyles) {
-        output = output
-          .replace(
-            `<style data-react-print-tailwind-start="${registrationId}"></style>`,
-            `<style>${escapeCss(css)}</style>`,
-          )
-          .replace(
-            `<style data-react-print-tailwind-end="${registrationId}"></style>`,
-            "",
-          );
+        output = output.replace(
+          `<template data-react-print-tailwind-start="${registrationId}"></template>`,
+          `<style>${escapeCss(css)}</style><template data-react-print-tailwind-start="${registrationId}"></template>`,
+        );
       }
 
       return output;
@@ -297,6 +358,7 @@ export const Tailwind = ({
     [config, stylesheet, preflight],
   );
 
+  const scopeId = useId();
   const startRef = useRef<HTMLTemplateElement>(null);
   const endRef = useRef<HTMLTemplateElement>(null);
   const [directRenderCss, setDirectRenderCss] = useState("");
@@ -345,7 +407,7 @@ export const Tailwind = ({
       void buildTailwindStyles(classNames, options).then(
         (css) => {
           if (active && currentGeneration === generation) {
-            setDirectRenderCss(css);
+            setDirectRenderCss(scopeTailwindStyles(css, scopeId));
           }
         },
         (error) => {
@@ -378,7 +440,7 @@ export const Tailwind = ({
       active = false;
       observer.disconnect();
     };
-  }, [collector, options]);
+  }, [collector, options, scopeId]);
 
   if (directRenderError) {
     throw directRenderError;
@@ -388,9 +450,9 @@ export const Tailwind = ({
     const registrationId = collector.register(options);
     return (
       <>
-        <style data-react-print-tailwind-start={registrationId} />
+        <template data-react-print-tailwind-start={registrationId} />
         {children}
-        <style data-react-print-tailwind-end={registrationId} />
+        <template data-react-print-tailwind-end={registrationId} />
       </>
     );
   }
@@ -398,9 +460,9 @@ export const Tailwind = ({
   return (
     <>
       <CSS>{directRenderCss}</CSS>
-      <template ref={startRef} />
+      <template ref={startRef} data-react-print-tailwind-start={scopeId} />
       {children}
-      <template ref={endRef} />
+      <template ref={endRef} data-react-print-tailwind-end={scopeId} />
     </>
   );
 };

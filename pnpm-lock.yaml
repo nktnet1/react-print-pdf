@@ -184,6 +184,9 @@ importers:
       markdown-to-jsx:
         specifier: ^9.10.3
         version: 9.10.3(react@19.3.0)
+      postcss-selector-parser:
+        specifier: ^7.1.6
+        version: 7.1.6
       react:
         specifier: ^19.3.0
         version: 19.3.0

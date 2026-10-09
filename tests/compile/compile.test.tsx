@@ -135,7 +135,12 @@ test("supports nested Tailwind regions", async () => {
 
   expect(html).toContain(".bg-red-500");
   expect(html).toContain(".text-blue-500");
-  expect(html).not.toContain("data-react-print-tailwind-");
+  expect(
+    html.match(/<template data-react-print-tailwind-start=/g),
+  ).toHaveLength(2);
+  expect(html.match(/<template data-react-print-tailwind-end=/g)).toHaveLength(
+    2,
+  );
 });
 
 test("preserves Tailwind flex gap and justify-evenly layout in Chromium", async () => {
