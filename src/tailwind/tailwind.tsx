@@ -714,8 +714,17 @@ export function createTailwindStyleCollector(): TailwindStyleCollector {
           const startMarker = `<template data-react-print-tailwind-start="${registrationId}"></template>`;
           const endMarker = `<template data-react-print-tailwind-end="${registrationId}"></template>`;
           const start = html.indexOf(startMarker);
-          const end = html.indexOf(endMarker, start + startMarker.length);
+          const end = html.indexOf(
+            endMarker,
+            start === -1 ? 0 : start + startMarker.length,
+          );
 
+          // React's renderToString() can render a Suspense fallback after a
+          // child has already registered a Tailwind region. Both boundaries
+          // disappear with the suspended branch; its styles must not be
+          // compiled or cause the fallback document to fail. A single missing
+          // boundary still indicates malformed HTML and remains an error.
+          if (start === -1 && end === -1) return null;
           if (start === -1 || end === -1) {
             throw new Error(
               `Unable to locate Tailwind render markers for ${registrationId}.`,
@@ -735,7 +744,9 @@ export function createTailwindStyleCollector(): TailwindStyleCollector {
         }),
       );
 
-      for (const { registrationId, css } of compiledStyles) {
+      for (const compiled of compiledStyles) {
+        if (!compiled) continue;
+        const { registrationId, css } = compiled;
         output = output.replace(
           `<template data-react-print-tailwind-start="${registrationId}"></template>`,
           `<style>${escapeCss(css)}</style><template data-react-print-tailwind-start="${registrationId}"></template>`,
