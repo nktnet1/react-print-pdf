@@ -17,9 +17,9 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
-import { renderToString } from "react-dom/server";
 import { type Config, compile as compileTailwind } from "tailwindcss";
 import { CSS, escapeCss } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
@@ -87,6 +87,34 @@ function extractClassNames(markup: string) {
         classNames.add(className);
       }
     }
+  }
+
+  return [...classNames];
+}
+
+/** Collect candidates from the subtree React actually mounted in the browser. */
+function extractMountedClassNames(start: Element, end: Element): string[] {
+  const classNames = new Set<string>();
+  const include = (element: Element) => {
+    for (const className of element.classList) {
+      classNames.add(className);
+    }
+  };
+
+  let sibling = start.nextSibling;
+  while (sibling && sibling !== end) {
+    if (sibling.nodeType === 1) {
+      const element = sibling as Element;
+      include(element);
+      for (const descendant of element.querySelectorAll("[class]")) {
+        include(descendant);
+      }
+    }
+    sibling = sibling.nextSibling;
+  }
+
+  if (sibling !== end) {
+    throw new Error("Unable to locate direct Tailwind render boundaries.");
   }
 
   return [...classNames];
@@ -259,11 +287,14 @@ export const Tailwind = ({
     [config, stylesheet, preflight],
   );
 
+  const startRef = useRef<HTMLTemplateElement>(null);
+  const endRef = useRef<HTMLTemplateElement>(null);
   const [directRenderCss, setDirectRenderCss] = useState("");
   const [directRenderError, setDirectRenderError] = useState<Error | null>(
     null,
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: New React children may change the mounted classes even when Tailwind options are unchanged.
   useEffect(() => {
     if (collector) {
       return;
@@ -272,15 +303,22 @@ export const Tailwind = ({
     let active = true;
     setDirectRenderError(null);
 
-    // Do not call renderToString while another React render is in progress.
-    // React 19's server renderer can lose its hook state on nested renders.
+    // Rendering children a second time here would bypass their context and
+    // invoke hooks and render-time side effects again. Use the mounted DOM
+    // between inert template boundaries instead. Unlike style markers, these
+    // do not add empty stylesheets or expose internal marker attributes.
     void (async () => {
       try {
-        const markup = renderToString(children);
-        const css = await buildTailwindStyles(
-          extractClassNames(markup),
-          options,
+        if (!startRef.current || !endRef.current) {
+          throw new Error(
+            "Unable to locate direct Tailwind render boundaries.",
+          );
+        }
+        const classNames = extractMountedClassNames(
+          startRef.current,
+          endRef.current,
         );
+        const css = await buildTailwindStyles(classNames, options);
         if (active) {
           setDirectRenderCss(css);
         }
@@ -316,7 +354,9 @@ export const Tailwind = ({
   return (
     <>
       <CSS>{directRenderCss}</CSS>
+      <template ref={startRef} />
       {children}
+      <template ref={endRef} />
     </>
   );
 };

@@ -1,4 +1,10 @@
-import { Component, type ReactNode } from "react";
+import {
+  Component,
+  createContext,
+  type ReactNode,
+  useContext,
+  useId,
+} from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Tailwind } from "react-print-pdf";
 import { beforeEach, expect, test, vi } from "vitest";
@@ -135,5 +141,79 @@ test("converts non-Error Tailwind rejections into Errors for the boundary", asyn
   } finally {
     cleanup();
     reactErrorLog.mockRestore();
+  }
+});
+
+test("direct Tailwind collects classes from mounted context consumers without rendering twice", async () => {
+  compileTailwind.mockResolvedValue(
+    compilerWithCss(".bg-contextual { background-color: #123456; }"),
+  );
+  const Theme = createContext("bg-outside-context");
+  let renderCount = 0;
+  const ContextualContent = () => {
+    renderCount++;
+    const className = useContext(Theme);
+    const id = useId();
+    return (
+      <section className={className} data-react-id={id}>
+        <svg aria-label="Icon" role="img">
+          <path className="fill-current" d="M 0 0 L 1 1" />
+        </svg>
+      </section>
+    );
+  };
+
+  const { host, root, cleanup } = createHost();
+
+  try {
+    root.render(
+      <Theme.Provider value="bg-contextual">
+        <Tailwind preflight={false}>
+          <ContextualContent />
+        </Tailwind>
+      </Theme.Provider>,
+    );
+
+    await vi.waitFor(() => {
+      expect(compileTailwind).toHaveBeenCalledTimes(1);
+      expect(host.querySelector("style")?.textContent).toContain("#123456");
+    });
+
+    const input = String(compileTailwind.mock.calls[0]?.[0]);
+    expect(input).toContain('@source inline("bg-contextual")');
+    expect(input).toContain('@source inline("fill-current")');
+    expect(input).not.toContain("bg-outside-context");
+    expect(renderCount).toBe(1);
+    expect(host.querySelector("[data-react-id]")).not.toBeNull();
+  } finally {
+    cleanup();
+  }
+});
+
+test("direct Tailwind rebuilds for a new child class without reusing old candidates", async () => {
+  compileTailwind.mockResolvedValue(compilerWithCss(""));
+  const { root, cleanup } = createHost();
+  const renderContent = (className: string) => {
+    root.render(
+      <Tailwind preflight={false}>
+        <p className={className}>Changing document</p>
+      </Tailwind>,
+    );
+  };
+
+  try {
+    renderContent("bg-old");
+    await vi.waitFor(() => expect(compileTailwind).toHaveBeenCalledTimes(1));
+
+    renderContent("bg-new");
+    await vi.waitFor(() => expect(compileTailwind).toHaveBeenCalledTimes(2));
+
+    const firstInput = String(compileTailwind.mock.calls[0]?.[0]);
+    const secondInput = String(compileTailwind.mock.calls[1]?.[0]);
+    expect(firstInput).toContain('@source inline("bg-old")');
+    expect(secondInput).toContain('@source inline("bg-new")');
+    expect(secondInput).not.toContain('@source inline("bg-old")');
+  } finally {
+    cleanup();
   }
 });
