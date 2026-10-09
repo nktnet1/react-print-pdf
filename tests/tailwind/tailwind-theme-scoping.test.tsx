@@ -230,3 +230,87 @@ test("Tailwind does not insert layout wrappers around table rows", async () => {
     host.remove();
   }
 });
+
+test("separately compiled Tailwind fragments keep their theme styles when assembled", async () => {
+  const [first, second] = await Promise.all([
+    compile(
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #123456; }"
+      >
+        <div data-region="independent-first" className="bg-shared">
+          First
+        </div>
+      </Tailwind>,
+    ),
+    compile(
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #654321; }"
+      >
+        <div data-region="independent-second" className="bg-shared">
+          Second
+        </div>
+      </Tailwind>,
+    ),
+  ]);
+  const host = document.createElement("div");
+  document.body.append(host);
+  try {
+    host.innerHTML = `${first}${second}`;
+    expect(backgroundOf(host, '[data-region="independent-first"]')).toBe(
+      "rgb(18, 52, 86)",
+    );
+    expect(backgroundOf(host, '[data-region="independent-second"]')).toBe(
+      "rgb(101, 67, 33)",
+    );
+  } finally {
+    host.remove();
+  }
+});
+
+test("Tailwind themes remain independent across separately mounted React roots", async () => {
+  const hostA = document.createElement("div");
+  const hostB = document.createElement("div");
+  document.body.append(hostA, hostB);
+  const rootA = createRoot(hostA);
+  const rootB = createRoot(hostB);
+  try {
+    rootA.render(
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #123456; }"
+      >
+        <p data-region="root-a" className="bg-shared">
+          Root A
+        </p>
+      </Tailwind>,
+    );
+    rootB.render(
+      <Tailwind
+        preflight={false}
+        stylesheet="@theme { --color-shared: #654321; }"
+      >
+        <p data-region="root-b" className="bg-shared">
+          Root B
+        </p>
+      </Tailwind>,
+    );
+    await vi.waitFor(
+      () => {
+        expect(backgroundOf(hostA, '[data-region="root-a"]')).toBe(
+          "rgb(18, 52, 86)",
+        );
+        expect(backgroundOf(hostB, '[data-region="root-b"]')).toBe(
+          "rgb(101, 67, 33)",
+        );
+      },
+      { timeout: 15_000 },
+    );
+  } finally {
+    rootA.unmount();
+    rootB.unmount();
+    hostA.remove();
+    hostB.remove();
+  }
+}, 30_000);

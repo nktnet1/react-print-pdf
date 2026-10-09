@@ -285,11 +285,18 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
 
 export function createTailwindStyleCollector(): TailwindStyleCollector {
   let id = 0;
+  // Compiled fragments can be joined later, including fragments rendered by
+  // separate servers. Per-collector zero-based IDs would then collide and let
+  // the last fragment's theme override styles in earlier fragments.
+  const collectorId = Array.from(
+    globalThis.crypto.getRandomValues(new Uint8Array(16)),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
   const registrations = new Map<string, TailwindCompileOptions>();
 
   return {
     register(options) {
-      const registrationId = `react-print-tailwind-${id++}`;
+      const registrationId = `react-print-tailwind-${collectorId}-${id++}`;
       registrations.set(registrationId, options);
       return registrationId;
     },

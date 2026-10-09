@@ -99,9 +99,18 @@ const getEndpoint = (baseUrl: string): string => {
 };
 
 const addAsset = (formData: FormData, asset: GotenbergAsset): void => {
-  if (!asset.name || asset.name === "index.html") {
+  if (
+    !asset.name.trim() ||
+    asset.name === "." ||
+    asset.name === ".." ||
+    asset.name === "index.html" ||
+    [...asset.name].some((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127;
+    })
+  ) {
     throw new Error(
-      'Gotenberg asset names must be non-empty and cannot be "index.html".',
+      'Gotenberg asset names must be valid filenames and cannot be "index.html".',
     );
   }
 

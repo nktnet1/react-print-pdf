@@ -78,6 +78,15 @@ const pdf = await compileWithPlaywright(<Document />);
 
 Pass an existing Playwright `Browser` through the `browser` option to reuse Chromium across renders while keeping each document in an isolated browser context. See [`docs/content/docs/integrations/playwright.mdx`](docs/content/docs/integrations/playwright.mdx) for lifecycle, Next.js, and deployment examples.
 
+**Chromium paged-media limitations:** Both Playwright and Gotenberg's Chromium
+route can print page breaks, page counters, and CSS `@page` sizes, but Chromium
+does not implement the paged-media features used by `PageTop`, `PageBottom`,
+`RunningH1`–`RunningH6`, and `Footnote` (`position: running()`, `element()`,
+`string-set`, and `float: footnote`). These components still emit HTML, but
+Chromium will not repeat headers/footers, populate running headings, or move
+footnotes to the bottom of the page. Use a renderer that supports these CSS
+features when a document requires them.
+
 ## Components
 
 The library includes utilities for:

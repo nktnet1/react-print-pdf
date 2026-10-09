@@ -305,3 +305,18 @@ test("uses global fetch when no request-specific fetcher is supplied", async () 
     vi.unstubAllGlobals();
   }
 });
+
+test.each([".", "..", "notes\nextra.txt", "logo\0.png", "   "])(
+  "rejects dangerous Gotenberg asset filename %j",
+  async (name) => {
+    const fetcher = vi.fn<typeof fetch>(async () => new Response("%PDF"));
+    await expect(
+      convertHtmlWithGotenberg("<p>Document</p>", {
+        baseUrl: endpoint,
+        assets: [{ name, blob: new Blob(["content"]) }],
+        fetch: fetcher,
+      }),
+    ).rejects.toThrow(/Gotenberg asset/);
+    expect(fetcher).not.toHaveBeenCalled();
+  },
+);

@@ -5,25 +5,30 @@ import { createTailwindStyleCollector, Tailwind } from "#/tailwind/tailwind";
 test.each([
   {
     name: "start",
-    markup:
-      '<template data-react-print-tailwind-end="react-print-tailwind-0"></template>',
+    remainingMarker: "end",
   },
   {
     name: "end",
-    markup:
-      '<template data-react-print-tailwind-start="react-print-tailwind-0"></template>',
+    remainingMarker: "start",
   },
 ])(
   "rejects Tailwind regions missing their $name marker",
-  async ({ markup }) => {
+  async ({ remainingMarker }) => {
     const collector = createTailwindStyleCollector();
     const id = collector.register({ preflight: false });
+    const markup = `<template data-react-print-tailwind-${remainingMarker}="${id}"></template>`;
 
     await expect(collector.resolve(markup)).rejects.toThrow(
       `Unable to locate Tailwind render markers for ${id}.`,
     );
   },
 );
+
+test("independent collectors allocate different render boundaries", () => {
+  const first = createTailwindStyleCollector().register({ preflight: false });
+  const second = createTailwindStyleCollector().register({ preflight: false });
+  expect(first).not.toBe(second);
+});
 
 test("a collector without Tailwind registrations leaves HTML untouched", async () => {
   const collector = createTailwindStyleCollector();

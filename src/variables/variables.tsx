@@ -5,6 +5,15 @@ import { CSS } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
 import { PageTop } from "#/shell/shell";
 
+// counterStyle appears in both a CSS selector and counter(...). Only accept a
+// CSS identifier, not arbitrary CSS that could escape the generated rule.
+const validateCounterStyle = (value: string): string => {
+  if (!/^(?:[_\p{L}]|-[_\p{L}])[-_\p{L}\p{N}\p{M}]*$/u.test(value)) {
+    throw new Error("counterStyle must be a CSS counter-style identifier");
+  }
+  return value;
+};
+
 /**
  * Returns the current page number.
  */
@@ -16,16 +25,17 @@ export const PageNumber = ({
    */
   counterStyle?: string;
 }) => {
+  const style = validateCounterStyle(counterStyle);
   return (
     <>
       <CSS>
         {`
-.react-print-page-number-${counterStyle}:before {
-  content: counter(page, ${counterStyle});
+.react-print-page-number-${style}:before {
+  content: counter(page, ${style});
 }
         `}
       </CSS>
-      <span className={`react-print-page-number-${counterStyle}`} />
+      <span className={`react-print-page-number-${style}`} />
     </>
   );
 };
@@ -41,16 +51,17 @@ export const PagesNumber = ({
    */
   counterStyle?: string;
 }) => {
+  const style = validateCounterStyle(counterStyle);
   return (
     <>
       <CSS>
         {`
-.react-print-pages-number-${counterStyle}:before {
-  content: counter(pages, ${counterStyle});
+.react-print-pages-number-${style}:before {
+  content: counter(pages, ${style});
 }
         `}
       </CSS>
-      <span className={`react-print-pages-number-${counterStyle}`} />
+      <span className={`react-print-pages-number-${style}`} />
     </>
   );
 };

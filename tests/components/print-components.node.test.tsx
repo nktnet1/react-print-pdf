@@ -330,3 +330,23 @@ test.each([
   expect(html).toContain(`data-react-print-sign="${type}"`);
   expect(html).toContain('data-react-print-signee="reviewer"');
 });
+
+test.each([PageNumber, PagesNumber])(
+  "page counters reject style names that can inject CSS rules",
+  (Counter) => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Counter counterStyle="decimal); } body { color: red; } /*" />,
+      ),
+    ).toThrow(/counterStyle/);
+    expect(() =>
+      renderToStaticMarkup(<Counter counterStyle="decimal other" />),
+    ).toThrow(/counterStyle/);
+    expect(() =>
+      renderToStaticMarkup(<Counter counterStyle={'"quoted"'} />),
+    ).toThrow(/counterStyle/);
+    expect(
+      renderToStaticMarkup(<Counter counterStyle="custom-2026" />),
+    ).toContain("custom-2026");
+  },
+);
