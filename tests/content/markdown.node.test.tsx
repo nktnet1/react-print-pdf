@@ -1,4 +1,12 @@
-import { Component, Fragment, type ReactNode } from "react";
+import {
+  Component,
+  createContext,
+  Fragment,
+  type ReactNode,
+  useContext,
+  useId,
+  useState,
+} from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Markdown } from "react-print-pdf";
 import { expect, test } from "vitest";
@@ -89,15 +97,7 @@ test("detects headings across ReactNode children for a table of contents", () =>
   expect(html).toContain("Second");
 });
 
-test("TOC discovers nested headings returned by class and function components", () => {
-  class ClassHeading extends Component {
-    render() {
-      return <h2 id="class-section">Class section</h2>;
-    }
-  }
-
-  const FunctionHeading = () => <h3 id="function-section">Function section</h3>;
-
+test("TOC collects nested JSX headings without evaluating custom components", () => {
   const html = renderToStaticMarkup(
     <Markdown
       tocRenderer={({ level, id, children }) => (
@@ -106,18 +106,178 @@ test("TOC discovers nested headings returned by class and function components", 
         </a>
       )}
     >
-      {"<Toc />\n\n"}
-      <section>
-        <ClassHeading />
-        <FunctionHeading />
-      </section>
+      {"<Toc />\n\n# Markdown section\n\n"}
+      <Fragment key="jsx-headings">
+        <h2 id="jsx-section">JSX section</h2>
+        <section>
+          <h3 id="nested-section">Nested section</h3>
+        </section>
+      </Fragment>
     </Markdown>,
   );
 
-  expect(html).toContain('href="#class-section"');
-  expect(html).toContain('href="#function-section"');
+  expect(html).toContain('href="#jsx-section"');
+  expect(html).toContain('href="#nested-section"');
+  expect(html).toContain('data-toc-level="1"');
   expect(html).toContain('data-toc-level="2"');
   expect(html).toContain('data-toc-level="3"');
+});
+
+test("TOC does not invoke hook components or class render methods during discovery", () => {
+  const SectionContext = createContext("missing");
+  let functionRenders = 0;
+  let classRenders = 0;
+
+  const FunctionHeading = () => {
+    functionRenders++;
+    const id = useId();
+    const label = useContext(SectionContext);
+    const [section] = useState("Function section");
+    return <h2 id={id}>{`${label} ${section}`}</h2>;
+  };
+
+  class ClassHeading extends Component {
+    render() {
+      classRenders++;
+      return <h3 id="class-section">Class section</h3>;
+    }
+  }
+
+  const html = renderToStaticMarkup(
+    <SectionContext.Provider value="Context-aware">
+      <Markdown
+        tocRenderer={({ level, children }) => (
+          <span data-toc-level={level}>{children}</span>
+        )}
+      >
+        {"# Static section\n\n<Toc />\n\n"}
+        <section>
+          <FunctionHeading />
+          <ClassHeading />
+        </section>
+      </Markdown>
+    </SectionContext.Provider>,
+  );
+
+  expect(functionRenders).toBe(1);
+  expect(classRenders).toBe(1);
+  expect(html).toContain("Context-aware Function section");
+  expect(html).toContain('id="class-section"');
+  expect(html).toContain('data-toc-level="1"');
+  expect(html).not.toContain('data-toc-level="2"');
+  expect(html).not.toContain('data-toc-level="3"');
+});
+
+test("TOC does not pre-render hook components provided as Markdown overrides", () => {
+  let renders = 0;
+  const DynamicHeading = () => {
+    renders++;
+    const id = useId();
+    return <h2 id={id}>Dynamic override heading</h2>;
+  };
+
+  const html = renderToStaticMarkup(
+    <Markdown
+      options={{ overrides: { DynamicHeading: { component: DynamicHeading } } }}
+      tocRenderer={({ level, children }) => (
+        <span data-toc-level={level}>{children}</span>
+      )}
+    >
+      {"# Static heading\n\n<Toc />\n\n<DynamicHeading />"}
+    </Markdown>,
+  );
+
+  expect(renders).toBe(1);
+  expect(html).toContain("Dynamic override heading");
+  expect(html.match(/data-toc-level=/g)).toHaveLength(1);
+});
+
+test("TOC renderer runs during React rendering and can use hooks", () => {
+  const LabelContext = createContext("outside");
+  let precedingChildRendered = false;
+  let rendererCalls = 0;
+
+  const PrecedingChild = () => {
+    precedingChildRendered = true;
+    return <span>Intro</span>;
+  };
+
+  const HookToc = ({
+    level,
+    children,
+  }: {
+    level: number;
+    children: ReactNode;
+  }) => {
+    // A render prop invoked eagerly by Markdown runs before its children render.
+    expect(precedingChildRendered).toBe(true);
+    rendererCalls++;
+    const label = useContext(LabelContext);
+    const [suffix] = useState("entry");
+    const id = useId();
+    return (
+      <span id={id} data-toc-level={level}>
+        {label} {suffix}: {children}
+      </span>
+    );
+  };
+
+  const html = renderToStaticMarkup(
+    <LabelContext.Provider value="Contextual">
+      <Markdown tocRenderer={HookToc}>
+        <PrecedingChild />
+        {"# First\n\n<Toc />\n\n## Second"}
+      </Markdown>
+    </LabelContext.Provider>,
+  );
+
+  expect(rendererCalls).toBe(2);
+  expect(html).toContain("Contextual entry: First");
+  expect(html).toContain("Contextual entry: Second");
+  expect(html).toContain('data-toc-level="1"');
+  expect(html).toContain('data-toc-level="2"');
+  const tocIds = Array.from(
+    html.matchAll(/<span id="([^"]+)" data-toc-level=/g),
+    ([, id]) => id,
+  );
+  expect(tocIds).toHaveLength(2);
+  expect(new Set(tocIds).size).toBe(2);
+});
+
+test("TOC does not invoke a renderer without a Toc placeholder", () => {
+  let calls = 0;
+  renderToStaticMarkup(
+    <Markdown
+      tocRenderer={() => {
+        calls++;
+        return <span>Unused TOC</span>;
+      }}
+    >
+      {"# Chapter without a table of contents"}
+    </Markdown>,
+  );
+  expect(calls).toBe(0);
+});
+
+test("TOC ignores headings passed to components that do not render them", () => {
+  const OmitContent = ({ children: _children }: { children: ReactNode }) => (
+    <p>Intentionally omitted</p>
+  );
+
+  const html = renderToStaticMarkup(
+    <Markdown
+      tocRenderer={({ id, children }) => <a href={`#${id}`}>{children}</a>}
+    >
+      {"<Toc />\n\n"}
+      <OmitContent>
+        <h2 id="hidden-section">Hidden section</h2>
+      </OmitContent>
+    </Markdown>,
+  );
+
+  expect(html).toContain("Intentionally omitted");
+  expect(html).not.toContain("Hidden section");
+  expect(html).not.toContain('href="#hidden-section"');
 });
 
 test("explicit Toc overrides take precedence over the generated table of contents", () => {

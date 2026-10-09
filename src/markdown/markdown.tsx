@@ -1,7 +1,7 @@
 import { compiler, type MarkdownToJSX } from "markdown-to-jsx";
 import {
   Children,
-  type ComponentClass,
+  createElement,
   Fragment,
   isValidElement,
   type ReactElement,
@@ -81,21 +81,6 @@ export const Markdown = (props: MarkdownProps) => {
     return isValidElement<MarkdownElementProps>(child);
   };
 
-  const isClassComponent = (
-    type: ReactElement<MarkdownElementProps>["type"],
-  ): type is ComponentClass<MarkdownElementProps> => {
-    if (typeof type !== "function" || !("prototype" in type)) {
-      return false;
-    }
-
-    const { prototype } = type;
-    return (
-      typeof prototype === "object" &&
-      prototype !== null &&
-      "isReactComponent" in prototype
-    );
-  };
-
   const detectHeader = (nodes: ReactNode) => {
     Children.forEach(nodes, (child) => {
       if (!isReactElement(child)) return;
@@ -112,15 +97,12 @@ export const Markdown = (props: MarkdownProps) => {
         } as TocRendererProps);
       }
 
-      if (isClassComponent(child.type)) {
-        const instance = new child.type(child.props);
-        detectHeader(instance.render());
-      } else if (typeof child.type === "function") {
-        const FunctionComponent = child.type as (
-          props: MarkdownElementProps,
-        ) => ReactNode;
-        detectHeader(FunctionComponent(child.props));
-      } else if (child.props?.children) {
+      // Only traverse the elements React has already been given. Calling a
+      // function component (or constructing a class component) to look inside
+      // it would render it outside React's lifecycle, breaking hooks, context,
+      // and render counts. Headings returned by components cannot be known
+      // statically; include them directly in Markdown/JSX to add them to TOC.
+      if (child.type === Fragment || typeof child.type === "string") {
         detectHeader(child.props.children);
       }
     });
@@ -131,7 +113,13 @@ export const Markdown = (props: MarkdownProps) => {
   if (tocRenderer)
     detectHeader(renderMarkdownChildren(props.children, props.options));
 
-  const Toc = tocRenderer ? headers.map((header) => tocRenderer(header)) : null;
+  // Let React invoke each renderer in its own component lifecycle. Calling the
+  // renderer here would associate its hooks with Markdown and render it early.
+  const Toc = tocRenderer
+    ? Children.toArray(
+        headers.map((header) => createElement(tocRenderer, header)),
+      )
+    : null;
 
   return renderMarkdownChildren(
     props.children,
@@ -208,7 +196,7 @@ This agreement is signed with <CustomerName />.
           name: "Table of Contents",
           description: `You can use the \`tocRenderer\` prop to render a table of contents from your Markdown content. The headers will be automatically detected and rendered in the order they appear. You need to place the \`<Toc />\` component in your Markdown content to render the table of contents.
 
-You can also use the \`id\` attribute in your headers to link to them directly.`,
+You can also use the \`id\` attribute in your headers to link to them directly. Headings must appear in the Markdown source or as JSX elements inside native elements/fragments; headings produced inside custom React components are not introspected. The \`tocRenderer\` is rendered as a React component, so it may use hooks.`,
           template: (
             <Tailwind
               config={{
