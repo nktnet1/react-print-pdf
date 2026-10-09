@@ -79,8 +79,8 @@ test("waits for document fonts before rendering a PDF by default", async () => {
     expect(fixture.evaluate).toHaveBeenCalledOnce();
     expect(fontReadCount).toBe(1);
     expect(fixture.events).toEqual([
-      "setContent",
       "media",
+      "setContent",
       "fonts",
       "pdf",
       "close context",
@@ -115,8 +115,15 @@ test("can skip waiting for fonts and leaves complete HTML documents unchanged", 
     waitUntil: "load",
   });
   expect(fixture.evaluate).not.toHaveBeenCalled();
-  expect(fixture.emulateMedia).not.toHaveBeenCalled();
-  expect(fixture.events).toEqual(["setContent", "pdf", "close context"]);
+  expect(fixture.emulateMedia).toHaveBeenCalledExactlyOnceWith({
+    media: "print",
+  });
+  expect(fixture.events).toEqual([
+    "media",
+    "setContent",
+    "pdf",
+    "close context",
+  ]);
 });
 
 test("forwards browser options and awaits the readiness hook before printing", async () => {
@@ -152,8 +159,8 @@ test("forwards browser options and awaits the readiness hook before printing", a
   });
   expect(fixture.evaluate).not.toHaveBeenCalled();
   expect(fixture.events).toEqual([
-    "setContent",
     "media",
+    "setContent",
     "ready",
     "pdf",
     "close context",

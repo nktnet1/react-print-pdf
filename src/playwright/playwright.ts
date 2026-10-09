@@ -37,7 +37,12 @@ export interface PlaywrightRenderOptions {
    * outlines, and tagged PDF output to `true`.
    */
   pdf?: PlaywrightPdfOptions;
-  /** Override the media emulation used before PDF generation. */
+  /**
+   * Media applied before loading HTML and running the readiness hook.
+   * Defaults to `print` so styles, fonts, and layout measurements match the
+   * generated PDF. Pass `screen` to print using screen CSS, or `null` to reset
+   * media emulation to the browser default.
+   */
   media?: "print" | "screen" | null;
   /** Wait for `document.fonts.ready` before rendering. Defaults to `true`. */
   waitForFonts?: boolean;
@@ -95,14 +100,18 @@ export const convertHtmlWithPlaywright = async (
     context = await browser.newContext(options.context);
     const page = await context.newPage();
 
+    // Page.setContent() normally starts in screen media, while page.pdf()
+    // switches to print media. Apply the final media mode before loading the
+    // document so print-only resources and onPageReady layout measurements
+    // use the same styles that will be printed.
+    await page.emulateMedia({
+      media: options.media === undefined ? "print" : options.media,
+    });
+
     await page.setContent(toHtmlDocument(html), {
       waitUntil: "load",
       ...options.setContent,
     });
-
-    if (options.media !== undefined) {
-      await page.emulateMedia({ media: options.media });
-    }
 
     if (options.waitForFonts ?? true) {
       await waitForDocumentFonts(page);

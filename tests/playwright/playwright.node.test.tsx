@@ -149,6 +149,38 @@ describe("Playwright PDF integration", () => {
     expect(browser.contexts()).toHaveLength(0);
   }, 30_000);
 
+  test("uses print media for readiness measurements before generating the PDF", async () => {
+    const pdf = await convertHtmlWithPlaywright(
+      `<style>
+        @page { size: 360px 240px; margin: 20px; }
+        .panel { width: 60px; }
+        @media print { .panel { width: 180px; } }
+      </style>
+      <div class="panel"></div>
+      <p id="measurement"></p>`,
+      {
+        browser,
+        onPageReady: async (page) => {
+          const measurement = await page.evaluate(() => {
+            const panel = document.querySelector(".panel");
+            const output = document.querySelector("#measurement");
+            if (!panel || !output) throw new Error("Missing test elements");
+
+            const width = getComputedStyle(panel).width;
+            output.textContent = `Measured: ${width}`;
+            return { print: matchMedia("print").matches, width };
+          });
+
+          expect(measurement).toEqual({ print: true, width: "180px" });
+        },
+      },
+    );
+
+    expect(pdfInfo(pdf)).toMatch(/^Pages:\s*1$/m);
+    expect(pdfText(pdf)).toContain("Measured: 180px");
+    expect(browser.contexts()).toHaveLength(0);
+  }, 30_000);
+
   test("preserves complete HTML documents and forwards PDF options", async () => {
     const pdf = await convertHtmlWithPlaywright(
       "<!doctype html><html><head><title>Existing document</title></head><body><main>Complete HTML document</main></body></html>",
