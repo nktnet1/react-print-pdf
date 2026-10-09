@@ -33,15 +33,20 @@ test("CSS escapes closing tags instead of allowing markup injection", () => {
   expect(html.match(/<\/style>/g)).toHaveLength(1);
 });
 
-test("CSS rewrites unsupported :where selectors without escaping valid CSS quotes", () => {
-  const html = renderToStaticMarkup(
-    <CSS>{`:where(.chapter, .appendix)::before { content: "Section"; }`}</CSS>,
-  );
+test("CSS preserves :where selectors and quoted CSS text unchanged", () => {
+  const css =
+    ':where(.chapter, .appendix)::before { content: ":where(Section)"; }';
+  const html = renderToStaticMarkup(<CSS>{css}</CSS>);
 
-  expect(html).toContain(
-    ':is(.chapter, .appendix)::before { content: "Section"; }',
-  );
-  expect(html).not.toContain(":where(");
+  expect(html).toContain(css);
+  expect(html).not.toContain(":is(");
+});
+
+test("compile preserves zero-specificity :where selectors in document CSS", async () => {
+  const css = ":where(.print-document) { color: red; }";
+  const html = await compile(<CSS>{css}</CSS>);
+
+  expect(html).toContain(`<style>${css}</style>`);
 });
 
 test("CSS preserves ampersands and literal characters inside style elements", () => {

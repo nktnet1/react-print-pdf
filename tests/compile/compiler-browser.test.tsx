@@ -1,7 +1,7 @@
 import { Global, jsx } from "@emotion/react";
 import { useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { compile, Tailwind } from "react-print-pdf";
+import { CSS, compile, Tailwind } from "react-print-pdf";
 import { expect, test, vi } from "vitest";
 
 const createHost = () => {
@@ -18,6 +18,43 @@ const createHost = () => {
     },
   };
 };
+
+test("CSS preserves the zero specificity of :where selectors in Chromium", async () => {
+  const { host, root, cleanup } = createHost();
+
+  try {
+    root.render(
+      <>
+        <CSS>{`
+          .css-where-specificity { color: rgb(0, 0, 255); }
+          :where(.css-where-specificity) { color: rgb(255, 0, 0); }
+          .css-is-specificity { color: rgb(0, 0, 255); }
+          :is(.css-is-specificity) { color: rgb(255, 0, 0); }
+        `}</CSS>
+        <p className="css-where-specificity" data-css-where>
+          Lower-specificity :where should not override the class selector.
+        </p>
+        <p className="css-is-specificity" data-css-is>
+          Equal-specificity :is should win when declared later.
+        </p>
+      </>,
+    );
+
+    await vi.waitFor(() => {
+      const where = host.querySelector<HTMLElement>("[data-css-where]");
+      const is = host.querySelector<HTMLElement>("[data-css-is]");
+      expect(where).not.toBeNull();
+      expect(is).not.toBeNull();
+      expect(getComputedStyle(where as HTMLElement).color).toBe(
+        "rgb(0, 0, 255)",
+      );
+      expect(getComputedStyle(is as HTMLElement).color).toBe("rgb(255, 0, 0)");
+    });
+    expect(host.querySelector("style")?.textContent).toContain(":where(");
+  } finally {
+    cleanup();
+  }
+});
 
 test("Tailwind generates and applies utility CSS when mounted directly in a browser", async () => {
   const { host, root, cleanup } = createHost();

@@ -5,8 +5,10 @@ export const escapeCss = (css: string) => {
   // <style> is a raw-text HTML element: character references such as &amp;
   // are not decoded. HTML-encoding CSS corrupts URLs and literal text.
   // Escape '<' to prevent a CSS string containing </style> from ending the
-  // element, while preserving every other character as authored.
-  return css.replaceAll("<", "&lt;").replaceAll(":where", ":is");
+  // element, while preserving every other character as authored. In
+  // particular, :where() must retain its zero specificity; replacing it with
+  // :is() changes the cascade and breaks otherwise valid stylesheets.
+  return css.replaceAll("<", "&lt;");
 };
 
 export const CSS = ({ children }: { children: string }) => {
