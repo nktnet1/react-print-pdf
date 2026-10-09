@@ -87,6 +87,11 @@ Chromium will not repeat headers/footers, populate running headings, or move
 footnotes to the bottom of the page. Use a renderer that supports these CSS
 features when a document requires them.
 
+Custom Tailwind `@keyframes` and `@font-face` names are isolated per region.
+Use Tailwind utility classes or CSS theme variables (such as
+`animation: var(--animate-custom)`) to reference them. Hard-coded animation
+names and font-family names in React inline `style` props are not rewritten.
+
 ## Components
 
 The library includes utilities for:

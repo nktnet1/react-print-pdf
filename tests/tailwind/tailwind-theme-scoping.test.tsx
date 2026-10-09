@@ -197,7 +197,7 @@ test("Tailwind supports pseudo-elements, responsive utilities, and animation key
     const before = getComputedStyle(element, "::before");
     expect(before.content).toBe('"scoped"');
     expect(before.color).toBe("rgb(18, 85, 120)");
-    expect(getComputedStyle(element).animationName).toBe("spin");
+    expect(getComputedStyle(element).animationName).toMatch(/^react-print-/);
   } finally {
     host.remove();
   }

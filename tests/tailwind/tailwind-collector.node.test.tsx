@@ -79,3 +79,52 @@ test("standalone Tailwind does not nest server rendering inside its hooks", () =
   expect(html).toContain("Standalone Tailwind example");
   expect(html).toContain('class="text-lg"');
 });
+
+test("renaming Tailwind keyframes leaves CSS strings and URLs untouched", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@theme { --animate-wiggle: wiggle 1s linear; }
+      @keyframes wiggle { to { opacity: .3 } }
+      .custom-animation {
+        animation-name: wiggle;
+        --literal-name: "wiggle";
+        --image-path: url(wiggle);
+        content: "wiggle";
+      }`,
+  });
+  const start = `<template data-react-print-tailwind-start="${id}"></template>`;
+  const end = `<template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(
+    `${start}<div class="custom-animation animate-wiggle">Test</div>${end}`,
+  );
+
+  expect(result).toMatch(/@keyframes react-print-[\w-]+-wiggle/);
+  expect(result).not.toMatch(/animation-name:\s*wiggle\b/);
+  expect(result).toMatch(/--literal-name:\s*"wiggle"/);
+  expect(result).toMatch(/--image-path:\s*url\(wiggle\)/);
+  expect(result).toMatch(/content:\s*"wiggle"/);
+});
+
+test("renames unquoted font-family fallbacks without changing unrelated custom properties", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: First Font; src: url(first.woff2); }
+      @font-face { font-family: Second Font; src: url(second.woff2); }
+      @theme { --font-local: First Font, Second Font, serif; }
+      .custom-font { font-family: First Font, Second Font, serif; --label: "First Font"; }`,
+  });
+  const start = `<template data-react-print-tailwind-start="${id}"></template>`;
+  const end = `<template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(
+    `${start}<p class="font-local custom-font">Test</p>${end}`,
+  );
+
+  expect(result).not.toContain("font-family: First Font");
+  expect(result).not.toContain("font-family: Second Font");
+  expect(result).toMatch(
+    /font-family:\s*"react-print-[^"]+-font-0"\s*,\s*"react-print-[^"]+-font-1"\s*,\s*serif/,
+  );
+  expect(result).toContain('--label: "First Font"');
+});

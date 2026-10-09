@@ -12,6 +12,7 @@ import { decode } from "html-entities";
 import postcss from "postcss";
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
 import selectorParser from "postcss-selector-parser";
+import parseCssValue from "postcss-value-parser";
 import {
   createContext,
   type ReactNode,
@@ -229,6 +230,127 @@ async function buildTailwindStyles(
 // than the document root, or sibling configurations overwrite one another.
 function scopeTailwindStyles(css: string, registrationId: string): string {
   const root = postcss.parse(css);
+
+  // @scope isolates selectors, but CSS animation names remain global. When two
+  // regions define the same @keyframes name, the last definition wins for both.
+  // Give every region its own names and update animation declarations (including
+  // Tailwind's --animate-* variables) to use them. Encode the scope ID because
+  // React's useId() values can contain characters invalid in CSS identifiers.
+  const suffix = Array.from(new TextEncoder().encode(registrationId), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  const keyframes = new Map<string, string>();
+  root.walkAtRules((atRule) => {
+    if (!/^(?:-webkit-)?keyframes$/i.test(atRule.name)) return;
+    const name = atRule.params.trim();
+    if (!name) return;
+    const scopedName = `react-print-${suffix}-${name}`;
+    keyframes.set(name, scopedName);
+    atRule.params = scopedName;
+  });
+
+  // @font-face families are also document-global even when declared inside
+  // @scope. Rename them with the same per-region prefix and update references
+  // in Tailwind theme variables and CSS font declarations.
+  const fontFamilies = new Map<string, string>();
+  root.walkAtRules((atRule) => {
+    if (!/^font-face$/i.test(atRule.name)) return;
+    atRule.walkDecls(/^font-family$/i, (declaration) => {
+      const parsed = parseCssValue(declaration.value);
+      // CSS family names can be quoted or unquoted word sequences, e.g.
+      // "My Font" and My Font. Ignore invalid/complex descriptor values.
+      const nodes = parsed.nodes.filter((node) => node.type !== "comment");
+      const original =
+        nodes.length === 1 && nodes[0].type === "string"
+          ? nodes[0].value
+          : nodes.every((node) => node.type === "word" || node.type === "space")
+            ? nodes
+                .filter((node) => node.type === "word")
+                .map((node) => node.value)
+                .join(" ")
+            : "";
+      if (!original) return;
+      const familyKey = original.toLowerCase();
+      let scopedFamily = fontFamilies.get(familyKey);
+      if (!scopedFamily) {
+        scopedFamily = `react-print-${suffix}-font-${fontFamilies.size}`;
+        fontFamilies.set(familyKey, scopedFamily);
+      }
+      declaration.value = `"${scopedFamily}"`;
+    });
+  });
+
+  if (keyframes.size > 0 || fontFamilies.size > 0) {
+    root.walkDecls((declaration) => {
+      const property = declaration.prop.toLowerCase();
+      const isAnimation = /^(?:-webkit-)?animation(?:-name)?$/.test(property);
+      const isFont = property === "font" || property === "font-family";
+      const isVariable = property.startsWith("--");
+      const isFontVariable = isVariable && property.includes("font");
+      if (!isAnimation && !isFont && !isVariable) return;
+      // @font-face family descriptors have already been renamed above.
+      if (
+        property === "font-family" &&
+        declaration.parent &&
+        "name" in declaration.parent &&
+        typeof declaration.parent.name === "string" &&
+        /^font-face$/i.test(declaration.parent.name)
+      ) {
+        return;
+      }
+
+      const parsedValue = parseCssValue(declaration.value);
+      parsedValue.walk((node) => {
+        // Do not rewrite URL contents or arbitrary quoted animation strings.
+        if (node.type === "function" && node.value.toLowerCase() === "url") {
+          return false;
+        }
+        if (node.type === "word") {
+          if (isAnimation || isVariable) {
+            node.value = keyframes.get(node.value) ?? node.value;
+          }
+          if (isFont || isFontVariable) {
+            node.value =
+              fontFamilies.get(node.value.toLowerCase()) ?? node.value;
+          }
+        } else if (node.type === "string" && (isFont || isFontVariable)) {
+          node.value = fontFamilies.get(node.value.toLowerCase()) ?? node.value;
+        }
+      });
+
+      // Unquoted multiword font families are represented as word/space nodes.
+      // Rewrite complete family entries, preserving comma-separated fallbacks.
+      if (isFont || isFontVariable) {
+        const nodes = parsedValue.nodes;
+        for (let index = 0; index < nodes.length; index++) {
+          if (nodes[index].type !== "word") continue;
+          const words = [nodes[index].value];
+          let end = index + 1;
+          while (
+            nodes[end]?.type === "space" &&
+            nodes[end + 1]?.type === "word"
+          ) {
+            words.push(nodes[end + 1].value);
+            end += 2;
+          }
+          const scopedFamily = fontFamilies.get(words.join(" ").toLowerCase());
+          if (scopedFamily && words.length > 1) {
+            nodes.splice(index, end - index, {
+              type: "string",
+              quote: '"',
+              value: scopedFamily,
+              sourceIndex: nodes[index].sourceIndex,
+              sourceEndIndex: nodes[end - 1].sourceEndIndex,
+            });
+          } else {
+            index = end - 1;
+          }
+        }
+      }
+      declaration.value = parsedValue.toString();
+    });
+  }
+
   root.walkRules((rule) => {
     // @keyframes selectors are percentages, not element selectors.
     if (
