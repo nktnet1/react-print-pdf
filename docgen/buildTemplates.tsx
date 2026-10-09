@@ -2,8 +2,10 @@ import { promises as fs } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import frontmatter from "front-matter";
 import { glob } from "glob";
+import { createElement } from "react";
 import remarkFrontmatter from "remark-frontmatter";
 import type { TsdownPlugin } from "tsdown";
+import { docgenDependencies } from "#docgen/bundling";
 import { renderPreview } from "#docgen/renderPreview";
 import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils";
 
@@ -50,6 +52,7 @@ export async function buildTemplates() {
         sourcemap: false,
         config: false,
         clean: false,
+        deps: docgenDependencies,
       });
 
       const { default: Component } = await import(outPath);
@@ -70,7 +73,7 @@ export async function buildTemplates() {
       );
 
       const paths = await renderPreview(
-        <RealComponent />,
+        createElement(RealComponent),
         `${dirname(
           relative(join(import.meta.dirname, "../src"), template),
         ).replace(/\//g, " ")} ${basename(outPath, ".mjs")}`,

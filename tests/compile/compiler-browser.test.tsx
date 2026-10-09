@@ -231,6 +231,22 @@ test("browser Emotion compilation cleans up after a render failure", async () =>
   expect(html).toContain("Can still compile");
 });
 
+test("browser Emotion compilation rejects uncaught layout effect failures", async () => {
+  const BrokenEffect = () => {
+    useLayoutEffect(() => {
+      throw new Error("cannot mount print effect");
+    }, []);
+    return <p>Should not print</p>;
+  };
+
+  await expect(compile(<BrokenEffect />, { emotion: true })).rejects.toThrow(
+    "cannot mount print effect",
+  );
+
+  const html = await compile(<p>Follow-up render</p>, { emotion: true });
+  expect(html).toContain("Follow-up render");
+});
+
 test("browser Emotion compilation unmounts detached React effects before returning", async () => {
   const events: string[] = [];
   const Tracked = () => {

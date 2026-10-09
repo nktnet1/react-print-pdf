@@ -259,41 +259,44 @@ export const Tailwind = ({
     [config, stylesheet, preflight],
   );
 
-  const directRenderMarkup = useMemo(
-    () => (collector ? null : renderToString(children)),
-    [children, collector],
-  );
   const [directRenderCss, setDirectRenderCss] = useState("");
   const [directRenderError, setDirectRenderError] = useState<Error | null>(
     null,
   );
 
   useEffect(() => {
-    if (collector || directRenderMarkup === null) {
+    if (collector) {
       return;
     }
 
     let active = true;
     setDirectRenderError(null);
 
-    buildTailwindStyles(extractClassNames(directRenderMarkup), options)
-      .then((css) => {
+    // Do not call renderToString while another React render is in progress.
+    // React 19's server renderer can lose its hook state on nested renders.
+    void (async () => {
+      try {
+        const markup = renderToString(children);
+        const css = await buildTailwindStyles(
+          extractClassNames(markup),
+          options,
+        );
         if (active) {
           setDirectRenderCss(css);
         }
-      })
-      .catch((error: unknown) => {
+      } catch (error) {
         if (active) {
           setDirectRenderError(
             error instanceof Error ? error : new Error(String(error)),
           );
         }
-      });
+      }
+    })();
 
     return () => {
       active = false;
     };
-  }, [collector, directRenderMarkup, options]);
+  }, [collector, children, options]);
 
   if (directRenderError) {
     throw directRenderError;

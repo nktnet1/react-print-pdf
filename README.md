@@ -130,8 +130,15 @@ verified separately by `test:package`.
 Chromium is required for the browser suite and PDF integration tests. Install
 it with `pnpm exec playwright install chromium`; the PDF integration tests also
 use Poppler's `pdfinfo` and `pdftotext` (`poppler-utils`). CI installs these
-prerequisites. `test:source` does not build `dist/` or download Chromium at
-every run.
+prerequisites. Documentation previews created by `pnpm build-components`
+also use Poppler's `pdftoppm` to rasterize the first PDF page (on macOS,
+`brew install poppler`). `test:source` does not build `dist/` or download
+Chromium at every run.
+
+The pre-commit hook runs the non-writing `check` command; it deliberately does
+not regenerate documentation. To update generated component documentation,
+run `pnpm build-components-commit` explicitly and commit the resulting MDX
+pages **together with** any new preview PDFs and images they reference.
 
 For a real Gotenberg integration check, run `pnpm test:gotenberg`. This
 builds the distributable package, launches a disposable Chromium-only Gotenberg

@@ -2,11 +2,10 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
-import { glob } from "glob";
-import { fromBuffer } from "pdf2pic";
 import { chromium } from "playwright";
-import type React from "react";
+import { createElement, Fragment, type ReactElement } from "react";
 import type { CompileOptions } from "#/compile/compile";
+import { ensurePreviewImage, isNonEmptyFile } from "#docgen/previewAssets";
 
 type CompileModule = Pick<typeof import("#/compile/compile"), "compile">;
 
@@ -26,13 +25,12 @@ const indexCss = fs.readFileSync(
 );
 
 export async function renderPreview(
-  component: React.ReactElement,
+  component: ReactElement,
   componentName: string,
   useBaseCss: boolean = true,
   compileOptions?: CompileOptions,
 ) {
-  const Component = component;
-  const Element = <>{Component}</>;
+  const element = createElement(Fragment, null, component);
   const { compile } = await loadCompileModule();
   const documentCss = useBaseCss ? baseCss.toString() : "@page { size: A4; }";
 
@@ -40,7 +38,7 @@ export async function renderPreview(
           <meta charset="utf-8" />
           <style>${documentCss}</style>
           <style>${indexCss.toString()}</style>
-          </head><body>${await compile(Element, compileOptions)}</body></html>`;
+          </head><body>${await compile(element, compileOptions)}</body></html>`;
 
   const hash = crypto.createHash("sha256");
   hash.update(html);
@@ -53,13 +51,12 @@ export async function renderPreview(
     `../docs/public/docs/images/previews/${id}/`,
   );
 
-  if (!fs.existsSync(targetFolder)) {
+  const pdfPath = path.join(targetFolder, "document.pdf");
+
+  // A previous run might have left the directory behind without a valid PDF.
+  if (!isNonEmptyFile(pdfPath)) {
     fs.mkdirSync(targetFolder, { recursive: true });
-
-    const htmlPath = path.join(targetFolder, "index.html");
-    const pdfPath = path.join(targetFolder, "document.pdf");
-
-    fs.writeFileSync(htmlPath, html);
+    fs.writeFileSync(path.join(targetFolder, "index.html"), html);
 
     const browser = await chromium.launch({ headless: true });
     try {
@@ -75,33 +72,11 @@ export async function renderPreview(
     } finally {
       await browser.close();
     }
-
-    const buffer = fs.readFileSync(pdfPath);
-
-    const pdf2pic = fromBuffer(buffer, {
-      density: 300,
-      saveFilename: "document",
-      savePath: targetFolder,
-      format: "jpg",
-      preserveAspectRatio: true,
-      width: 1920,
-    });
-
-    let currentPage = 1;
-
-    while (true) {
-      try {
-        await pdf2pic(currentPage);
-      } catch (_e) {
-        break;
-      }
-
-      currentPage++;
-    }
   }
 
-  const pages = (await glob(path.join(targetFolder, "*.jpg"))).sort();
-  const pdf = await glob(path.join(targetFolder, "*.pdf"));
+  // A failed rasterization must not be mistaken for the end of a document.
+  // Only the first page is used as the documentation preview image.
+  const previewImage = ensurePreviewImage(targetFolder);
   const publicDocsPath = path.join(import.meta.dirname, "../docs/public/docs");
   const toPublicUrl = (assetPath: string) =>
     `/docs/${path
@@ -109,11 +84,8 @@ export async function renderPreview(
       .split(path.sep)
       .join("/")}`;
 
-  const imagePath = toPublicUrl(pages[0]);
-  const pdfPath = toPublicUrl(pdf[0]);
-
   return {
-    imagePath,
-    pdfPath,
+    imagePath: toPublicUrl(previewImage),
+    pdfPath: toPublicUrl(pdfPath),
   };
 }

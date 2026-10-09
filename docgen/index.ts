@@ -4,6 +4,7 @@ import * as glob from "glob";
 import * as docgen from "react-docgen-typescript";
 import { buildFileMarkdown } from "#docgen/buildFileMarkdown";
 import { buildTemplateList, buildTemplates } from "#docgen/buildTemplates";
+import { buildDocgenComponent } from "#docgen/bundling";
 import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction";
 import type { DocConfig, LucideIconName } from "#docgen/types";
 import {
@@ -46,11 +47,6 @@ const process = async () => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
   fs.mkdirSync(tmpDir, { recursive: true });
 
-  const [{ build }, { default: Raw }] = await Promise.all([
-    import("tsdown"),
-    import("unplugin-raw/rolldown"),
-  ]);
-
   const files = glob
     .sync(path.join(import.meta.dirname, "../src/**/*.tsx"))
     .filter((filePath) => {
@@ -71,17 +67,7 @@ const process = async () => {
           `${path.basename(relativePath, ".tsx")}.mjs`,
         );
 
-        await build({
-          entry: [filePath],
-          dts: false,
-          outDir: path.dirname(entrypoint),
-          format: "esm",
-          platform: "node",
-          sourcemap: false,
-          config: false,
-          clean: false,
-          plugins: [Raw()],
-        });
+        await buildDocgenComponent(filePath, entrypoint);
 
         const elements = await import(entrypoint);
 

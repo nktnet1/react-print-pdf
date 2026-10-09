@@ -170,7 +170,7 @@ This is a paragraph with a [link](https://google.com)`}</Markdown>
             <Markdown
               options={{
                 overrides: {
-                  Title: {
+                  AgreementTitle: {
                     component: () => "Non-Disclosure Agreement",
                   },
                   CustomerName: {
@@ -185,7 +185,7 @@ This is a paragraph with a [link](https://google.com)`}</Markdown>
                   },
                 },
               }}
-            >{`# <Title />
+            >{`# <AgreementTitle />
 
 This agreement is signed with <CustomerName />.
 

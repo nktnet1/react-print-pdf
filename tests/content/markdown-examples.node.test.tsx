@@ -16,6 +16,7 @@ test("Markdown custom component documentation example renders replacements", () 
   expect(html).toContain("20/month");
   expect(html).toContain("color:blue");
   expect(html).not.toContain("<CustomerName");
+  expect(html).not.toContain("<AgreementTitle");
 });
 
 test("Markdown table-of-contents documentation example renders links and page breaks", async () => {

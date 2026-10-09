@@ -1,4 +1,4 @@
-import { Button, ChakraProvider } from "@chakra-ui/react";
+import { Button, ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import postcss from "postcss";
 import type React from "react";
@@ -119,10 +119,22 @@ export const compile = async (
       import("react-dom"),
     ]);
     const host = document.createElement("div");
-    const root = createRoot(host);
+    let hasUncaughtError = false;
+    let uncaughtError: unknown;
+    const root = createRoot(host, {
+      // React 19 reports uncaught render errors through the root callback
+      // instead of necessarily throwing them from flushSync().
+      onUncaughtError(error) {
+        hasUncaughtError = true;
+        uncaughtError = error;
+      },
+    });
 
     try {
       flushSync(() => root.render(Element));
+      if (hasUncaughtError) {
+        throw uncaughtError;
+      }
       renderedHtml = host.innerHTML;
       // Read styles before unmount: Emotion's <Global /> cleanup removes its
       // separate stylesheet during the unmount insertion effect.
@@ -194,8 +206,8 @@ const html = await compile(<Component />, { emotion: true });
 \`\`\``,
           template: (
             <>
-              <ChakraProvider>
-                <Button colorScheme="blue">Hello</Button>
+              <ChakraProvider value={defaultSystem}>
+                <Button colorPalette="blue">Hello</Button>
               </ChakraProvider>
             </>
           ),
@@ -204,7 +216,7 @@ const html = await compile(<Component />, { emotion: true });
             emotion: true,
           },
           externalImports: [
-            `import { Button, ChakraProvider, extendTheme } from "@chakra-ui/react";`,
+            `import { Button, ChakraProvider, defaultSystem } from "@chakra-ui/react";`,
           ],
         },
       },

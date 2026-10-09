@@ -1,5 +1,8 @@
+import ts, {
+  type Expression,
+  type ObjectLiteralExpression,
+} from "@typescript/typescript6";
 import * as prettier from "prettier";
-import ts, { type Expression, type ObjectLiteralExpression } from "typescript";
 import type {
   DocConfig,
   EnrichedExample,

@@ -1,5 +1,6 @@
+import { renderToString } from "react-dom/server";
 import { expect, test } from "vitest";
-import { createTailwindStyleCollector } from "#/tailwind/tailwind";
+import { createTailwindStyleCollector, Tailwind } from "#/tailwind/tailwind";
 
 test.each([
   {
@@ -46,4 +47,15 @@ test("reusing a collector does not reuse candidates from previous HTML", async (
   expect(second).not.toContain("#123456");
   expect(first).not.toContain("data-react-print-tailwind-");
   expect(second).not.toContain("data-react-print-tailwind-");
+});
+
+test("standalone Tailwind does not nest server rendering inside its hooks", () => {
+  const html = renderToString(
+    <Tailwind>
+      <p className="text-lg">Standalone Tailwind example</p>
+    </Tailwind>,
+  );
+
+  expect(html).toContain("Standalone Tailwind example");
+  expect(html).toContain('class="text-lg"');
 });

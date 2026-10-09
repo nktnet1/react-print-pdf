@@ -56,10 +56,11 @@
     "build": "tsdown --config config/tsdown.config.ts --config-loader tsx",
     "test": "pnpm test:source && pnpm test:package",
     "test:source": "vitest run",
+    "test:docgen": "vitest run --config config/vitest.node.config.ts tests/docgen tests/tailwind/tailwind-collector.node.test.tsx",
     "test:package": "pnpm build && vitest run --config config/vitest.package.config.ts",
     "test:coverage": "vitest run --coverage && tsx scripts/check-source-coverage.ts coverage/combined/coverage-summary.json && pnpm test:package",
     "dev": "pnpm --dir ./docs dev",
-    "build-components": "npm run build && tsx ./docgen/index.ts",
+    "build-components": "npm run build && node --import ./scripts/register-docgen-typescript.mjs --import tsx ./docgen/index.ts",
     "prune-docs": "tsx ./docgen/prune.ts",
     "build-components-commit": "npm run build-components && npm run prune-docs",
     "lint": "biome lint",
@@ -78,7 +79,7 @@
     "test:gotenberg": "pnpm build && node ./tests/gotenberg/gotenberg.integration.mjs"
   },
   "pre-commit": [
-    "build-components-commit"
+    "check"
   ],
   "author": "",
   "license": "ISC",
@@ -89,6 +90,7 @@
     "@mdx-js/rollup": "^3.1.1",
     "@rolldown/plugin-node-polyfills": "^1.0.3",
     "@tsdown/css": "^0.23.0",
+    "@typescript/typescript6": "^6.0.2",
     "@types/node": "^26.6.4",
     "@types/postcss-css-variables": "^0.18.3",
     "@types/react": "^19.3.0",
@@ -98,7 +100,6 @@
     "front-matter": "^4.0.2",
     "glob": "^13.0.6",
     "lefthook": "^2.2.0",
-    "pdf2pic": "^3.2.0",
     "playwright": "^1.64.0",
     "postcss": "^8.5.29",
     "postcss-color-functional-notation": "^8.0.15",
