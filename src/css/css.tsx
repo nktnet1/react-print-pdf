@@ -2,13 +2,12 @@ import React from "react";
 import type { DocConfig } from "#/docgen/types";
 
 export const escapeCss = (css: string) => {
-  // <style> is a raw-text HTML element: character references such as &amp;
-  // are not decoded. HTML-encoding CSS corrupts URLs and literal text.
-  // Escape '<' to prevent a CSS string containing </style> from ending the
-  // element, while preserving every other character as authored. In
-  // particular, :where() must retain its zero specificity; replacing it with
-  // :is() changes the cascade and breaks otherwise valid stylesheets.
-  return css.replaceAll("<", "&lt;");
+  // HTML treats <style> as raw text. Only a closing </style> sequence can end
+  // the element prematurely; replacing every '<' corrupts valid CSS strings
+  // such as content: "4 < 5" because character references are not decoded.
+  // CSS decodes the escaped slash inside strings, preserving their meaning
+  // while preventing the HTML parser from seeing a closing style tag.
+  return css.replace(/<\/style/gi, (tag) => `<\\${tag.slice(1)}`);
 };
 
 export const CSS = ({ children }: { children: string }) => {

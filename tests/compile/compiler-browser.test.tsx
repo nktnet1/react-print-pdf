@@ -56,6 +56,74 @@ test("CSS preserves the zero specificity of :where selectors in Chromium", async
   }
 });
 
+test("CSS keeps literal less-than text while preventing closing-style injection", async () => {
+  const { host, root, cleanup } = createHost();
+
+  try {
+    root.render(
+      <>
+        <CSS>{`.literal-less-than::before { content: "4 < 5"; }
+          .literal-close-tag::before { content: "</StYlE ><b data-escaped='true'>"; }`}</CSS>
+        <p className="literal-less-than" data-literal-less-than>
+          Comparison
+        </p>
+        <p className="literal-close-tag" data-literal-close-tag>
+          Closing tag
+        </p>
+      </>,
+    );
+
+    await vi.waitFor(() => {
+      const comparison = host.querySelector<HTMLElement>(
+        "[data-literal-less-than]",
+      );
+      const closing = host.querySelector<HTMLElement>(
+        "[data-literal-close-tag]",
+      );
+      expect(comparison).not.toBeNull();
+      expect(closing).not.toBeNull();
+      expect(
+        getComputedStyle(comparison as HTMLElement, "::before").content,
+      ).toBe('"4 < 5"');
+      expect(getComputedStyle(closing as HTMLElement, "::before").content).toBe(
+        `"</StYlE ><b data-escaped='true'>"`,
+      );
+    });
+    expect(host.querySelectorAll("style")).toHaveLength(1);
+    expect(host.querySelector("[data-escaped]")).toBeNull();
+  } finally {
+    cleanup();
+  }
+});
+
+test("compiled CSS cannot terminate a style element when parsed as HTML", async () => {
+  const host = document.createElement("div");
+  document.body.append(host);
+
+  try {
+    host.innerHTML = await compile(
+      <>
+        <CSS>{`.compiled-less-than::before { content: "4 < 5; </StYlE ><b data-injected>"; }`}</CSS>
+        <p className="compiled-less-than" data-compiled-less-than>
+          Server-rendered CSS
+        </p>
+      </>,
+    );
+
+    const element = host.querySelector<HTMLElement>(
+      "[data-compiled-less-than]",
+    );
+    expect(element).not.toBeNull();
+    expect(getComputedStyle(element as HTMLElement, "::before").content).toBe(
+      '"4 < 5; </StYlE ><b data-injected>"',
+    );
+    expect(host.querySelector("[data-injected]")).toBeNull();
+    expect(host.querySelectorAll("style")).toHaveLength(2);
+  } finally {
+    host.remove();
+  }
+});
+
 test("Font loads a CSS URL with quotes and keeps the import intact", async () => {
   const { host, root, cleanup } = createHost();
   const url = `data:text/css,.from-font-import%7Bcolor%3Argb(17%2C34%2C51)%7D#Jane's"font`;

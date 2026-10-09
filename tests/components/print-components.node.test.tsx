@@ -23,14 +23,27 @@ import {
 } from "react-print-pdf";
 import { expect, test } from "vitest";
 
-test("CSS escapes closing tags instead of allowing markup injection", () => {
-  const html = renderToStaticMarkup(
-    <CSS>{'p::before { content: "</style><script>bad()</script>"; }'}</CSS>,
-  );
+test("CSS escapes HTML closing-style sequences without corrupting their text", () => {
+  const css =
+    'p::before { content: "</style><script>bad()</script> | </StYlE >"; }';
+  const html = renderToStaticMarkup(<CSS>{css}</CSS>);
 
-  expect(html).toContain("&lt;/style>");
-  expect(html).not.toContain("<script>");
-  expect(html.match(/<\/style>/g)).toHaveLength(1);
+  // A backslash before the slash prevents HTML from closing the style tag,
+  // but CSS decodes the escape so the original text is still displayed.
+  expect(html).toContain("<\\/style><script>bad()</script>");
+  expect(html).toContain("<\\/StYlE >");
+  expect(html).not.toContain("&lt;");
+  expect(html.match(/<\/style>/gi)).toHaveLength(1);
+});
+
+test("CSS and compile preserve literal less-than operators in CSS strings", async () => {
+  const css = '.comparison::before { content: "4 < 5"; }';
+  const html = renderToStaticMarkup(<CSS>{css}</CSS>);
+  const compiled = await compile(<CSS>{css}</CSS>);
+
+  expect(html).toContain(css);
+  expect(compiled).toContain(css);
+  expect(html).not.toContain("&lt;");
 });
 
 test("CSS preserves :where selectors and quoted CSS text unchanged", () => {
