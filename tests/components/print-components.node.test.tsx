@@ -130,6 +130,34 @@ test("Margins produces a complete @page rule with every margin", () => {
   expect(html).toContain("margin-left:40px;");
 });
 
+test("Margins rejects CSS rule injection through size and pixel fields", () => {
+  const valid = {
+    pageRatio: "210mm 297mm",
+    top: "12.5",
+    right: "0",
+    bottom: "20",
+    left: "-2",
+  };
+  const html = renderToStaticMarkup(<Margins {...valid} />);
+  expect(html).toContain("size: 210mm 297mm;");
+  expect(html).toContain("margin-top:12.5px;");
+
+  expect(() =>
+    renderToStaticMarkup(
+      <Margins {...valid} pageRatio="A4; } body { background: red; } /*" />,
+    ),
+  ).toThrow(/pageRatio/);
+
+  expect(() =>
+    renderToStaticMarkup(
+      <Margins {...valid} top="0; } body { background: red; } /*" />,
+    ),
+  ).toThrow(/top/);
+  expect(() => renderToStaticMarkup(<Margins {...valid} left="NaN" />)).toThrow(
+    /left/,
+  );
+});
+
 test("layout wrappers preserve their content, classes and extra attributes", () => {
   const html = renderToStaticMarkup(
     <>

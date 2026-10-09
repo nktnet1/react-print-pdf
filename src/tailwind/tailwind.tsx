@@ -81,7 +81,10 @@ const VIRTUAL_CONFIG_ID = "react-print-tailwind-config";
 function extractClassNames(markup: string) {
   const classNames = new Set<string>();
 
-  for (const match of markup.matchAll(/\bclass="([^"]*)"/g)) {
+  // HTML attribute names must be preceded by whitespace. A word boundary
+  // also matches the `class` suffix in `data-class` and `aria-class`, which
+  // would wrongly generate utilities for non-class attributes.
+  for (const match of markup.matchAll(/\sclass="([^"]*)"/g)) {
     for (const className of decode(match[1]).split(/\s+/)) {
       if (className) {
         classNames.add(className);

@@ -1,5 +1,6 @@
 import type React from "react";
 import { type CompileOptions, compile } from "#/compile/compile";
+import { toHtmlDocument } from "#/html/html-document";
 
 export type GotenbergFormValue = string | number | boolean;
 
@@ -90,16 +91,6 @@ const createBasicAuthorization = ({
   }
 
   return `Basic ${btoa(binary)}`;
-};
-
-const toHtmlDocument = (html: string): string => {
-  const trimmed = html.trimStart();
-
-  if (/^<!doctype\s+html/i.test(trimmed) || /^<html(?:\s|>)/i.test(trimmed)) {
-    return html;
-  }
-
-  return `<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
 };
 
 const getEndpoint = (baseUrl: string): string => {

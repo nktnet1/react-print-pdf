@@ -8,6 +8,7 @@ import {
 } from "playwright";
 import type React from "react";
 import { type CompileOptions, compile } from "#/compile/compile";
+import { toHtmlDocument } from "#/html/html-document";
 
 export type PlaywrightSetContentOptions = NonNullable<
   Parameters<Page["setContent"]>[1]
@@ -64,16 +65,6 @@ const DEFAULT_PDF_OPTIONS = {
   outline: true,
   tagged: true,
 } satisfies PlaywrightPdfOptions;
-
-const toHtmlDocument = (html: string): string => {
-  const trimmed = html.trimStart();
-
-  if (/^<!doctype\s+html/i.test(trimmed) || /^<html(?:\s|>)/i.test(trimmed)) {
-    return html;
-  }
-
-  return `<!doctype html><html><head><meta charset="utf-8"></head><body>${html}</body></html>`;
-};
 
 const waitForDocumentFonts = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {

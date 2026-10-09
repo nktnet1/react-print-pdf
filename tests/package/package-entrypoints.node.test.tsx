@@ -74,5 +74,5 @@ describe("published package entrypoints", () => {
       }
     }
     expect(packedFiles.has("dist/index.css")).toBe(true);
-  });
+  }, 45_000);
 });

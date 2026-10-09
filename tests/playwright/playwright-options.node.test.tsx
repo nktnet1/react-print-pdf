@@ -126,6 +126,22 @@ test("can skip waiting for fonts and leaves complete HTML documents unchanged", 
   ]);
 });
 
+test.each([
+  "<!-- generated report -->\n<!doctype html><html><body>PDF</body></html>",
+  "<!-- first --><!-- second -->\n<html><body>PDF</body></html>",
+])("preserves complete documents after leading HTML comments", async (html) => {
+  const fixture = createBrowser();
+  await convertHtmlWithPlaywright(html, {
+    browser: fixture.browser,
+    waitForFonts: false,
+  });
+
+  expect(fixture.setContent).toHaveBeenCalledWith(html, {
+    waitUntil: "load",
+  });
+  expect(fixture.closeContext).toHaveBeenCalledOnce();
+});
+
 test("forwards browser options and awaits the readiness hook before printing", async () => {
   const fixture = createBrowser();
   const document =

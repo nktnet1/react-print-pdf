@@ -44,6 +44,23 @@ type MarginsProps = {
   left: string;
   bottom: string;
 };
+
+const validatePageSize = (value: string): string => {
+  const size = value.trim();
+  if (!size || /[;{}\0]|\/\*|\*\//.test(size)) {
+    throw new Error("Margins pageRatio must be a single CSS page-size value");
+  }
+  return size;
+};
+
+const validatePixelMargin = (name: string, value: string): string => {
+  const pixels = value.trim();
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(pixels)) {
+    throw new Error(`Margins ${name} must be a numeric pixel value`);
+  }
+  return pixels;
+};
+
 export const Margins = ({
   pageRatio,
   top,
@@ -51,8 +68,16 @@ export const Margins = ({
   left,
   bottom,
 }: MarginsProps) => {
+  const size = validatePageSize(pageRatio);
+  const margins = {
+    top: validatePixelMargin("top", top),
+    right: validatePixelMargin("right", right),
+    left: validatePixelMargin("left", left),
+    bottom: validatePixelMargin("bottom", bottom),
+  };
+
   return (
-    <CSS>{`@page {size: ${pageRatio};margin-top:${top}px;margin-right:${right}px;margin-left:${left}px;margin-bottom:${bottom}px;}`}</CSS>
+    <CSS>{`@page {size: ${size};margin-top:${margins.top}px;margin-right:${margins.right}px;margin-left:${margins.left}px;margin-bottom:${margins.bottom}px;}`}</CSS>
   );
 };
 

@@ -71,6 +71,8 @@ test("includes uploaded assets and respects custom request headers", async () =>
 test.each([
   "  <!DOCTYPE HTML><html><body>Existing doctype</body></html>",
   '\n<html lang="en"><body>Existing html element</body></html>',
+  "<!-- generated report -->\n<!doctype html><html><body>Commented doctype</body></html>",
+  "<!-- note 1 --><!-- note 2 -->\n<html><body>Commented root</body></html>",
 ])("preserves an existing complete HTML document", async (html) => {
   const fetcher: typeof fetch = async (_input, init) => {
     const body = init?.body as FormData;

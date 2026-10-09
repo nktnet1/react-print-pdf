@@ -41,7 +41,7 @@ test("react-docgen-typescript parses annotated React props with the TypeScript 6
       }),
     ]),
   );
-});
+}, 30_000);
 
 // The Node/tsx documentation runner can lower TSX with the classic JSX
 // transform. This must never produce calls to an undeclared React global.

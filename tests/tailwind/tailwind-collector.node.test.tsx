@@ -49,6 +49,18 @@ test("reusing a collector does not reuse candidates from previous HTML", async (
   expect(second).not.toContain("data-react-print-tailwind-");
 });
 
+test("collects actual class attributes without matching data-class attributes", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({ preflight: false });
+  const html = `<style data-react-print-tailwind-start="${id}"></style><main data-class="bg-red-600" aria-class="p-7" class="text-blue-600">Content</main><style data-react-print-tailwind-end="${id}"></style>`;
+
+  const result = await collector.resolve(html);
+
+  expect(result).toContain(".text-blue-600");
+  expect(result).not.toContain(".bg-red-600");
+  expect(result).not.toContain(".p-7");
+});
+
 test("standalone Tailwind does not nest server rendering inside its hooks", () => {
   const html = renderToString(
     <Tailwind>
