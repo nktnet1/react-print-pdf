@@ -84,4 +84,21 @@ describe("beta version selection", () => {
       /already released/,
     );
   });
+
+  test("rejects beta base downgrades and versions older than a published stable", () => {
+    // A prerelease for an older stable version must never become the next beta.
+    expect(() => nextBetaVersion("1.3.0", [], "1.2.9")).toThrow(/newer/);
+    expect(() => nextBetaVersion("1.3.0", [], "1.3.0")).toThrow(/newer/);
+    expect(() => nextBetaVersion("1.4.0-beta.3", [], "1.3.0")).toThrow(/newer/);
+    expect(() =>
+      nextBetaVersion("1.4.0-beta.3", ["1.5.0", "1.4.0-beta.3"]),
+    ).toThrow(/published/);
+  });
+
+  test("allows advancing beta bases after current and published stable versions", () => {
+    expect(nextBetaVersion("1.3.0", ["1.3.0"], "1.4.0")).toBe("1.4.0-beta.1");
+    expect(nextBetaVersion("1.4.0-beta.3", ["1.3.0"], "1.5.0")).toBe(
+      "1.5.0-beta.1",
+    );
+  });
 });

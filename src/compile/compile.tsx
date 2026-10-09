@@ -24,14 +24,28 @@ const printStyles = [
   variableStyles,
 ].join("\n");
 
-const emotionStyleTagPattern =
-  /<style\b[^>]*\bdata-emotion=(?:"[^"]*"|'[^']*')[^>]*>([\s\S]*?)<\/style>/gi;
+const styleTagPattern = /<style\b([^>]*)>([\s\S]*?)<\/style>/gi;
+const styleAttributePattern =
+  /(?:^|\s+)([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g;
+
+const hasEmotionAttribute = (attributes: string): boolean => {
+  // A word boundary also matches `data-widget-data-emotion`, accidentally
+  // removing otherwise ordinary styles. Consume complete attributes instead,
+  // including quoted values that may themselves mention `data-emotion`.
+  for (const match of attributes.matchAll(styleAttributePattern)) {
+    if (match[1].toLowerCase() === "data-emotion" && match[0].includes("=")) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const extractEmotionStyleTags = (html: string) => {
   let css = "";
   const cleanedHtml = html.replace(
-    emotionStyleTagPattern,
-    (_styleTag, styleContents: string) => {
+    styleTagPattern,
+    (styleTag, attributes: string, styleContents: string) => {
+      if (!hasEmotionAttribute(attributes)) return styleTag;
       css += styleContents;
       return "";
     },

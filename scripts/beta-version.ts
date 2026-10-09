@@ -13,6 +13,17 @@ const normalizeRequestedBase = (requestedBase: string): string => {
   return parsed.base;
 };
 
+// Compare numeric SemVer components without losing precision for large values.
+const compareBases = (left: string, right: string): number => {
+  const leftParts = left.split(".").map(BigInt);
+  const rightParts = right.split(".").map(BigInt);
+  for (let index = 0; index < 3; index++) {
+    if (leftParts[index] > rightParts[index]) return 1;
+    if (leftParts[index] < rightParts[index]) return -1;
+  }
+  return 0;
+};
+
 export const nextBetaVersion = (
   current: string,
   published: string[],
@@ -31,10 +42,32 @@ export const nextBetaVersion = (
       "package.json is on a stable version; choose the next beta base explicitly with --base <version>",
     );
   }
+  if (
+    compareBases(base, currentRelease.base) < 0 ||
+    (compareBases(base, currentRelease.base) === 0 &&
+      currentRelease.beta === undefined)
+  ) {
+    throw new Error(
+      `Beta base ${base} must be newer than the current ${current} release`,
+    );
+  }
   if (published.includes(base)) {
     throw new Error(
       `${base} is already released; choose a newer --base version`,
     );
+  }
+  for (const version of published) {
+    let release: ReturnType<typeof parseReleaseVersion>;
+    try {
+      release = parseReleaseVersion(version);
+    } catch {
+      continue;
+    }
+    if (compareBases(release.base, base) > 0) {
+      throw new Error(
+        `Beta base ${base} is older than published version ${version}; choose a newer --base version`,
+      );
+    }
   }
 
   let highest = 0n;

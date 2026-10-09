@@ -85,3 +85,28 @@ test("merges multiple Emotion style tags while preserving ordinary styles", asyn
   expect(html).not.toMatch(/<style\b[^>]*\bdata-emotion=/);
   expect(html).toContain("Multiple style tags");
 });
+
+test("preserves ordinary style tags whose attributes merely end in data-emotion", async () => {
+  const html = await compile(
+    <main>
+      <style data-widget-data-emotion="unrelated">
+        {".keep-custom-style { border-color: #123abc; }"}
+      </style>
+      <style data-description="Mention data-emotion='not-an-attribute'">
+        {".also-preserved { color: #224466; }"}
+      </style>
+      <style data-emotion="emotion inline">
+        {".real-emotion-style { color: #456def; }"}
+      </style>
+      <p className="keep-custom-style real-emotion-style">Preserved CSS</p>
+    </main>,
+    { emotion: true },
+  );
+
+  expect(html).toContain('data-widget-data-emotion="unrelated"');
+  expect(html).toContain(".keep-custom-style { border-color: #123abc; }");
+  expect(html).toContain('data-description="Mention data-emotion=');
+  expect(html).toContain(".also-preserved { color: #224466; }");
+  expect(html).toContain(".real-emotion-style");
+  expect(html).not.toContain('data-emotion="emotion inline"');
+});
