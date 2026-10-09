@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { type Browser, chromium } from "playwright";
-import { CSS, Margins, NoBreak, PageBreak } from "react-print-pdf";
+import { CSS, Latex, Margins, NoBreak, PageBreak } from "react-print-pdf";
 import {
   compileWithPlaywright,
   convertHtmlWithPlaywright,
@@ -85,6 +85,40 @@ describe("Playwright PDF integration", () => {
 
   afterAll(async () => {
     await browser?.close();
+  }, 30_000);
+
+  test("prints LaTeX with embedded KaTeX fonts and no external stylesheet", async () => {
+    const pdf = await compileWithPlaywright(
+      <main>
+        <Latex>{String.raw`\frac{1}{2} + \sqrt{x}`}</Latex>
+      </main>,
+      {
+        browser,
+        onPageReady: async (page) => {
+          const styles = await page.evaluate(async () => {
+            await document.fonts.ready;
+            return {
+              localStyles: document.querySelectorAll(
+                'style[data-href="react-print-pdf-katex"]',
+              ).length,
+              fontLoaded: document.fonts.check('16px "KaTeX_Main"'),
+              remoteStyles: document.querySelectorAll(
+                'link[rel="stylesheet"][href^="http"]',
+              ).length,
+            };
+          });
+          expect(styles).toEqual({
+            localStyles: 1,
+            fontLoaded: true,
+            remoteStyles: 0,
+          });
+        },
+      },
+    );
+
+    expect(pdfFonts(pdf)).toContain("KaTeX_Main-Regular");
+    expect(pdfFonts(pdf)).toContain("KaTeX_Math-Italic");
+    expect(browser.contexts()).toHaveLength(0);
   }, 30_000);
 
   test("compiles React into a readable, correctly paginated PDF", async () => {

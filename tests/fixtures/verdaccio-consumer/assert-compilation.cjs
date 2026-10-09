@@ -38,7 +38,22 @@ const verifyConsumerCompilation = async ({
     assert.match(tailwindHtml, /#365a87/, context);
     assert.match(tailwindHtml, /\.p-4\s*\{[^}]*padding:/, context);
     assert.ok(tailwindHtml.includes(`${context} Tailwind`), context);
-    assert.doesNotMatch(tailwindHtml, /data-react-print-tailwind-/, context);
+    // The Tailwind compiler retains inert boundaries so that separately
+    // configured regions cannot leak styles into one another. The installed
+    // package must preserve both markers and the matching CSS @scope rule.
+    const start = tailwindHtml.match(
+      /<template data-react-print-tailwind-start="([^"]+)"><\/template>/,
+    );
+    const end = tailwindHtml.match(
+      /<template data-react-print-tailwind-end="([^"]+)"><\/template>/,
+    );
+    assert.ok(start, `${context}: missing Tailwind start boundary`);
+    assert.equal(end?.[1], start[1], `${context}: mismatched boundaries`);
+    assert.ok(tailwindHtml.includes("@scope"), context);
+    assert.ok(
+      tailwindHtml.includes(`data-react-print-tailwind-start="${start[1]}"`),
+      context,
+    );
 
     const emotionHtml = await compile(
       createElement(

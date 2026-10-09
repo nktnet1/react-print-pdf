@@ -1,10 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
+import { katexCssDefines } from "#config/katex-css";
 import { tailwindCssDefines } from "#config/tailwind-css";
 
 export default defineConfig({
   root: process.cwd(),
-  define: tailwindCssDefines,
+  define: { ...tailwindCssDefines, ...katexCssDefines },
   resolve: {
     alias: [
       {

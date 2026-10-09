@@ -90,7 +90,15 @@ try {
   assert.equal(result.emotionColor, "rgb(35, 69, 103)");
   assert.equal(result.emotionPadding, "9px");
   assert.ok(result.styleCount > 0, "Compiled CSS must be injected");
-  assert.doesNotMatch(result.html, /data-react-print-tailwind-/);
+  const start = result.html.match(
+    /<template data-react-print-tailwind-start="([^"]+)"><\/template>/,
+  );
+  const end = result.html.match(
+    /<template data-react-print-tailwind-end="([^"]+)"><\/template>/,
+  );
+  assert.ok(start, "Vite consumer must retain the Tailwind start marker");
+  assert.equal(end?.[1], start[1], "Tailwind scope markers must match");
+  assert.match(result.html, /@scope\s*\(/);
   assert.doesNotMatch(result.html, /<style\b[^>]*\bdata-emotion=/i);
   assert.deepEqual(pageErrors, [], "No browser JavaScript errors");
   console.log(

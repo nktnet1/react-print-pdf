@@ -1,12 +1,13 @@
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults, defineConfig } from "vitest/config";
+import { katexCssDefines } from "#config/katex-css";
 import { tailwindCssDefines } from "#config/tailwind-css";
 
 export default defineConfig({
   root: process.cwd(),
   // The source compiler uses the same inlined Tailwind CSS as tsdown.
-  define: tailwindCssDefines,
+  define: { ...tailwindCssDefines, ...katexCssDefines },
   resolve: {
     // React and the Chromium test renderer must share their hook dispatcher.
     dedupe: ["react", "react-dom"],

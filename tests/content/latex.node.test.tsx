@@ -12,7 +12,10 @@ test("renders a fraction and root with accessible MathML", () => {
   expect(html).toMatch(/<math\b/);
   expect(html).toMatch(/<mfrac\b/);
   expect(html).toMatch(/<msqrt\b/);
-  expect(html).toContain("katex.css");
+  expect(html).toContain('data-href="react-print-pdf-katex"');
+  expect(html).toContain("data:font/woff2;base64,");
+  expect(html).not.toContain("cdn.jsdelivr.net");
+  expect(html).not.toMatch(/url\(fonts\//);
 });
 
 test("renders an integral without losing LaTeX backslashes", () => {
@@ -57,4 +60,5 @@ test("does not share or discard the MathML for separate formulas", () => {
   expect(html.match(/class="katex-mathml"/g)).toHaveLength(2);
   expect(html).toContain("<mn>2</mn>");
   expect(html).toContain("<mn>3</mn>");
+  expect(html.match(/data-href="react-print-pdf-katex"/g)).toHaveLength(1);
 });

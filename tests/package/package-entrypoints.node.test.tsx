@@ -23,6 +23,20 @@ describe("published package entrypoints", () => {
     expect(node(script)).toContain("package-exports-ok");
   }, 35_000);
 
+  test.each(["require.cjs", "import.mjs"])(
+    "runs the Verdaccio %s consumer compilation fixture against the built package",
+    (fixtureName) => {
+      const script = fileURLToPath(
+        new URL(
+          `../fixtures/verdaccio-consumer/${fixtureName}`,
+          import.meta.url,
+        ),
+      );
+      expect(node(script)).toContain("installed-package compilation");
+    },
+    35_000,
+  );
+
   test("resolves ESM and CommonJS declaration exports in a consumer tsconfig", () => {
     const tsc = fileURLToPath(
       new URL("../../node_modules/typescript/bin/tsc", import.meta.url),
