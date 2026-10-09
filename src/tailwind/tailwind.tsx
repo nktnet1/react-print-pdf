@@ -376,13 +376,58 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
   });
 
   if (keyframes.size > 0 || fontFamilies.size > 0) {
+    // An arbitrary custom property may contain a literal word that happens to
+    // match a keyframe name (`--status: wiggle`, for example). Only rewrite
+    // animation-related variables, following var() dependencies so custom
+    // animation shorthands keep working without corrupting unrelated values.
+    const animationVariables = new Set<string>();
+    const variableReferences = new Map<string, Set<string>>();
+    const references = (value: string): Set<string> => {
+      const found = new Set<string>();
+      parseCssValue(value).walk((node) => {
+        if (node.type !== "function" || node.value.toLowerCase() !== "var") {
+          return;
+        }
+        const name = node.nodes.find((part) => part.type === "word")?.value;
+        if (name?.startsWith("--")) found.add(name);
+      });
+      return found;
+    };
+
+    root.walkDecls((declaration) => {
+      const property = declaration.prop;
+      if (property.startsWith("--")) {
+        if (property.startsWith("--animate-")) animationVariables.add(property);
+        const previous = variableReferences.get(property) ?? new Set<string>();
+        for (const name of references(declaration.value)) previous.add(name);
+        variableReferences.set(property, previous);
+      } else if (/^(?:-webkit-)?animation(?:-name)?$/i.test(property)) {
+        for (const name of references(declaration.value)) {
+          animationVariables.add(name);
+        }
+      }
+    });
+
+    const pending = [...animationVariables];
+    for (let index = 0; index < pending.length; index++) {
+      for (const name of variableReferences.get(pending[index]) ?? []) {
+        if (!animationVariables.has(name)) {
+          animationVariables.add(name);
+          pending.push(name);
+        }
+      }
+    }
+
     root.walkDecls((declaration) => {
       const property = declaration.prop.toLowerCase();
       const isAnimation = /^(?:-webkit-)?animation(?:-name)?$/.test(property);
       const isFont = property === "font" || property === "font-family";
-      const isVariable = property.startsWith("--");
+      const isVariable = declaration.prop.startsWith("--");
+      const isAnimationVariable =
+        isVariable && animationVariables.has(declaration.prop);
       const isFontVariable = isVariable && property.includes("font");
-      if (!isAnimation && !isFont && !isVariable) return;
+      if (!isAnimation && !isFont && !isFontVariable && !isAnimationVariable)
+        return;
       // @font-face family descriptors have already been renamed above.
       if (
         property === "font-family" &&
@@ -453,7 +498,7 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
           return false;
         }
         if (node.type === "word") {
-          if (isAnimation || isVariable) {
+          if (isAnimation || isAnimationVariable) {
             node.value = keyframes.get(node.value) ?? node.value;
           }
           if (isFont || isFontVariable) {

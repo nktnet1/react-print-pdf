@@ -24,7 +24,12 @@ const printStyles = [
   variableStyles,
 ].join("\n");
 
-const styleTagPattern = /<style\b([^>]*)>([\s\S]*?)<\/style>/gi;
+// React's server output can contain literal <style> text in comments, scripts,
+// and other raw-text elements. Those are not CSS nodes, and removing them
+// corrupts the document (and can turn a JSON/script payload into invalid data).
+// Walk only complete raw-text elements while respecting quoted tag attributes.
+const rawElementPattern =
+  /<!--[\s\S]*?(?:-->|$)|<(style|script|textarea|title|xmp|iframe|noembed|noframes|plaintext)\b((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
 const styleAttributePattern =
   /(?:^|\s+)([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g;
 
@@ -42,16 +47,35 @@ const hasEmotionAttribute = (attributes: string): boolean => {
 
 const extractEmotionStyleTags = (html: string) => {
   let css = "";
-  const cleanedHtml = html.replace(
-    styleTagPattern,
-    (styleTag, attributes: string, styleContents: string) => {
-      if (!hasEmotionAttribute(attributes)) return styleTag;
-      css += styleContents;
-      return "";
-    },
-  );
+  let cursor = 0;
+  let cleanedHtml = "";
+  rawElementPattern.lastIndex = 0;
 
-  return { html: cleanedHtml, css };
+  for (
+    let match = rawElementPattern.exec(html);
+    match;
+    match = rawElementPattern.exec(html)
+  ) {
+    const tagName = match[1]?.toLowerCase();
+    if (!tagName) continue; // A complete HTML comment, including its contents.
+    if (tagName === "plaintext") break;
+
+    const endTag = new RegExp(`</${tagName}\\s*>`, "gi");
+    endTag.lastIndex = match.index + match[0].length;
+    const closing = endTag.exec(html);
+    if (!closing) break; // The rest of the document is raw-text content.
+
+    if (tagName === "style" && hasEmotionAttribute(match[2])) {
+      cleanedHtml += html.slice(cursor, match.index);
+      css += html.slice(match.index + match[0].length, closing.index);
+      cursor = endTag.lastIndex;
+    }
+
+    // Skip the entire raw-text element (including fake tags within its text).
+    rawElementPattern.lastIndex = endTag.lastIndex;
+  }
+
+  return { html: cleanedHtml + html.slice(cursor), css };
 };
 
 export interface CompileOptions {

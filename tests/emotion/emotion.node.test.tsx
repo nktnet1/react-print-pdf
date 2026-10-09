@@ -110,3 +110,38 @@ test("preserves ordinary style tags whose attributes merely end in data-emotion"
   expect(html).toContain(".real-emotion-style");
   expect(html).not.toContain('data-emotion="emotion inline"');
 });
+
+test("does not harvest styles from comments or raw-text script contents", async () => {
+  const fakeStyle =
+    '<style data-emotion="fake">.not-a-style{color:#ff0000}</style>';
+  const html = await compile(
+    <main>
+      <div dangerouslySetInnerHTML={{ __html: `<!-- ${fakeStyle} -->` }} />
+      <script
+        type="text/plain"
+        dangerouslySetInnerHTML={{ __html: fakeStyle }}
+      />
+      <style data-emotion="real">{".actual-style{color:#123456}"}</style>
+    </main>,
+    { emotion: true },
+  );
+  expect(html).toContain(`<!-- ${fakeStyle} -->`);
+  expect(html).toContain(`<script type="text/plain">${fakeStyle}</script>`);
+  expect(html).toContain(".actual-style{color:#123456}");
+  expect(html).not.toContain('<style data-emotion="real">');
+});
+
+test("extracts actual Emotion styles with greater-than signs in quoted attributes", async () => {
+  const html = await compile(
+    <div
+      dangerouslySetInnerHTML={{
+        __html:
+          '<style data-description="threshold > limit" data-emotion="custom">.greater-than{color:#123456}</style>',
+      }}
+    />,
+    { emotion: true },
+  );
+  expect(html).toContain(".greater-than");
+  expect(html).not.toContain('data-emotion="custom"');
+  expect(html).not.toContain('data-description="threshold &gt; limit"');
+});

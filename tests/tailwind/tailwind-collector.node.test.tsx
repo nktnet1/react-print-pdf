@@ -183,3 +183,26 @@ test("isolates unquoted multiword font names in CSS font shorthand", async () =>
     /font:\s*italic 16px\/1\.2 "react-print-[^"]+-font-0", serif/,
   );
 });
+
+test("does not rewrite unrelated CSS variable values that match keyframes", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@keyframes wiggle { to { opacity: .4 } }
+      .example {
+        animation-name: wiggle;
+        --status: wiggle;
+        --animate-wiggle: wiggle 1s ease;
+        --motion: var(--motion-actual);
+        --motion-actual: wiggle 2s ease;
+        animation: var(--motion);
+      }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="example animate-wiggle">Hello</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(html);
+  expect(result).toMatch(/--status:\s*wiggle\s*;/);
+  expect(result).toMatch(/animation-name:\s*react-print-[\w-]+-wiggle/);
+  expect(result).toMatch(/--animate-wiggle:\s*react-print-[\w-]+-wiggle/);
+  expect(result).toMatch(/--motion:\s*var\(--motion-actual\)/);
+  expect(result).toMatch(/--motion-actual:\s*react-print-[\w-]+-wiggle/);
+});
