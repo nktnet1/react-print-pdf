@@ -117,7 +117,17 @@ export const Markdown = (props: MarkdownProps) => {
   // renderer here would associate its hooks with Markdown and render it early.
   const Toc = tocRenderer
     ? Children.toArray(
-        headers.map((header) => createElement(tocRenderer, header)),
+        headers.map((header) =>
+          createElement(
+            tocRenderer,
+            header,
+            // Markdown-to-JSX may produce an array of unkeyed heading children.
+            // Passing that array to a new component triggers React's key warning.
+            Array.isArray(header.children)
+              ? Children.toArray(header.children)
+              : header.children,
+          ),
+        ),
       )
     : null;
 

@@ -40,12 +40,15 @@ test("works with tailwind", async () => {
   expect(html).toContain("background-color");
 });
 
-test("smoke test tailwind", async () => {
+test("deduplicates Tailwind utilities across repeated elements", async () => {
+  // Keep this a deterministic regression test, not a million-element
+  // performance benchmark that times out on shared CI runners.
+  const elementCount = 10_000;
   const TestComponent = () => {
     return (
       <Tailwind>
-        {Array.from({ length: 1000000 }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: static server-render stress test with no list reordering.
+        {Array.from({ length: elementCount }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static test content with no list reordering.
           <div key={i} className="bg-red-500">
             Test
           </div>
@@ -57,6 +60,8 @@ test("smoke test tailwind", async () => {
   const html = await compile(<TestComponent />);
 
   expect(html).toContain(".bg-red-500");
+  expect(html.match(/class="bg-red-500"/g)).toHaveLength(elementCount);
+  expect(html.match(/\.bg-red-500\s*\{/g)).toHaveLength(1);
 });
 
 test("works with tailwind dark", async () => {

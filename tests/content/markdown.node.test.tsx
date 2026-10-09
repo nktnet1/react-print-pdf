@@ -2,6 +2,7 @@ import {
   Component,
   createContext,
   Fragment,
+  isValidElement,
   type ReactNode,
   useContext,
   useId,
@@ -121,6 +122,33 @@ test("TOC collects nested JSX headings without evaluating custom components", ()
   expect(html).toContain('data-toc-level="1"');
   expect(html).toContain('data-toc-level="2"');
   expect(html).toContain('data-toc-level="3"');
+});
+
+test("TOC renderers receive keyed children from rich Markdown and JSX headings", () => {
+  const observedKeys: Array<string | null> = [];
+
+  const html = renderToStaticMarkup(
+    <Markdown
+      tocRenderer={({ children }) => {
+        if (Array.isArray(children)) {
+          for (const child of children) {
+            if (isValidElement(child)) observedKeys.push(child.key);
+          }
+        }
+        return <span data-toc-entry="true">{children}</span>;
+      }}
+    >
+      {"# Markdown **bold** and [link](#next)\n\n<Toc />\n\n"}
+      <h2 id="next">
+        JSX <strong>bold</strong> and <em>italic</em>
+      </h2>
+    </Markdown>,
+  );
+
+  expect(observedKeys.length).toBeGreaterThan(0);
+  expect(observedKeys.every((key) => key !== null)).toBe(true);
+  expect(html).toContain("<strong>bold</strong>");
+  expect(html).toContain('data-toc-entry="true"');
 });
 
 test("TOC does not invoke hook components or class render methods during discovery", () => {
