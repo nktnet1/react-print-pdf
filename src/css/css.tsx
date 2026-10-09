@@ -1,23 +1,12 @@
-import { encode } from "html-entities";
 import React from "react";
 import type { DocConfig } from "#/docgen/types";
 
-const allowedEntities = {
-  "&apos;": "'",
-  "&quot;": '"',
-  "&gt;": ">",
-  ":where": ":is", // This may introduce specificity issues, but there is no workaround supported by the engine.
-};
-
 export const escapeCss = (css: string) => {
-  let contents = encode(css);
-
-  // Replace allowed entities (nb: match all entities and replace them)
-  for (const [entity, value] of Object.entries(allowedEntities)) {
-    contents = contents.replace(new RegExp(entity, "g"), value);
-  }
-
-  return contents;
+  // <style> is a raw-text HTML element: character references such as &amp;
+  // are not decoded. HTML-encoding CSS corrupts URLs and literal text.
+  // Escape '<' to prevent a CSS string containing </style> from ending the
+  // element, while preserving every other character as authored.
+  return css.replaceAll("<", "&lt;").replaceAll(":where", ":is");
 };
 
 export const CSS = ({ children }: { children: string }) => {

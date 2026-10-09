@@ -44,11 +44,32 @@ test("CSS rewrites unsupported :where selectors without escaping valid CSS quote
   expect(html).not.toContain(":where(");
 });
 
+test("CSS preserves ampersands and literal characters inside style elements", () => {
+  const html = renderToStaticMarkup(
+    <CSS>{`@import url("https://fonts.example.test/css?family=A+B&display=swap");
+.label::before { content: "R&D > ©"; }`}</CSS>,
+  );
+
+  expect(html).toContain('family=A+B&display=swap");');
+  expect(html).toContain('content: "R&D > ©";');
+  expect(html).not.toContain("&amp;");
+  expect(html.match(/<\/style>/g)).toHaveLength(1);
+});
+
 test("Font emits a stylesheet import", () => {
   const html = renderToStaticMarkup(
     <Font url="https://example.test/font.css" />,
   );
   expect(html).toContain("@import url('https://example.test/font.css');");
+});
+
+test("Font keeps query parameters intact when importing an external stylesheet", () => {
+  const url =
+    "https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap";
+  const html = renderToStaticMarkup(<Font url={url} />);
+
+  expect(html).toContain(`@import url('${url}');`);
+  expect(html).not.toContain("&amp;");
 });
 
 test("source compilation includes real print CSS instead of Vitest CSS stubs", async () => {
