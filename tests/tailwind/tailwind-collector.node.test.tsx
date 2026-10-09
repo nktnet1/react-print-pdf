@@ -280,3 +280,48 @@ test("does not rewrite non-family custom properties that share a font name", asy
   expect(css).toMatch(/--font-alias:\s*var\(--family\)/);
   expect(css).toMatch(/font-family:\s*var\(--font-alias\)/);
 });
+
+test.each([
+  {
+    name: "quoted @keyframes",
+    atRule: '@keyframes "blink"',
+    declaration: 'animation-name: "blink"',
+    expectedSuffix: "blink",
+  },
+  {
+    name: "quoted animation-name",
+    atRule: "@keyframes blink",
+    declaration: 'animation-name: "blink"',
+    expectedSuffix: "blink",
+  },
+  {
+    name: "names with spaces",
+    atRule: '@keyframes "slide in"',
+    declaration: 'animation: 2s ease "slide in"',
+    expectedSuffix: "keyframes-0",
+  },
+  {
+    name: "single quotes and comments",
+    atRule: "@keyframes /* comment */ 'bounce'",
+    declaration: "animation-name: 'bounce'",
+    expectedSuffix: "bounce",
+  },
+])(
+  "keeps $name aligned with its scoped animation reference",
+  async ({ atRule, declaration, expectedSuffix }) => {
+    const collector = createTailwindStyleCollector();
+    const id = collector.register({
+      preflight: false,
+      stylesheet: `${atRule} { to { opacity: .5 } } .motion { ${declaration}; }`,
+    });
+    const html = `<template data-react-print-tailwind-start="${id}"></template><span class="motion">Hello</span><template data-react-print-tailwind-end="${id}"></template>`;
+    const css = (await collector.resolve(html)).split("</style>")[0];
+
+    const match = css.match(/@keyframes (react-print-[\w-]+)/);
+    expect(match?.[1]).toMatch(new RegExp(`-${expectedSuffix}$`));
+    expect(css).toContain(match?.[1]);
+    expect(css).toMatch(
+      new RegExp(`animation(?:-name)?:[^;}]*["']${match?.[1]}["']`),
+    );
+  },
+);

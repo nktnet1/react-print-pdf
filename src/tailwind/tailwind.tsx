@@ -408,9 +408,23 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
   const keyframes = new Map<string, string>();
   root.walkAtRules((atRule) => {
     if (!/^(?:-webkit-)?keyframes$/i.test(atRule.name)) return;
-    const name = atRule.params.trim();
-    if (!name) return;
-    const scopedName = `react-print-${suffix}-${name}`;
+    const nameNodes = parseCssValue(atRule.params).nodes.filter(
+      (node) => node.type !== "space" && node.type !== "comment",
+    );
+    if (
+      nameNodes.length !== 1 ||
+      (nameNodes[0].type !== "word" && nameNodes[0].type !== "string")
+    ) {
+      return;
+    }
+    // A quoted keyframe name may contain whitespace or CSS punctuation.
+    // Generate a valid identifier rather than appending its quotes verbatim.
+    const name = nameNodes[0].value;
+    const scopedName =
+      keyframes.get(name) ??
+      (name && /^[\w-]+$/.test(name)
+        ? `react-print-${suffix}-${name}`
+        : `react-print-${suffix}-keyframes-${keyframes.size}`);
     keyframes.set(name, scopedName);
     atRule.params = scopedName;
   });
@@ -595,6 +609,11 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
         // Do not rewrite URL contents or arbitrary quoted animation strings.
         if (node.type === "function" && node.value.toLowerCase() === "url") {
           return false;
+        }
+        if (node.type === "string" && (isAnimation || isAnimationVariable)) {
+          // Quoted names are valid in animation-name and the animation shorthand.
+          // They must refer to the same scoped @keyframes rule as bare names.
+          node.value = keyframes.get(node.value) ?? node.value;
         }
         if (node.type === "word") {
           if (isAnimation || isAnimationVariable) {

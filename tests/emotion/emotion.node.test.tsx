@@ -145,3 +145,34 @@ test("extracts actual Emotion styles with greater-than signs in quoted attribute
   expect(html).not.toContain('data-emotion="custom"');
   expect(html).not.toContain('data-description="threshold &gt; limit"');
 });
+
+test("preserves style-like text inside ordinary quoted HTML attributes", async () => {
+  const fakeStyle = '<style data-emotion="fake">harmless</style>';
+  const html = await compile(
+    <main
+      dangerouslySetInnerHTML={{
+        __html: `<div title='${fakeStyle}'>Attribute text</div>`,
+      }}
+    />,
+    { emotion: true },
+  );
+
+  expect(html).toContain(`title='${fakeStyle}'`);
+  expect(html).toContain("Attribute text");
+});
+
+test("does not confuse raw-text-looking attributes with real Emotion styles", async () => {
+  const html = await compile(
+    <main
+      dangerouslySetInnerHTML={{
+        __html: `<div title='<script>not raw text</script>'>Content</div>
+          <style data-emotion="real">.actual{color:#123456}</style>`,
+      }}
+    />,
+    { emotion: true },
+  );
+
+  expect(html).toContain("title='<script>not raw text</script>'");
+  expect(html).toContain(".actual{color:#123456}");
+  expect(html).not.toContain('<style data-emotion="real">');
+});

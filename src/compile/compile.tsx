@@ -24,12 +24,22 @@ const printStyles = [
   variableStyles,
 ].join("\n");
 
-// React's server output can contain literal <style> text in comments, scripts,
-// and other raw-text elements. Those are not CSS nodes, and removing them
-// corrupts the document (and can turn a JSON/script payload into invalid data).
-// Walk only complete raw-text elements while respecting quoted tag attributes.
-const rawElementPattern =
-  /<!--[\s\S]*?(?:-->|$)|<(style|script|textarea|title|xmp|iframe|noembed|noframes|plaintext)\b((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
+// Tokenize whole start/end tags, not just style and raw-text tags. A valid
+// non-style element may have a quoted attribute containing literal "<style>"
+// text, which must not be treated as a real stylesheet. Quotes may contain '>'.
+const htmlTagPattern =
+  /<!--[\s\S]*?(?:-->|$)|<(\/?)([a-z][a-z0-9:-]*)(?=[\s/>])((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
+const rawTextTags = new Set([
+  "style",
+  "script",
+  "textarea",
+  "title",
+  "xmp",
+  "iframe",
+  "noembed",
+  "noframes",
+  "plaintext",
+]);
 const styleAttributePattern =
   /(?:^|\s+)([^\s=/>]+)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?/g;
 
@@ -49,15 +59,17 @@ const extractEmotionStyleTags = (html: string) => {
   let css = "";
   let cursor = 0;
   let cleanedHtml = "";
-  rawElementPattern.lastIndex = 0;
+  htmlTagPattern.lastIndex = 0;
 
   for (
-    let match = rawElementPattern.exec(html);
+    let match = htmlTagPattern.exec(html);
     match;
-    match = rawElementPattern.exec(html)
+    match = htmlTagPattern.exec(html)
   ) {
-    const tagName = match[1]?.toLowerCase();
-    if (!tagName) continue; // A complete HTML comment, including its contents.
+    const tagName = match[2]?.toLowerCase();
+    if (!tagName || match[1] === "/" || !rawTextTags.has(tagName)) {
+      continue; // Comments, end tags and ordinary elements (including attributes).
+    }
     if (tagName === "plaintext") break;
 
     const endTag = new RegExp(`</${tagName}\\s*>`, "gi");
@@ -65,14 +77,14 @@ const extractEmotionStyleTags = (html: string) => {
     const closing = endTag.exec(html);
     if (!closing) break; // The rest of the document is raw-text content.
 
-    if (tagName === "style" && hasEmotionAttribute(match[2])) {
+    if (tagName === "style" && hasEmotionAttribute(match[3] ?? "")) {
       cleanedHtml += html.slice(cursor, match.index);
       css += html.slice(match.index + match[0].length, closing.index);
       cursor = endTag.lastIndex;
     }
 
     // Skip the entire raw-text element (including fake tags within its text).
-    rawElementPattern.lastIndex = endTag.lastIndex;
+    htmlTagPattern.lastIndex = endTag.lastIndex;
   }
 
   return { html: cleanedHtml + html.slice(cursor), css };
