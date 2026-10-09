@@ -6,6 +6,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -16,6 +17,7 @@ import { afterEach, expect, test } from "vitest";
 import {
   createOfflineArtifacts,
   parseOfflineArtifactArgs,
+  publishStagedArtifacts,
 } from "../../scripts/create-offline-artifacts";
 
 const tempRoots: string[] = [];
@@ -203,6 +205,11 @@ test("exports a verified Git bundle, pnpm symlinks, and only matching Chromium b
   await createOfflineArtifacts(options);
   expect(readdirSync(out)).not.toContain("playwright.part-99");
   expect(readFileSync(join(out, "keep.txt"), "utf8")).toBe("untouched");
+  expect(
+    readdirSync(out).some((file) =>
+      file.startsWith(".offline-artifacts-backup-"),
+    ),
+  ).toBe(false);
 });
 
 test("refuses to silently omit uncommitted changes from the Git bundle", async () => {
@@ -250,4 +257,117 @@ test("rejects outputs nested under inputs to avoid self-archiving", async () => 
       playwrightCache: cache,
     }),
   ).rejects.toThrow("Output directory cannot be inside");
+});
+
+test.each(["browser cache", "node_modules"])(
+  "rejects export destinations aliased into %s",
+  async (input) => {
+    const { root, repoRoot, cache } = fixture();
+    const target =
+      input === "browser cache" ? cache : join(repoRoot, "node_modules");
+    const alias = join(root, "input-alias");
+    symlinkSync(target, alias, "dir");
+    // Without the physical-path guard, browser preflight fails instead.
+    rmSync(join(cache, "ffmpeg-1013"), { recursive: true });
+
+    await expect(
+      createOfflineArtifacts({
+        repoRoot,
+        outputDir: join(alias, "exports"),
+        playwrightCache: cache,
+      }),
+    ).rejects.toThrow("Output directory cannot be inside");
+    expect(existsSync(join(target, "exports"))).toBe(false);
+  },
+);
+
+test("invalid existing artifact does not delete any earlier exports", async () => {
+  const { repoRoot, cache, out } = fixture();
+  const options = { repoRoot, outputDir: out, playwrightCache: cache };
+  const manifest = await createOfflineArtifacts(options);
+  const existingManifest = readFileSync(
+    join(out, "artifacts-manifest.json"),
+    "utf8",
+  );
+  const existingBundle = readFileSync(join(out, "project.bundle"));
+  symlinkSync("unrelated.txt", join(out, "playwright.part-99"));
+
+  await expect(createOfflineArtifacts(options)).rejects.toThrow(
+    "Refusing to replace non-file artifact",
+  );
+  expect(readFileSync(join(out, "artifacts-manifest.json"), "utf8")).toBe(
+    existingManifest,
+  );
+  expect(readFileSync(join(out, "project.bundle"))).toEqual(existingBundle);
+  expect(manifest.commit).toBeDefined();
+});
+
+test("recovers all existing artifacts when publication fails midway", () => {
+  const root = mkdtempSync(join(tmpdir(), "print-pdf-publish-test-"));
+  tempRoots.push(root);
+  const outputDir = join(root, "output");
+  const staging = join(root, "staging");
+  mkdirSync(outputDir);
+  mkdirSync(staging);
+  writeFileSync(join(outputDir, "artifacts-manifest.json"), "old-manifest");
+  writeFileSync(join(outputDir, "project.bundle"), "old-bundle");
+  writeFileSync(join(outputDir, "playwright.part-00"), "old-part");
+  writeFileSync(join(outputDir, "keep.txt"), "untouched");
+  writeFileSync(join(staging, "artifacts-manifest.json"), "new-manifest");
+  writeFileSync(join(staging, "project.bundle"), "new-bundle");
+  writeFileSync(join(staging, "playwright.part-00"), "new-part");
+
+  let failed = false;
+  const move = (source: string, destination: string) => {
+    if (!failed && source === join(staging, "playwright.part-00")) {
+      failed = true;
+      throw new Error("simulated move failure");
+    }
+    renameSync(source, destination);
+  };
+
+  expect(() => publishStagedArtifacts(outputDir, staging, move)).toThrow(
+    "simulated move failure",
+  );
+  expect(readFileSync(join(outputDir, "artifacts-manifest.json"), "utf8")).toBe(
+    "old-manifest",
+  );
+  expect(readFileSync(join(outputDir, "project.bundle"), "utf8")).toBe(
+    "old-bundle",
+  );
+  expect(readFileSync(join(outputDir, "playwright.part-00"), "utf8")).toBe(
+    "old-part",
+  );
+  expect(readFileSync(join(outputDir, "keep.txt"), "utf8")).toBe("untouched");
+  expect(readdirSync(outputDir)).toEqual([
+    "artifacts-manifest.json",
+    "keep.txt",
+    "playwright.part-00",
+    "project.bundle",
+  ]);
+});
+
+test("publishes the completion manifest last", () => {
+  const root = mkdtempSync(join(tmpdir(), "print-pdf-publish-test-"));
+  tempRoots.push(root);
+  const outputDir = join(root, "output");
+  const staging = join(root, "staging");
+  mkdirSync(outputDir);
+  mkdirSync(staging);
+  writeFileSync(join(staging, "project.bundle"), "new-bundle");
+  writeFileSync(join(staging, "artifacts-manifest.json"), "new-manifest");
+  const moves: string[] = [];
+  publishStagedArtifacts(outputDir, staging, (source, destination) => {
+    moves.push(source);
+    renameSync(source, destination);
+  });
+
+  expect(moves.at(-1)).toBe(join(staging, "artifacts-manifest.json"));
+  expect(readFileSync(join(outputDir, "artifacts-manifest.json"), "utf8")).toBe(
+    "new-manifest",
+  );
+  expect(readdirSync(outputDir)).toEqual([
+    "artifacts-manifest.json",
+    "project.bundle",
+  ]);
 });

@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   statSync,
@@ -222,6 +223,19 @@ function isWithinDirectory(path: string, directory: string): boolean {
   );
 }
 
+/** Resolve symlinks even when the destination itself has not been created. */
+function physicalPath(path: string): string {
+  const pending: string[] = [];
+  let current = resolve(path);
+  while (!existsSync(current)) {
+    const parent = dirname(current);
+    if (parent === current) return current;
+    pending.unshift(basename(current));
+    current = parent;
+  }
+  return resolve(realpathSync(current), ...pending);
+}
+
 function isManagedArtifact(name: string): boolean {
   return (
     name === BUNDLE_NAME ||
@@ -229,6 +243,68 @@ function isManagedArtifact(name: string): boolean {
     name === MANIFEST_NAME ||
     PART_PATTERN.test(name)
   );
+}
+
+/** @internal: Publish an export, retaining the old files if any move fails. */
+export function publishStagedArtifacts(
+  outputDir: string,
+  staging: string,
+  moveFile: (source: string, destination: string) => void = renameSync,
+): void {
+  // Validate every existing managed file before touching any previous export.
+  const existing = readdirSync(outputDir).filter(isManagedArtifact);
+  for (const name of existing) {
+    const target = join(outputDir, name);
+    if (!lstatSync(target).isFile()) {
+      throw new Error(`Refusing to replace non-file artifact ${target}`);
+    }
+  }
+
+  // Keep the old files available for rollback if a rename fails. Publish the
+  // manifest last so readers never mistake a partial export for a complete one.
+  const backup = mkdtempSync(join(outputDir, ".offline-artifacts-backup-"));
+  const backedUp: string[] = [];
+  const published: string[] = [];
+  let keepBackup = false;
+  try {
+    for (const name of existing) {
+      moveFile(join(outputDir, name), join(backup, name));
+      backedUp.push(name);
+    }
+    const stagedFiles = readdirSync(staging).sort((a, b) =>
+      a === MANIFEST_NAME ? 1 : b === MANIFEST_NAME ? -1 : a.localeCompare(b),
+    );
+    for (const name of stagedFiles) {
+      moveFile(join(staging, name), join(outputDir, name));
+      published.push(name);
+    }
+  } catch (error) {
+    const rollbackErrors: unknown[] = [];
+    for (const name of published.reverse()) {
+      try {
+        rmSync(join(outputDir, name));
+      } catch (failure) {
+        rollbackErrors.push(failure);
+      }
+    }
+    for (const name of backedUp) {
+      try {
+        moveFile(join(backup, name), join(outputDir, name));
+      } catch (failure) {
+        rollbackErrors.push(failure);
+      }
+    }
+    if (rollbackErrors.length) {
+      keepBackup = true;
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        `Could not fully restore previous artifacts; backup retained at ${backup}`,
+      );
+    }
+    throw error;
+  } finally {
+    if (!keepBackup) rmSync(backup, { recursive: true, force: true });
+  }
 }
 
 export async function createOfflineArtifacts(
@@ -240,9 +316,13 @@ export async function createOfflineArtifacts(
   const repoRoot = resolve(options.repoRoot);
   const outputDir = resolve(options.outputDir);
   const playwrightCache = resolve(options.playwrightCache);
+  const physicalOutputDir = physicalPath(outputDir);
   if (
-    isWithinDirectory(outputDir, join(repoRoot, "node_modules")) ||
-    isWithinDirectory(outputDir, playwrightCache)
+    isWithinDirectory(
+      physicalOutputDir,
+      physicalPath(join(repoRoot, "node_modules")),
+    ) ||
+    isWithinDirectory(physicalOutputDir, physicalPath(playwrightCache))
   ) {
     throw new Error(
       "Output directory cannot be inside node_modules or the Playwright browser cache",
@@ -384,19 +464,7 @@ export async function createOfflineArtifacts(
       `${JSON.stringify(manifest, null, 2)}\n`,
     );
 
-    // Delete only outputs owned by this command, including obsolete part files.
-    for (const name of readdirSync(outputDir)) {
-      if (isManagedArtifact(name)) {
-        const target = join(outputDir, name);
-        if (!lstatSync(target).isFile()) {
-          throw new Error(`Refusing to replace non-file artifact ${target}`);
-        }
-        rmSync(target);
-      }
-    }
-    for (const name of readdirSync(staging)) {
-      renameSync(join(staging, name), join(outputDir, name));
-    }
+    publishStagedArtifacts(outputDir, staging);
     for (const artifact of [
       manifest.artifacts.bundle,
       manifest.artifacts.dependencies,
