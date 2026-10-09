@@ -1,7 +1,7 @@
 pre-commit:
   commands:
     typecheck:
-      glob: "*.{ts,cts,mts}"
+      glob: "*.{ts,cts,mts,tsx}"
       run: >
         pnpm typecheck
     check:
