@@ -5,6 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   root: process.cwd(),
   test: {
+    fsModuleCache: true,
     projects: [
       "./config/vitest.node.config.ts",
       "./config/vitest.browser.config.ts",
