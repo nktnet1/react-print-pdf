@@ -301,42 +301,81 @@ export const Tailwind = ({
     null,
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: New React children may change the mounted classes even when Tailwind options are unchanged.
+  // The DOM observer detects changes from both parent-provided children and
+  // child-local state. Recreating this effect for every new children element
+  // would compile the same new class set twice: once from the observer and
+  // once from the new effect. Only compiler option changes need a new effect.
   useEffect(() => {
     if (collector) {
       return;
     }
 
     let active = true;
+    let generation = 0;
+    let previousCandidates: string | undefined;
     setDirectRenderError(null);
 
     // Rendering children a second time here would bypass their context and
     // invoke hooks and render-time side effects again. Use the mounted DOM
     // between inert template boundaries instead. Unlike style markers, these
     // do not add empty stylesheets or expose internal marker attributes.
-    void (async () => {
+    const rebuildForMountedClasses = () => {
+      let classNames: string[];
       try {
-        const classNames = extractMountedClassNames(
-          startRef.current,
-          endRef.current,
-        );
-        const css = await buildTailwindStyles(classNames, options);
-        if (active) {
-          setDirectRenderCss(css);
-        }
+        classNames = extractMountedClassNames(startRef.current, endRef.current);
       } catch (error) {
-        if (active) {
-          setDirectRenderError(
-            error instanceof Error ? error : new Error(String(error)),
-          );
-        }
+        // Class discovery runs synchronously while this effect is active.
+        // Cleanup disconnects the observer, so no stale callback can run.
+        setDirectRenderError(
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        return;
       }
-    })();
+
+      const candidates = JSON.stringify(classNames);
+      if (candidates === previousCandidates) {
+        return;
+      }
+      previousCandidates = candidates;
+      const currentGeneration = ++generation;
+
+      void buildTailwindStyles(classNames, options).then(
+        (css) => {
+          if (active && currentGeneration === generation) {
+            setDirectRenderCss(css);
+          }
+        },
+        (error) => {
+          if (active && currentGeneration === generation) {
+            setDirectRenderError(
+              error instanceof Error ? error : new Error(String(error)),
+            );
+          }
+        },
+      );
+    };
+
+    // Child state updates do not re-render Tailwind itself. Observe DOM class
+    // changes and inserted/removed descendants so those utilities are built
+    // too. Observe the parent to catch changes among multiple root siblings;
+    // the collector still limits candidates to the two template boundaries.
+    const observer = new MutationObserver(rebuildForMountedClasses);
+    const boundaryParent = startRef.current?.parentNode;
+    if (boundaryParent) {
+      observer.observe(boundaryParent, {
+        attributes: true,
+        attributeFilter: ["class"],
+        childList: true,
+        subtree: true,
+      });
+    }
+    rebuildForMountedClasses();
 
     return () => {
       active = false;
+      observer.disconnect();
     };
-  }, [collector, children, options]);
+  }, [collector, options]);
 
   if (directRenderError) {
     throw directRenderError;

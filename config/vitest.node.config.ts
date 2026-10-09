@@ -31,6 +31,7 @@ export default defineConfig({
     // This config lives in config/, but test discovery starts at project root.
     dir: process.cwd(),
     name: "node",
+    fsModuleCache: true,
     environment: "node",
     // Vitest stubs CSS imports to empty strings by default. The compiler
     // imports its print stylesheet using ?raw, so source tests must allow Vite

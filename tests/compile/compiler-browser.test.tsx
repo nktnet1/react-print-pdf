@@ -1,5 +1,5 @@
 import { Global, jsx } from "@emotion/react";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { compile, Tailwind } from "react-print-pdf";
 import { expect, test, vi } from "vitest";
@@ -266,3 +266,62 @@ test("browser Emotion compilation unmounts detached React effects before returni
   expect(html).toContain("Detached React root");
   expect(events).toEqual(["mounted", "unmounted"]);
 });
+
+test("direct Tailwind applies utilities introduced by an internal child state update", async () => {
+  const StatefulChild = () => {
+    const [updated, setUpdated] = useState(false);
+    return (
+      <button
+        type="button"
+        data-dynamic-tailwind
+        className={updated ? "bg-after-state" : "bg-before-state"}
+        onClick={() => setUpdated(true)}
+      >
+        Change background
+      </button>
+    );
+  };
+  const { host, root, cleanup } = createHost();
+
+  try {
+    root.render(
+      <Tailwind
+        preflight={false}
+        stylesheet={`@theme {
+  --color-before-state: #aa0011;
+  --color-after-state: #1122aa;
+}`}
+      >
+        <StatefulChild />
+      </Tailwind>,
+    );
+    await vi.waitFor(
+      () => {
+        const button = host.querySelector<HTMLElement>(
+          "[data-dynamic-tailwind]",
+        );
+        expect(button).not.toBeNull();
+        expect(getComputedStyle(button as HTMLElement).backgroundColor).toBe(
+          "rgb(170, 0, 17)",
+        );
+      },
+      { timeout: 15_000 },
+    );
+
+    host.querySelector<HTMLButtonElement>("[data-dynamic-tailwind]")?.click();
+    await vi.waitFor(
+      () => {
+        const button = host.querySelector<HTMLElement>(
+          "[data-dynamic-tailwind]",
+        );
+        expect(button).not.toBeNull();
+        expect(getComputedStyle(button as HTMLElement).backgroundColor).toBe(
+          "rgb(17, 34, 170)",
+        );
+      },
+      { timeout: 15_000 },
+    );
+  } finally {
+    cleanup();
+  }
+}, 30_000);
