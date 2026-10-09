@@ -1,6 +1,40 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+/** Stable cache identity for a compiled document, ignoring Tailwind nonce IDs. */
+export const previewContentHash = (html: string): string => {
+  const ids = new Map<string, string>();
+  for (const match of html.matchAll(
+    /\breact-print-tailwind-[a-f0-9]{32}-\d+\b/g,
+  )) {
+    if (!ids.has(match[0])) {
+      ids.set(match[0], `react-print-tailwind-cache-${ids.size}`);
+    }
+  }
+
+  // Each compile() call uses random Tailwind boundaries to avoid cross-document
+  // CSS collisions. Replacing only the boundary attributes isn't enough:
+  // scoped @keyframes and @font-face names also contain the hex-encoded ID.
+  let stableHtml = html;
+  for (const [id, stableId] of ids) {
+    const encodedId = Buffer.from(id).toString("hex");
+    const encodedStableId = Buffer.from(stableId).toString("hex");
+    stableHtml = stableHtml.replaceAll(
+      `react-print-${encodedId}-`,
+      `react-print-${encodedStableId}-`,
+    );
+  }
+  // Replace complete identifiers in one pass. Sequential string replacement
+  // could mistake the end of region 10 for the shorter region 1 identifier.
+  stableHtml = stableHtml.replace(
+    /\breact-print-tailwind-[a-f0-9]{32}-\d+\b/g,
+    (id) => ids.get(id) ?? id,
+  );
+
+  return createHash("sha256").update(stableHtml).digest("hex");
+};
 
 export const isNonEmptyFile = (filePath: string): boolean => {
   if (!existsSync(filePath)) return false;

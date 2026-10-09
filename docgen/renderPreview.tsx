@@ -1,11 +1,14 @@
-import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createElement, Fragment, type ReactElement } from "react";
 import type { CompileOptions } from "#/compile/compile";
-import { ensurePreviewImage, isNonEmptyFile } from "#docgen/previewAssets";
+import {
+  ensurePreviewImage,
+  isNonEmptyFile,
+  previewContentHash,
+} from "#docgen/previewAssets";
 
 type CompileModule = Pick<typeof import("#/compile/compile"), "compile">;
 
@@ -40,10 +43,7 @@ export async function renderPreview(
           <style>${indexCss.toString()}</style>
           </head><body>${await compile(element, compileOptions)}</body></html>`;
 
-  const hash = crypto.createHash("sha256");
-  hash.update(html);
-
-  let id = hash.digest("hex");
+  let id = previewContentHash(html);
   id = `${componentName.replace(/ /g, "-").toLowerCase()}-${id.slice(0, 8)}`;
 
   const targetFolder = path.join(

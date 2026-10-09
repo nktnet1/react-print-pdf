@@ -202,3 +202,21 @@ test("a manually specified virtual config cannot load without a legacy config", 
     /Unsupported Tailwind module:.*react-print-tailwind-config/,
   );
 });
+
+test("compile generates utilities for raw HTML attributes without reading comments", async () => {
+  const html = await compile(
+    <Tailwind preflight={false}>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: `<article class='bg-[#123abc]'>Rendered HTML</article>
+            <!-- <div class="bg-[#deadbe]"></div> -->`,
+        }}
+      />
+    </Tailwind>,
+  );
+  const css = html.split("</style>").slice(0, -1).join("</style>");
+
+  expect(html).toContain("Rendered HTML");
+  expect(css).toContain("background-color: #123abc");
+  expect(css).not.toContain("#deadbe");
+});

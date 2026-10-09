@@ -83,15 +83,110 @@ const VIRTUAL_CONFIG_ID = "react-print-tailwind-config";
 
 function extractClassNames(markup: string) {
   const classNames = new Set<string>();
+  const rawTextElements = new Set([
+    "script",
+    "style",
+    "textarea",
+    "title",
+    "xmp",
+    "iframe",
+    "noembed",
+    "noframes",
+    "plaintext",
+  ]);
+  let position = 0;
 
-  // HTML attribute names must be preceded by whitespace. A word boundary
-  // also matches the `class` suffix in `data-class` and `aria-class`, which
-  // would wrongly generate utilities for non-class attributes.
-  for (const match of markup.matchAll(/\sclass="([^"]*)"/g)) {
-    for (const className of decode(match[1]).split(/\s+/)) {
-      if (className) {
-        classNames.add(className);
+  // React uses double quotes for regular JSX attributes, but
+  // dangerouslySetInnerHTML can contain valid single-quoted or unquoted HTML.
+  // Scan start tags rather than all text: comments, scripts and CSS often
+  // contain examples like `class="bg-red-500"` that are not real elements.
+  while (position < markup.length) {
+    const opening = markup.indexOf("<", position);
+    if (opening < 0) break;
+    position = opening + 1;
+
+    if (markup.startsWith("!--", position)) {
+      const closing = markup.indexOf("-->", position + 3);
+      if (closing < 0) break;
+      position = closing + 3;
+      continue;
+    }
+    if (markup[position] === "!" || markup[position] === "?") {
+      const closing = markup.indexOf(">", position);
+      if (closing < 0) break;
+      position = closing + 1;
+      continue;
+    }
+
+    const closingTag = markup[position] === "/";
+    if (closingTag) position++;
+    const tagStart = position;
+    while (/[a-zA-Z0-9:-]/.test(markup[position] ?? "")) position++;
+    if (position === tagStart) continue;
+    const tagName = markup.slice(tagStart, position).toLowerCase();
+    let selfClosing = false;
+
+    while (position < markup.length) {
+      while (/\s/.test(markup[position] ?? "")) position++;
+      if (markup[position] === ">") {
+        position++;
+        break;
       }
+      if (markup[position] === "/" && markup[position + 1] === ">") {
+        position += 2;
+        selfClosing = true;
+        break;
+      }
+      if (position >= markup.length) break;
+
+      const attributeStart = position;
+      while (position < markup.length && !/[\s=/>]/.test(markup[position])) {
+        position++;
+      }
+      if (position === attributeStart) {
+        position++;
+        continue;
+      }
+      const attribute = markup.slice(attributeStart, position).toLowerCase();
+      while (/\s/.test(markup[position] ?? "")) position++;
+      if (markup[position] !== "=") continue;
+      position++;
+      while (/\s/.test(markup[position] ?? "")) position++;
+
+      let value: string;
+      const quote = markup[position];
+      if (quote === '"' || quote === "'") {
+        const end = markup.indexOf(quote, position + 1);
+        if (end < 0) {
+          position = markup.length;
+          break;
+        }
+        value = markup.slice(position + 1, end);
+        position = end + 1;
+      } else {
+        const valueStart = position;
+        while (position < markup.length && !/[\s>]/.test(markup[position])) {
+          position++;
+        }
+        value = markup.slice(valueStart, position);
+      }
+
+      if (!closingTag && attribute === "class") {
+        for (const className of decode(value).split(/\s+/)) {
+          if (className) classNames.add(className);
+        }
+      }
+    }
+
+    // Raw-text and RCDATA elements can contain literal markup-like strings.
+    // They are not children and must not be scanned as potential start tags.
+    if (!closingTag && !selfClosing && rawTextElements.has(tagName)) {
+      if (tagName === "plaintext") break;
+      const closeTag = new RegExp(`</${tagName}(?=[\\s/>])`, "gi");
+      closeTag.lastIndex = position;
+      const match = closeTag.exec(markup);
+      if (!match) break;
+      position = match.index;
     }
   }
 
@@ -300,6 +395,58 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
       }
 
       const parsedValue = parseCssValue(declaration.value);
+      // Process multiword families before single identifiers. Otherwise a
+      // registered one-word family can mask a longer family with that prefix.
+      // In a `font` shorthand, style/size tokens may precede the family, so
+      // search suffixes of each word run rather than matching only the run.
+      if (isFont || isFontVariable) {
+        const nodes = parsedValue.nodes;
+        for (let index = 0; index < nodes.length; ) {
+          if (nodes[index].type !== "word") {
+            index++;
+            continue;
+          }
+          let end = index + 1;
+          while (
+            nodes[end]?.type === "space" &&
+            nodes[end + 1]?.type === "word"
+          ) {
+            end += 2;
+          }
+
+          const starts =
+            property === "font"
+              ? Array.from(
+                  { length: (end - index + 1) / 2 },
+                  (_, i) => index + i * 2,
+                )
+              : [index];
+          let replaced = false;
+          for (const start of starts) {
+            const words = nodes
+              .slice(start, end)
+              .filter((node) => node.type === "word")
+              .map((node) => node.value);
+            if (words.length < 2) continue;
+            const scopedFamily = fontFamilies.get(
+              words.join(" ").toLowerCase(),
+            );
+            if (!scopedFamily) continue;
+            nodes.splice(start, end - start, {
+              type: "string",
+              quote: '"',
+              value: scopedFamily,
+              sourceIndex: nodes[start].sourceIndex,
+              sourceEndIndex: nodes[end - 1].sourceEndIndex,
+            });
+            index = start + 1;
+            replaced = true;
+            break;
+          }
+          if (!replaced) index = end;
+        }
+      }
+
       parsedValue.walk((node) => {
         // Do not rewrite URL contents or arbitrary quoted animation strings.
         if (node.type === "function" && node.value.toLowerCase() === "url") {
@@ -318,35 +465,6 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
         }
       });
 
-      // Unquoted multiword font families are represented as word/space nodes.
-      // Rewrite complete family entries, preserving comma-separated fallbacks.
-      if (isFont || isFontVariable) {
-        const nodes = parsedValue.nodes;
-        for (let index = 0; index < nodes.length; index++) {
-          if (nodes[index].type !== "word") continue;
-          const words = [nodes[index].value];
-          let end = index + 1;
-          while (
-            nodes[end]?.type === "space" &&
-            nodes[end + 1]?.type === "word"
-          ) {
-            words.push(nodes[end + 1].value);
-            end += 2;
-          }
-          const scopedFamily = fontFamilies.get(words.join(" ").toLowerCase());
-          if (scopedFamily && words.length > 1) {
-            nodes.splice(index, end - index, {
-              type: "string",
-              quote: '"',
-              value: scopedFamily,
-              sourceIndex: nodes[index].sourceIndex,
-              sourceEndIndex: nodes[end - 1].sourceEndIndex,
-            });
-          } else {
-            index = end - 1;
-          }
-        }
-      }
       declaration.value = parsedValue.toString();
     });
   }

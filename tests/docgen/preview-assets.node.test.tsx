@@ -5,6 +5,7 @@ import { afterEach, expect, test } from "vitest";
 import {
   ensurePreviewImage,
   isNonEmptyFile,
+  previewContentHash,
   rasterizeFirstPage,
 } from "../../docgen/previewAssets";
 
@@ -127,4 +128,59 @@ test("the pre-commit hook does not generate documentation previews", () => {
 
   expect(manifest["pre-commit"]).toEqual(["check"]);
   expect(manifest.scripts["build-components-commit"]).toBeTruthy();
+});
+
+test("identical Tailwind documents have stable preview cache keys", async () => {
+  const { compile, Tailwind } = await import("react-print-pdf");
+  const document = (
+    <Tailwind
+      preflight={false}
+      stylesheet="@theme { --color-example: #123456; }"
+    >
+      <main className="bg-example">Identical document</main>
+    </Tailwind>
+  );
+  const first = await compile(document);
+  const second = await compile(document);
+  expect(first).not.toBe(second); // CSS boundaries must remain globally unique.
+  expect(previewContentHash(first)).toBe(previewContentHash(second));
+}, 15_000);
+
+test("preview cache keys change with content, but not isolated CSS identifiers", async () => {
+  const { compile, Tailwind } = await import("react-print-pdf");
+  const makeDocument = (color: string) =>
+    compile(
+      <Tailwind
+        preflight={false}
+        stylesheet={`@theme { --color-accent: ${color}; --animate-pop: pop 1s; }
+          @keyframes pop { to { opacity: .5 } }
+          @font-face { font-family: Sample; src: url(sample.woff2); }`}
+      >
+        <p className="bg-accent animate-pop">Preview</p>
+      </Tailwind>,
+    );
+  const first = await makeDocument("#112233");
+  const repeated = await makeDocument("#112233");
+  const changed = await makeDocument("#445566");
+
+  expect(previewContentHash(first)).toBe(previewContentHash(repeated));
+  expect(previewContentHash(first)).not.toBe(previewContentHash(changed));
+}, 15_000);
+
+test("preview cache normalization distinguishes similarly prefixed scope numbers", () => {
+  const markup = (nonce: string) =>
+    [0, 1, 10]
+      .map((index) => {
+        const id = `react-print-tailwind-${nonce}-${index}`;
+        const encodedId = Buffer.from(id).toString("hex");
+        return `<style>@keyframes react-print-${encodedId}-pop { to { opacity: 1 } }</style>
+        <template data-react-print-tailwind-start="${id}"></template>
+        <div class="animate-pop">${index}</div>
+        <template data-react-print-tailwind-end="${id}"></template>`;
+      })
+      .join("");
+
+  expect(previewContentHash(markup("a".repeat(32)))).toBe(
+    previewContentHash(markup("b".repeat(32))),
+  );
 });

@@ -128,3 +128,58 @@ test("renames unquoted font-family fallbacks without changing unrelated custom p
   );
   expect(result).toContain('--label: "First Font"');
 });
+
+test("collects classes from single-quoted and unquoted raw HTML attributes", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({ preflight: false });
+  const html = [
+    `<template data-react-print-tailwind-start="${id}"></template>`,
+    `<section class='text-[#123abc]' data-class="bg-red-800">`,
+    `<span class=bg-blue-600 class='font-bold'>Raw HTML</span>`,
+    `</section>`,
+    `<template data-react-print-tailwind-end="${id}"></template>`,
+  ].join("");
+
+  const result = await collector.resolve(html);
+  const css = result.split("</style>")[0];
+  expect(css).toContain("#123abc");
+  expect(css).toContain(".bg-blue-600");
+  expect(css).toContain(".font-bold");
+  expect(css).not.toContain(".bg-red-800");
+});
+
+test("ignores class-like text in HTML comments and raw-text elements", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({ preflight: false });
+  const html = [
+    `<template data-react-print-tailwind-start="${id}"></template>`,
+    `<!-- <div class="bg-[#010203]"></div> -->`,
+    `<style>/* <div class="bg-[#040506]"></div> */</style>`,
+    `<script type="application/json">{"markup":"<div class="bg-[#070809]"></div>"}</script>`,
+    `<div class="bg-[#aabbcc]">Real content</div>`,
+    `<template data-react-print-tailwind-end="${id}"></template>`,
+  ].join("");
+
+  const result = await collector.resolve(html);
+  const css = result.split("</style>")[0];
+  expect(css).toContain("#aabbcc");
+  expect(css).not.toContain("#010203");
+  expect(css).not.toContain("#040506");
+  expect(css).not.toContain("#070809");
+});
+
+test("isolates unquoted multiword font names in CSS font shorthand", async () => {
+  const collector = createTailwindStyleCollector();
+  const id = collector.register({
+    preflight: false,
+    stylesheet: `@font-face { font-family: Example Family; src: url(font.woff2); }
+      .font-shorthand { font: italic 16px/1.2 Example Family, serif; }`,
+  });
+  const html = `<template data-react-print-tailwind-start="${id}"></template><p class="font-shorthand">Hi</p><template data-react-print-tailwind-end="${id}"></template>`;
+  const result = await collector.resolve(html);
+  const css = result.split("</style>")[0];
+  expect(css).toMatch(/font-family:\s*"react-print-[^"]+-font-0"/);
+  expect(css).toMatch(
+    /font:\s*italic 16px\/1\.2 "react-print-[^"]+-font-0", serif/,
+  );
+});
