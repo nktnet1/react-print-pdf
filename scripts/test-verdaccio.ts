@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { once } from "node:events";
@@ -17,9 +18,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { styleText } from "node:util";
+import { parseArgs, styleText } from "node:util";
 import { parseReleaseVersion } from "#scripts/release-policy";
 
+const { values } = parseArgs({
+  options: { smoke: { type: "boolean", default: false } },
+});
 const VERDACCIO_VERSION = "6.10.4";
 const VITE_VERSION = "8.3.2";
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -31,7 +35,6 @@ const manifest = JSON.parse(
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
 };
-const { distTag } = parseReleaseVersion(manifest.version);
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const temporaryRoot = mkdtempSync(join(tmpdir(), "react-print-pdf-verdaccio-"));
@@ -48,6 +51,99 @@ const run = (
   env: NodeJS.ProcessEnv,
 ): void => {
   execFileSync(command, args, { cwd, env, stdio: "inherit", timeout: 300_000 });
+};
+
+const publish = (
+  target: string,
+  version: string,
+  registry: string,
+  env: NodeJS.ProcessEnv,
+): void => {
+  run(
+    npm,
+    [
+      "publish",
+      target,
+      "--registry",
+      registry,
+      "--tag",
+      parseReleaseVersion(version).distTag,
+      "--ignore-scripts",
+      "--provenance=false",
+    ],
+    root,
+    env,
+  );
+};
+
+const verifyDistTags = (
+  name: string,
+  expected: Record<string, string>,
+  registry: string,
+  env: NodeJS.ProcessEnv,
+  allowInitialBetaLatest = false,
+): void => {
+  const output = execFileSync(
+    npm,
+    [
+      "view",
+      name,
+      "dist-tags",
+      "--json",
+      "--prefer-online",
+      "--registry",
+      registry,
+    ],
+    { cwd: root, env, encoding: "utf8", timeout: 30_000 },
+  );
+  const actual = JSON.parse(output) as Record<string, string>;
+  // An empty Verdaccio registry may assign latest to its first published beta
+  // even when npm publish explicitly uses --tag beta. This exception must not
+  // apply after a stable release establishes its own latest tag.
+  if (
+    allowInitialBetaLatest &&
+    expected.beta !== undefined &&
+    expected.latest === undefined &&
+    actual.latest === expected.beta
+  ) {
+    delete actual.latest;
+  }
+  assert.deepEqual(actual, expected, `${name} has incorrect npm dist-tags`);
+  console.log(
+    `${styleText("cyan", "Verified")} ${styleText("bold", name)} dist-tags`,
+  );
+};
+
+const verifyReleaseTags = (registry: string, env: NodeJS.ProcessEnv): void => {
+  const probeRoot = join(temporaryRoot, "release-tag-probe");
+  const probeName = `${manifest.name}-release-tag-probe-${randomBytes(4).toString("hex")}`;
+  mkdirSync(probeRoot);
+  writeFileSync(join(probeRoot, "index.js"), "module.exports = true;\n");
+  writeFileSync(
+    join(probeRoot, "README.md"),
+    "Local release tag smoke test.\n",
+  );
+
+  // Verdaccio may bootstrap latest on the first beta. A subsequent stable
+  // release must take over latest, and later betas must leave it unchanged.
+  for (const [version, expected] of [
+    ["1.0.0-beta.1", { beta: "1.0.0-beta.1" }],
+    ["1.0.0", { beta: "1.0.0-beta.1", latest: "1.0.0" }],
+    ["1.1.0-beta.1", { beta: "1.1.0-beta.1", latest: "1.0.0" }],
+  ] as const) {
+    writeFileSync(
+      join(probeRoot, "package.json"),
+      `${JSON.stringify({ name: probeName, version, main: "index.js" })}\n`,
+    );
+    publish(probeRoot, version, registry, env);
+    verifyDistTags(
+      probeName,
+      expected,
+      registry,
+      env,
+      version === "1.0.0-beta.1",
+    );
+  }
 };
 
 const reservePort = async (): Promise<number> => {
@@ -239,21 +335,24 @@ const main = async (): Promise<void> => {
     if (packed.length !== 1 || !packed[0]?.filename) {
       throw new Error("npm pack did not produce a single package tarball");
     }
-    run(
-      npm,
-      [
-        "publish",
-        join(temporaryRoot, packed[0].filename),
-        "--registry",
-        registry,
-        "--tag",
-        distTag,
-        "--ignore-scripts",
-        "--provenance=false",
-      ],
-      root,
+    publish(
+      join(temporaryRoot, packed[0].filename),
+      manifest.version,
+      registry,
       npmEnv,
     );
+    const { distTag } = parseReleaseVersion(manifest.version);
+    verifyDistTags(
+      manifest.name,
+      { [distTag]: manifest.version },
+      registry,
+      npmEnv,
+      distTag === "beta",
+    );
+    console.log(
+      `${styleText("cyan", "Checking")} stable and beta release tags`,
+    );
+    verifyReleaseTags(registry, npmEnv);
 
     mkdirSync(consumerRoot, { recursive: true });
     writeFileSync(
@@ -303,9 +402,9 @@ const main = async (): Promise<void> => {
         "install",
         `${manifest.name}@${manifest.version}`,
         ...consumerDependencies,
-        ...typecheckDependencies,
+        ...(values.smoke ? [] : typecheckDependencies),
         `playwright@${playwrightVersion}`,
-        `vite@${VITE_VERSION}`,
+        ...(values.smoke ? [] : [`vite@${VITE_VERSION}`]),
         "--registry",
         registry,
         "--ignore-scripts",
@@ -332,6 +431,13 @@ const main = async (): Promise<void> => {
         `${styleText("cyan", "Verifying")} ${styleText("bold", fixture)} against the installed package`,
       );
       run(process.execPath, [fixture], consumerRoot, npmEnv);
+    }
+
+    if (values.smoke) {
+      console.log(
+        `Node ${styleText("yellow", process.versions.node)} installed-package CJS/ESM and release-tag smoke tests ${styleText("green", "passed")}`,
+      );
+      return;
     }
 
     // Typecheck the exact published declarations, not the source aliases used

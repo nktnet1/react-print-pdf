@@ -74,6 +74,7 @@
     "release:validate": "tsx ./scripts/validate-release.ts",
     "prepublishOnly": "tsx ./scripts/prevent-direct-publish.ts",
     "test:verdaccio": "pnpm build && tsx ./scripts/test-verdaccio.ts",
+    "test:verdaccio:smoke": "pnpm build && tsx ./scripts/test-verdaccio.ts --smoke",
     "test:gotenberg": "pnpm build && node ./tests/gotenberg/gotenberg.integration.mjs"
   },
   "pre-commit": [

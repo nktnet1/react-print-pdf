@@ -68,6 +68,30 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  node22-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify installed CJS/ESM package and npm release tags
+        run: pnpm test:verdaccio:smoke
+
   gotenberg-integration:
     # Docker image startup stays out of PR checks, but main releases must pass.
     if: github.event_name == 'push'
