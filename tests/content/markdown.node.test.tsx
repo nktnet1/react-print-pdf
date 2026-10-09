@@ -167,6 +167,58 @@ test("TOC renderers receive keyed children without React key warnings", () => {
   expect(html).toContain('data-toc-entry="true"');
 });
 
+test("TOC preserves nested JSX heading children and headings without ids", () => {
+  const entries: Array<{
+    heading: string;
+    id: string | undefined;
+    children: ReactNode;
+  }> = [];
+  const NestedTocRenderer = ({
+    heading,
+    id,
+    children,
+  }: {
+    heading: string;
+    id: string | undefined;
+    children: ReactNode;
+  }) => {
+    entries.push({ heading, id, children });
+    return <span data-toc-heading={heading}>{children}</span>;
+  };
+
+  const html = renderToStaticMarkup(
+    <Markdown tocRenderer={NestedTocRenderer}>
+      {"<Toc />\n\n"}
+      <h2 id="nested-heading">
+        {[
+          ["Nested ", <strong key="strong">bold</strong>],
+          [" and ", <em key="em">italic</em>],
+        ]}
+      </h2>
+      <h3>Heading without an id</h3>
+    </Markdown>,
+  );
+
+  expect(entries).toHaveLength(2);
+  expect(entries.map(({ heading, id }) => [heading, id])).toEqual([
+    ["h2", "nested-heading"],
+    ["h3", undefined],
+  ]);
+  const nested = entries[0]?.children;
+  expect(Array.isArray(nested)).toBe(true);
+  if (!Array.isArray(nested)) throw new Error("Expected nested TOC content");
+  expect(nested).toHaveLength(2);
+  const nestedKeys = nested.flatMap((group) =>
+    Array.isArray(group)
+      ? group.filter(isValidElement).map((child) => child.key)
+      : [],
+  );
+  expect(nestedKeys).toEqual(["strong", "em"]);
+  expect(html).toContain("Nested <strong>bold</strong> and <em>italic</em>");
+  expect(html).toContain('data-toc-heading="h3"');
+  expect(html).toContain("Heading without an id");
+});
+
 test("TOC does not invoke hook components or class render methods during discovery", () => {
   const SectionContext = createContext("missing");
   let functionRenders = 0;

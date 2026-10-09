@@ -92,8 +92,15 @@ function extractClassNames(markup: string) {
   return [...classNames];
 }
 
-/** Collect candidates from the subtree React actually mounted in the browser. */
-function extractMountedClassNames(start: Element, end: Element): string[] {
+/** @internal Collect candidates only between the mounted Tailwind boundaries. */
+export function extractMountedClassNames(
+  start: Element | null,
+  end: Element | null,
+): string[] {
+  if (!start || !end) {
+    throw new Error("Unable to locate direct Tailwind render boundaries.");
+  }
+
   const classNames = new Set<string>();
   const include = (element: Element) => {
     for (const className of element.classList) {
@@ -309,11 +316,6 @@ export const Tailwind = ({
     // do not add empty stylesheets or expose internal marker attributes.
     void (async () => {
       try {
-        if (!startRef.current || !endRef.current) {
-          throw new Error(
-            "Unable to locate direct Tailwind render boundaries.",
-          );
-        }
         const classNames = extractMountedClassNames(
           startRef.current,
           endRef.current,

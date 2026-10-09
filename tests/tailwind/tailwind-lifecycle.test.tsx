@@ -8,6 +8,7 @@ import {
 import { createRoot, type Root } from "react-dom/client";
 import { Tailwind } from "react-print-pdf";
 import { beforeEach, expect, test, vi } from "vitest";
+import { extractMountedClassNames } from "#/tailwind/tailwind";
 
 type StubCompiler = { build: (candidates: string[]) => string };
 
@@ -83,6 +84,57 @@ function renderTheme(root: Root, color: string) {
 }
 
 beforeEach(() => compileTailwind.mockReset());
+
+test("mounted Tailwind class discovery stays inside its boundaries", () => {
+  const host = document.createElement("div");
+  const start = document.createElement("template");
+  const end = document.createElement("template");
+  const section = document.createElement("section");
+  section.className = "bg-inside p-4";
+  const nested = document.createElement("span");
+  nested.className = "p-4 font-bold";
+  section.append(nested);
+  const outside = document.createElement("p");
+  outside.className = "bg-outside";
+  host.append(
+    start,
+    document.createTextNode("separator"),
+    section,
+    end,
+    outside,
+  );
+
+  expect(extractMountedClassNames(start, end)).toEqual([
+    "bg-inside",
+    "p-4",
+    "font-bold",
+  ]);
+});
+
+test.each(["start", "end"] as const)(
+  "mounted Tailwind class discovery rejects a missing %s boundary ref",
+  (missing) => {
+    const start = document.createElement("template");
+    const end = document.createElement("template");
+    expect(() =>
+      extractMountedClassNames(
+        missing === "start" ? null : start,
+        missing === "end" ? null : end,
+      ),
+    ).toThrow("Unable to locate direct Tailwind render boundaries.");
+  },
+);
+
+test("mounted Tailwind class discovery rejects an end marker outside the region", () => {
+  const host = document.createElement("div");
+  const start = document.createElement("template");
+  const end = document.createElement("template");
+  host.append(start, document.createElement("p"));
+
+  expect(() => extractMountedClassNames(start, end)).toThrow(
+    "Unable to locate direct Tailwind render boundaries.",
+  );
+});
 
 test.each(["resolve", "reject"] as const)(
   "ignores obsolete Tailwind compilation when it would %s after a theme change",
