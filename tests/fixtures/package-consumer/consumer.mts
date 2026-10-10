@@ -6,6 +6,10 @@ import {
   GotenbergError,
   type GotenbergRequestOptions,
   Markdown,
+  PageNumber,
+  PagesNumber,
+  RunningH1,
+  RunningH6,
   Tailwind,
 } from "react-print-pdf";
 import { compile as compileClient } from "react-print-pdf/client";
@@ -34,3 +38,22 @@ void createElement(
   { className: "source", id: "source-1", style: { color: "navy" } },
   "Source citation",
 );
+
+// Counter placeholders and running headings expose the underlying span API.
+void createElement(PageNumber, {
+  className: "page-number",
+  id: "current-page",
+  style: { color: "navy" },
+  "aria-label": "Current page",
+});
+void createElement(PagesNumber, {
+  counterStyle: "lower-roman",
+  title: "Total pages",
+});
+void createElement(RunningH1, {
+  before: "Chapter: ",
+  after: " (continued)",
+  className: "chapter-title",
+  lang: "en",
+});
+void createElement(RunningH6, { "aria-label": "Deepest heading" });

@@ -14,17 +14,19 @@ const validateCounterStyle = (value: string): string => {
   return value;
 };
 
+type CounterProps = Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> & {
+  /** The style of the CSS page counter. */
+  counterStyle?: string;
+};
+
 /**
  * Returns the current page number.
  */
 export const PageNumber = ({
   counterStyle = "decimal",
-}: {
-  /**
-   * The style of the counter.
-   */
-  counterStyle?: string;
-}) => {
+  className,
+  ...props
+}: CounterProps) => {
   const style = validateCounterStyle(counterStyle);
   return (
     <>
@@ -35,7 +37,10 @@ export const PageNumber = ({
 }
         `}
       </CSS>
-      <span className={`react-print-page-number-${style}`} />
+      <span
+        {...props}
+        className={`react-print-page-number-${style}${className ? ` ${className}` : ""}`}
+      />
     </>
   );
 };
@@ -45,12 +50,9 @@ export const PageNumber = ({
  */
 export const PagesNumber = ({
   counterStyle = "decimal",
-}: {
-  /**
-   * The style of the counter.
-   */
-  counterStyle?: string;
-}) => {
+  className,
+  ...props
+}: CounterProps) => {
   const style = validateCounterStyle(counterStyle);
   return (
     <>
@@ -61,16 +63,33 @@ export const PagesNumber = ({
 }
         `}
       </CSS>
-      <span className={`react-print-pages-number-${style}`} />
+      <span
+        {...props}
+        className={`react-print-pages-number-${style}${className ? ` ${className}` : ""}`}
+      />
     </>
   );
 };
 
+type RunningHeaderProps = Omit<
+  React.HTMLAttributes<HTMLSpanElement>,
+  "children"
+> & {
+  before?: string;
+  after?: string;
+};
+
 const RunningHeader = (level: number) => {
-  return ({ before = "", after = "" }: { before?: string; after?: string }) => {
+  return ({
+    before = "",
+    after = "",
+    className,
+    ...props
+  }: RunningHeaderProps) => {
     return (
       <span
-        className={`react-print-heading-contents react-print-h${level}-contents`}
+        {...props}
+        className={`react-print-heading-contents react-print-h${level}-contents${className ? ` ${className}` : ""}`}
         data-before={before}
         data-after={after}
       />
