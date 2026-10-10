@@ -45,7 +45,7 @@ export type TailwindProps = {
    * The children of the Tailwind component. Components will have access to
    * generated Tailwind utility classes.
    */
-  children: ReactNode;
+  children?: ReactNode;
   /**
    * A legacy JavaScript Tailwind config. Tailwind CSS v4 still supports JS
    * configuration through `@config`, but CSS-first configuration is preferred.

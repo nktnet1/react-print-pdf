@@ -17,11 +17,12 @@ interface TocRendererProps {
   heading: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   level: number;
   children: ReactNode;
-  id: string;
+  /** Markdown headings receive an id automatically; JSX headings may not. */
+  id?: string;
 }
 
 interface MarkdownProps {
-  children: ReactNode;
+  children?: ReactNode;
   tocRenderer?: (props: TocRendererProps) => ReactNode;
   options?: MarkdownToJSX.Options;
 }
@@ -221,7 +222,7 @@ This agreement is signed with <CustomerName />.
           name: "Table of Contents",
           description: `You can use the \`tocRenderer\` prop to render a table of contents from your Markdown content. The headers will be automatically detected and rendered in the order they appear. You need to place the \`<Toc />\` component in your Markdown content to render the table of contents.
 
-You can also use the \`id\` attribute in your headers to link to them directly. Headings must appear in the Markdown source or as JSX elements inside native elements/fragments; headings produced inside custom React components are not introspected. The \`tocRenderer\` is rendered as a React component, so it may use hooks.`,
+Markdown headings receive an automatic id; JSX headings without an explicit \`id\` produce an undefined id in \`tocRenderer\`. Only create a fragment link if an id is present. Headings must appear in the Markdown source or as JSX elements inside native elements/fragments; headings produced inside custom React components are not introspected. The \`tocRenderer\` is rendered as a React component, so it may use hooks.`,
           template: (
             <Tailwind
               config={{
@@ -248,7 +249,7 @@ You can also use the \`id\` attribute in your headers to link to them directly. 
                     style={{
                       paddingLeft: `${(level - 1) * 1}rem`,
                     }}
-                    href={`#${id}`}
+                    href={id ? `#${id}` : undefined}
                   >
                     {children}
                   </a>

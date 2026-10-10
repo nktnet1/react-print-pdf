@@ -57,3 +57,29 @@ void createElement(RunningH1, {
   lang: "en",
 });
 void createElement(RunningH6, { "aria-label": "Deepest heading" });
+
+// A JSX heading inside Markdown may have no id, despite Markdown text
+// headings receiving generated ids. The published callback type must match.
+void createElement(
+  Markdown,
+  {
+    tocRenderer: ({ id, children }) => {
+      // @ts-expect-error Consumers must narrow an optional id before using it.
+      id.toUpperCase();
+      return createElement("a", id ? { href: `#${id}` } : {}, children);
+    },
+  },
+  "<Toc />",
+);
+
+// Passing children as createElement's third argument must work with options.
+void createElement(
+  Markdown,
+  { options: { forceBlock: true } },
+  "## Node report",
+);
+void createElement(
+  Tailwind,
+  { preflight: false },
+  createElement("p", { className: "font-bold" }, "Print"),
+);

@@ -179,7 +179,7 @@ test("TOC preserves nested JSX heading children and headings without ids", () =>
     children,
   }: {
     heading: string;
-    id: string | undefined;
+    id?: string;
     children: ReactNode;
   }) => {
     entries.push({ heading, id, children });
