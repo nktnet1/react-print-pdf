@@ -29,7 +29,7 @@ export const buildExample = async (
 
   markdown += `<div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-\`\`\`jsx
+\`\`\`tsx
 ${source}
 \`\`\`
 </CodeBlock>
