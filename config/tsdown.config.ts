@@ -4,6 +4,7 @@ import { defineConfig } from "tsdown";
 import Raw from "unplugin-raw/rolldown";
 import { katexCssDefines } from "#config/katex-css";
 import { tailwindCssDefines } from "#config/tailwind-css";
+import { repairEmittedDeclarations } from "#scripts/repair-declaration-exports";
 
 // tsdown otherwise resolves entries relative to this config/ directory.
 // Keep the package root stable for entries, tsconfig discovery, and dist output.
@@ -30,6 +31,11 @@ export default defineConfig({
   },
   sourcemap: true,
   dts: true,
+  onSuccess: async () => {
+    await repairEmittedDeclarations(
+      fileURLToPath(new URL("../dist/", import.meta.url)),
+    );
+  },
   css: {
     fileName: "index.css",
     splitting: false,
