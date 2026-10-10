@@ -86,6 +86,15 @@ if (!html.includes("Consumer invoice") || !html.includes("Paid") || !html.includ
 if ((html.match(/(?:data-)?href="react-print-pdf-katex"/g) ?? []).length !== 1) {
   throw new Error("Multiple formulas must share exactly one KaTeX stylesheet");
 }
+const documentHtml = await compile(React.createElement("html", { lang: "en" },
+  React.createElement("head", null, React.createElement("title", null, "Consumer report")),
+  React.createElement("body", null, React.createElement("main", null, "Complete document"))));
+if (!documentHtml.startsWith('<html lang="en">') || !documentHtml.includes('Complete document')) {
+  throw new Error("Complete HTML document must preserve its original <html> root");
+}
+if (React.version.startsWith('18.') && !documentHtml.includes('<head><style>')) {
+  throw new Error("React 18 must move leading print styles inside the document <head>");
+}
 console.log(React.version);
 `,
     );

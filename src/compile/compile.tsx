@@ -5,6 +5,7 @@ import type React from "react";
 import { renderToString } from "react-dom/server";
 import { CSS } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
+import { moveCompiledStylesIntoDocument } from "#/html/html-document";
 import {
   createTailwindStyleCollector,
   Tailwind,
@@ -127,7 +128,9 @@ export const compile = async (
         {Element}
       </TailwindStyleCollectorProvider>,
     );
-    return deduplicateKatexStyles(await tailwindCollector.resolve(html));
+    return moveCompiledStylesIntoDocument(
+      deduplicateKatexStyles(await tailwindCollector.resolve(html)),
+    );
   }
 
   const { CacheProvider } = await import("@emotion/react");
@@ -224,7 +227,9 @@ export const compile = async (
     from: undefined,
   });
 
-  return deduplicateKatexStyles(`<style>${result.css}</style>${html}`);
+  return moveCompiledStylesIntoDocument(
+    deduplicateKatexStyles(`<style>${result.css}</style>${html}`),
+  );
 };
 
 // React 19 hoists styles with precedence/href and deduplicates identical
