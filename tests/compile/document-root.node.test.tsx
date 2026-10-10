@@ -81,3 +81,54 @@ test("ordinary HTML fragments still get a complete document wrapper", () => {
     '<!doctype html><html><head><meta charset="utf-8"></head><body><p>Standalone fragment</p></body></html>',
   );
 });
+
+test("moves root-wrapping Tailwind scope boundaries inside the body", () => {
+  const id = "react-print-tailwind-test-0";
+  const style = `<style>@scope (:where(template[data-react-print-tailwind-start="${id}"] ~ *)) { .font-bold { font-weight: 700 } }</style>`;
+  const start = `<template data-react-print-tailwind-start="${id}"></template>`;
+  const end = `<template data-react-print-tailwind-end="${id}"></template>`;
+  const html = `<style>.print { color: red }</style>${style}${start}<html lang="en"><head><title>Report</title></head><body><main class="font-bold">Hello</main></body></html>${end}`;
+
+  const actual = moveCompiledStylesIntoDocument(html);
+  expect(actual).toBe(
+    `<html lang="en"><head><style>.print { color: red }</style>${style}<title>Report</title></head><body>${start}<main class="font-bold">Hello</main>${end}</body></html>`,
+  );
+  expect(toHtmlDocument(actual)).toBe(actual);
+});
+
+test("keeps nested root-wrapping Tailwind scope pairs in the correct order", () => {
+  const outer = "react-print-tailwind-outer-0";
+  const inner = "react-print-tailwind-inner-1";
+  const start = (id: string) =>
+    `<template data-react-print-tailwind-start="${id}"></template>`;
+  const end = (id: string) =>
+    `<template data-react-print-tailwind-end="${id}"></template>`;
+  const html = `<style>p{color:black}</style>${start(outer)}<style>p{font-weight:bold}</style>${start(inner)}<html><body><p>Nested</p></body></html>${end(inner)}${end(outer)}`;
+  expect(moveCompiledStylesIntoDocument(html)).toBe(
+    `<html><head><style>p{color:black}</style><style>p{font-weight:bold}</style></head><body>${start(outer)}${start(inner)}<p>Nested</p>${end(inner)}${end(outer)}</body></html>`,
+  );
+});
+
+test("does not relocate incomplete or mismatched Tailwind scope pairs", () => {
+  const start = '<template data-react-print-tailwind-start="one"></template>';
+  const end = '<template data-react-print-tailwind-end="two"></template>';
+  const malformed = `<style>p{color:red}</style>${start}<html><body>Content</body></html>${end}`;
+  expect(moveCompiledStylesIntoDocument(malformed)).toBe(malformed);
+  const noBody = `<style>p{color:red}</style>${start}<html><head></head></html><template data-react-print-tailwind-end="one"></template>`;
+  expect(() => moveCompiledStylesIntoDocument(noBody)).toThrow(/body/i);
+});
+
+test("leaves dangling Tailwind scope markers untouched", () => {
+  const start =
+    '<template data-react-print-tailwind-start="dangling"></template>';
+  const html = `<style>p{color:red}</style>${start}<html><body>Content</body></html>`;
+  expect(moveCompiledStylesIntoDocument(html)).toBe(html);
+});
+
+test("requires a closing body tag for a Tailwind-wrapped complete document", () => {
+  const id = "react-print-tailwind-unclosed";
+  const start = `<template data-react-print-tailwind-start="${id}"></template>`;
+  const end = `<template data-react-print-tailwind-end="${id}"></template>`;
+  const html = `<style>p{color:blue}</style>${start}<html><head></head><body><main>Content</main></html>${end}`;
+  expect(() => moveCompiledStylesIntoDocument(html)).toThrow(/body/);
+});

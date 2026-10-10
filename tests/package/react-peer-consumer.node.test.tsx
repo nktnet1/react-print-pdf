@@ -95,6 +95,23 @@ if (!documentHtml.startsWith('<html lang="en">') || !documentHtml.includes('Comp
 if (React.version.startsWith('18.') && !documentHtml.includes('<head><style>')) {
   throw new Error("React 18 must move leading print styles inside the document <head>");
 }
+const scopedDocumentHtml = await compile(React.createElement(Tailwind, { preflight: false },
+  React.createElement("html", { lang: "en" },
+    React.createElement("head", null, React.createElement("title", null, "Tailwind report")),
+    React.createElement("body", null, React.createElement("main", { className: "font-bold" }, "Scoped document")))));
+if (!scopedDocumentHtml.startsWith('<html lang="en">')) {
+  throw new Error("Tailwind-wrapped complete documents must preserve the HTML root");
+}
+const bodyStart = scopedDocumentHtml.indexOf("<body>");
+const bodyEnd = scopedDocumentHtml.indexOf("</body>");
+const body = bodyStart >= 0 && bodyEnd > bodyStart ? scopedDocumentHtml.slice(bodyStart + 6, bodyEnd) : "";
+if (!body || !body.includes('data-react-print-tailwind-start=') ||
+    !body.includes('data-react-print-tailwind-end=') || !body.includes('Scoped document')) {
+  throw new Error("Tailwind-wrapped complete documents must keep CSS scope boundaries inside body");
+}
+if (React.version.startsWith('18.') && !scopedDocumentHtml.includes('<head><style>')) {
+  throw new Error("React 18 must place Tailwind document styles inside head");
+}
 console.log(React.version);
 `,
     );
