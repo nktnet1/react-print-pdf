@@ -77,7 +77,8 @@
     "test:verdaccio": "pnpm build && tsx ./scripts/test-verdaccio.ts",
     "test:verdaccio:smoke": "pnpm build && tsx ./scripts/test-verdaccio.ts --smoke",
     "test:gotenberg": "pnpm build && node ./tests/gotenberg/gotenberg.integration.mjs",
-    "artifacts:offline": "tsx ./scripts/create-offline-artifacts.ts"
+    "artifacts:offline": "tsx ./scripts/create-offline-artifacts.ts",
+    "docs:verify": "pnpm build-components && pnpm docs:build && tsx ./scripts/verify-docs.ts --freshness"
   },
   "pre-commit": [
     "check"

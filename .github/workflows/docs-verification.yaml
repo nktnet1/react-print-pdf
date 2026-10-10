@@ -1,0 +1,111 @@
+name: Documentation Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docgen/**"
+      - "src/**/*.tsx"
+      - "src/ui/**/*.mdx"
+      - "docs/**"
+      - "tests/docgen/**"
+      - "scripts/verify-docs.ts"
+      - "package.json"
+      - ".github/workflows/docs-verification.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docgen/**"
+      - "src/**/*.tsx"
+      - "src/ui/**/*.mdx"
+      - "docs/**"
+      - "tests/docgen/**"
+      - "scripts/verify-docs.ts"
+      - "package.json"
+      - ".github/workflows/docs-verification.yaml"
+  workflow_dispatch:
+    inputs:
+      cold_cache:
+        description: "Regenerate every preview PDF and image instead of using cached previews"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-verification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build library for documentation tests
+        run: pnpm build
+
+      - name: Test maintained documentation sources
+        run: pnpm test:docgen
+
+      - name: Install documentation site dependencies
+        run: pnpm --dir docs install --frozen-lockfile
+
+      - name: Compile existing documentation site
+        run: pnpm docs:build
+
+  regenerate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: docs-source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install documentation site dependencies
+        run: pnpm --dir docs install --frozen-lockfile
+
+      - name: Install preview rendering prerequisites
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+
+      - name: Clear preview cache for a cold rebuild
+        if: inputs.cold_cache
+        run: rm -rf docs/public/docs/images/previews
+
+      # This is manual until the maintainer regenerates and commits the stale MDX.
+      # Only text/metadata freshness is compared, not nondeterministic PDF/JPEG bytes.
+      - name: Regenerate, compile and verify documentation
+        run: pnpm docs:verify

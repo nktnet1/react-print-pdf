@@ -96,3 +96,29 @@ failed, cancelled, missing, or timed-out runs cannot publish. The Release job
 has npm OIDC access only after this gate passes.
 
 Direct `npm publish` from a local checkout is blocked by `prepublishOnly`.
+
+## Documentation verification
+
+The `Documentation Verification` workflow checks maintained docgen tests and
+compiles the existing documentation site when relevant sources change. It does
+**not** enforce generated-page freshness on every PR while older checked-in MDX
+pages remain stale.
+
+Use the workflow's **Run workflow** action for a full regeneration check. Its
+`cold_cache` input defaults to `true`, removing cached previews in the CI
+checkout so every PDF/JPEG preview is rendered again. The manual job runs
+`pnpm docs:verify`, which regenerates the pages, compiles the documentation
+site, checks for obsolete `@fileforge/react-print` imports and missing/empty
+preview assets, then compares generated MDX/metadata with `HEAD`. PDF/JPEG
+bytes are deliberately excluded from the freshness comparison.
+
+`docs:verify` **writes generated documentation and preview assets** into its
+working tree. Run it in a disposable checkout when you only want a report. The
+freshness check will fail until the regenerated MDX/metadata changes have been
+reviewed and committed by the maintainer. Do not enable it as a required PR
+status before completing that one-time regeneration; normal CI still checks
+the maintained examples and existing site build.
+
+The documentation site has its own `docs/package.json` and
+`docs/pnpm-lock.yaml`. CI installs both the root and site dependencies with
+`--frozen-lockfile`, without generating or committing a lockfile.
