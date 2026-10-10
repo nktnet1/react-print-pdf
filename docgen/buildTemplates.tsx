@@ -5,7 +5,8 @@ import { glob } from "glob";
 import { createElement } from "react";
 import { bundleTemplate } from "#docgen/bundleTemplate";
 import { renderPreview } from "#docgen/renderPreview";
-import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils";
+import { formatTemplateSource } from "#docgen/templateSource";
+import { formatCamelCaseToTitle } from "#docgen/utils";
 
 export async function buildTemplates() {
   const templates = await glob(join(import.meta.dirname, "../src/ui/**/*.mdx"));
@@ -61,7 +62,7 @@ category: ${attributes.category || "Uncategorized"}
       markdown += `<Frame background="subtle"><PreviewImage src="${paths.imagePath}" /></Frame>\n\n`;
 
       markdown += `\`\`\`jsx
-${await formatSnippet(body)}
+${await formatTemplateSource(body)}
 \`\`\`\n\n`;
 
       return {
