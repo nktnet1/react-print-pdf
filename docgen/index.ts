@@ -3,7 +3,11 @@ import * as path from "node:path";
 import * as glob from "glob";
 import * as docgen from "react-docgen-typescript";
 import { buildFileMarkdown } from "#docgen/buildFileMarkdown";
-import { buildTemplateList, buildTemplates } from "#docgen/buildTemplates";
+import {
+  buildTemplateList,
+  buildTemplateMetadata,
+  buildTemplates,
+} from "#docgen/buildTemplates";
 import { buildDocgenComponent } from "#docgen/bundling";
 import { mdxStringAttribute } from "#docgen/mdxSerialization";
 import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction";
@@ -236,22 +240,13 @@ const process = async () => {
     import.meta.dirname,
     "../docs/content/docs/ui/templates/meta.json",
   );
-  const templateCategories = templatesBuild.reduce<Record<string, string[]>>(
-    (acc, template) => {
-      const category = template.category || "Uncategorized";
-      acc[category] ??= [];
-      acc[category].push(path.basename(template.outputPath, ".mdx"));
-      return acc;
-    },
-    {},
-  );
-  const templatePages = Object.entries(templateCategories).flatMap(
-    ([category, pages]) => [`---${category}---`, ...pages],
-  );
-
   fs.writeFileSync(
     templatesMetaPath,
-    JSON.stringify({ title: "Examples", pages: templatePages }, null, 2),
+    JSON.stringify(
+      buildTemplateMetadata(templatesBuild, path.dirname(templatesMetaPath)),
+      null,
+      2,
+    ),
   );
 
   //-------------------------------------------------------------------------------- UPDATE introduction.mdx COMPONENT CARDS --------------------------------------------------------------------------------

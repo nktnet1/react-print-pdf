@@ -1,5 +1,5 @@
 import { promises as fs } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 import frontmatter from "front-matter";
 import { glob } from "glob";
 import { createElement } from "react";
@@ -120,4 +120,31 @@ icon: LayoutGridIcon
   });
 
   return markdown;
+};
+
+/** Sidebar metadata for the generated template pages. */
+export const buildTemplateMetadata = (
+  templates: Awaited<ReturnType<typeof buildTemplates>>,
+  templatesRoot: string,
+) => {
+  const categories = templates.reduce<Record<string, string[]>>(
+    (acc, template) => {
+      const category = template.category || "Uncategorized";
+      acc[category] ??= [];
+      const page = relative(templatesRoot, template.outputPath)
+        .split(sep)
+        .join("/")
+        .replace(/\.mdx$/, "");
+      // Fumadocs meta.json uses a ./ prefix for paths in nested directories.
+      acc[category].push(page.includes("/") ? `./${page}` : page);
+      return acc;
+    },
+    {},
+  );
+  const pages = Object.entries(categories).flatMap(([category, entries]) => [
+    `---${category}---`,
+    ...entries,
+  ]);
+
+  return { title: "Examples", pages };
 };
