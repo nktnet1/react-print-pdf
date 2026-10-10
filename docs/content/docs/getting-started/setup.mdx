@@ -20,6 +20,8 @@ npm init -y
 
 ## 2. Install the package
 
+In an existing React application, install React Print PDF; it uses your application's React and React DOM peers (React 18.3.1+ or React 19).
+
 <CodeBlocks>
 
 ```sh title="npm"
@@ -35,6 +37,13 @@ pnpm add react-print-pdf
 ```
 
 </CodeBlocks>
+
+For the empty Node.js project created in step 1, install React and a runner for the TSX files used below:
+
+```sh
+npm install react-print-pdf react@^19 react-dom@^19
+npm install --save-dev tsx typescript @types/react @types/react-dom
+```
 
 ## 3. Create your first document component
 
@@ -62,7 +71,7 @@ export const Document = () => {
 
 ## 4. Compile the document to HTML
 
-Create an entry file that renders the document with `compile`:
+Create `render.tsx` to compile the document:
 
 ```tsx
 import { compile } from "react-print-pdf";
@@ -72,6 +81,8 @@ const html = await compile(<Document />);
 
 console.log(html);
 ```
+
+Run the example with `npx tsx render.tsx`.
 
 ## 5. Render the HTML
 

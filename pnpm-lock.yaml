@@ -190,12 +190,6 @@ importers:
       postcss-value-parser:
         specifier: ^4.2.0
         version: 4.2.0
-      react:
-        specifier: ^19.3.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.3.0
-        version: 19.3.0(react@19.3.0)
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3
@@ -272,9 +266,15 @@ importers:
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.3.0)
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
       react-docgen-typescript:
         specifier: ^2.4.0
         version: 2.4.0(typescript@7.0.2)
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
       recharts:
         specifier: ^3.10.1
         version: 3.10.1(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react-is@16.13.1)(react@19.3.0)(redux@5.0.1)
@@ -296,10 +296,6 @@ importers:
       vitest:
         specifier: ^5.0.3
         version: 5.0.3(@types/node@26.6.4)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(vite@8.3.3(@types/node@26.6.4)(esbuild@0.28.2)(tsx@4.23.15))
-    optionalDependencies:
-      '@rollup/rollup-linux-x64-gnu':
-        specifier: ^4.64.2
-        version: 4.64.2
 
 packages:
 

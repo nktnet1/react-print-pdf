@@ -83,7 +83,7 @@
     "check"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@chakra-ui/react": "^3.37.0",
@@ -91,11 +91,11 @@
     "@mdx-js/rollup": "^3.1.1",
     "@rolldown/plugin-node-polyfills": "^1.0.3",
     "@tsdown/css": "^0.23.0",
-    "@typescript/typescript6": "^6.0.2",
     "@types/node": "^26.6.4",
     "@types/postcss-css-variables": "^0.18.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@typescript/typescript6": "^6.0.2",
     "@vitest/browser-playwright": "^5.0.3",
     "@vitest/coverage-v8": "^5.0.3",
     "front-matter": "^4.0.2",
@@ -109,7 +109,9 @@
     "pre-commit": "^2.0.0",
     "prettier": "^3.9.9",
     "qrcode.react": "^4.2.0",
+    "react": "^19.3.0",
     "react-docgen-typescript": "^2.4.0",
+    "react-dom": "^19.3.0",
     "recharts": "^3.10.1",
     "remark-frontmatter": "^5.0.0",
     "tsdown": "^0.23.0",
@@ -127,12 +129,7 @@
     "markdown-to-jsx": "^9.10.3",
     "postcss-selector-parser": "^7.1.6",
     "postcss-value-parser": "^4.2.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
     "tailwindcss": "4.3.3"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.64.2"
   },
   "packageManager": "pnpm@12.10.1",
   "files": [
@@ -151,6 +148,8 @@
     "#config/*": "./config/*.ts"
   },
   "peerDependencies": {
+    "react": "^18.3.1 || ^19.0.0",
+    "react-dom": "^18.3.1 || ^19.0.0",
     "playwright": ">=1.42.0"
   },
   "peerDependenciesMeta": {

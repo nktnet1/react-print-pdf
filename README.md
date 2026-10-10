@@ -27,6 +27,14 @@ yarn add react-print-pdf
 pnpm add react-print-pdf
 ```
 
+React Print PDF uses the **React and React DOM versions supplied by your application**. Both packages are peer dependencies; React 18.3.1+ and React 19 are supported. If you are starting a standalone Node.js document generator rather than using an existing React application, install them explicitly:
+
+```sh
+npm install react-print-pdf react@^19 react-dom@^19
+```
+
+Keeping one matching React/React DOM pair avoids rendering errors caused by multiple React versions in the same application.
+
 ## Example
 
 ```tsx
