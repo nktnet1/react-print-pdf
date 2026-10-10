@@ -58,3 +58,14 @@ test("documentation CI tracks every source that can affect generated documentati
     }
   }
 });
+
+test("documentation CI validates committed pages and previews before site compilation", () => {
+  const sourceJob = workflow
+    .split("  docs-source:")[1]
+    ?.split("  regenerate:")[0];
+  expect(sourceJob).toBeDefined();
+  expect(sourceJob).toContain("run: pnpm exec tsx scripts/verify-docs.ts");
+  expect(
+    sourceJob?.indexOf("run: pnpm exec tsx scripts/verify-docs.ts"),
+  ).toBeLessThan(sourceJob?.indexOf("run: pnpm docs:build") ?? 0);
+});

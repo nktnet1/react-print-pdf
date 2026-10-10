@@ -23,9 +23,15 @@ const loadCompileModule = async (): Promise<CompileModule> => {
 export const baseCss = fs.readFileSync(
   path.join(import.meta.dirname, "./base.css"),
 );
-const indexCss = fs.readFileSync(
-  path.join(import.meta.dirname, "../dist/index.css"),
-);
+// Importing documentation metadata must not require the built package.
+// Preview rendering itself still requires the package's compiled CSS.
+let indexCss: Buffer | undefined;
+const loadIndexCss = () => {
+  indexCss ??= fs.readFileSync(
+    path.join(import.meta.dirname, "../dist/index.css"),
+  );
+  return indexCss;
+};
 
 export async function renderPreview(
   component: ReactElement,
@@ -40,7 +46,7 @@ export async function renderPreview(
   const html = `<!doctype html><html><head>
           <meta charset="utf-8" />
           <style>${documentCss}</style>
-          <style>${indexCss.toString()}</style>
+          <style>${loadIndexCss().toString()}</style>
           </head><body>${await compile(element, compileOptions)}</body></html>`;
 
   let id = previewContentHash(html);

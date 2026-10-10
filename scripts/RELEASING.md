@@ -99,10 +99,10 @@ Direct `npm publish` from a local checkout is blocked by `prepublishOnly`.
 
 ## Documentation verification
 
-The `Documentation Verification` workflow checks maintained docgen tests and
-compiles the existing documentation site when relevant sources change. It does
-**not** enforce generated-page freshness on every PR while older checked-in MDX
-pages remain stale.
+The `Documentation Verification` workflow checks maintained docgen tests,
+validates committed generated pages and referenced preview assets, and compiles
+the documentation site when relevant sources change. This fast check rejects
+obsolete package imports and missing previews without regenerating PDFs.
 
 Use the workflow's **Run workflow** action for a full regeneration check. Its
 `cold_cache` input defaults to `true`, removing cached previews in the CI

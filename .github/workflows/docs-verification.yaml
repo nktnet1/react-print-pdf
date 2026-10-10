@@ -70,6 +70,9 @@ jobs:
       - name: Test maintained documentation sources
         run: pnpm test:docgen
 
+      - name: Verify committed documentation and preview assets
+        run: pnpm exec tsx scripts/verify-docs.ts
+
       - name: Install documentation site dependencies
         run: pnpm --dir docs install --frozen-lockfile
 
@@ -111,7 +114,7 @@ jobs:
         if: inputs.cold_cache
         run: rm -rf docs/public/docs/images/previews
 
-      # This is manual until the maintainer regenerates and commits the stale MDX.
-      # Only text/metadata freshness is compared, not nondeterministic PDF/JPEG bytes.
+      # Full cold-cache regeneration is opt-in because it rerenders every PDF/JPEG.
+      # Only MDX/metadata freshness is compared, not nondeterministic binaries.
       - name: Regenerate, compile and verify documentation
         run: pnpm docs:verify

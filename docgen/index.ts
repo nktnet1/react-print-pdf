@@ -9,6 +9,7 @@ import {
   buildTemplates,
 } from "#docgen/buildTemplates";
 import { buildDocgenComponent } from "#docgen/bundling";
+import { formatGeneratedMetadata } from "#docgen/generatedMetadata";
 import { mdxStringAttribute } from "#docgen/mdxSerialization";
 import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction";
 import type { DocConfig, LucideIconName } from "#docgen/types";
@@ -165,36 +166,26 @@ const process = async () => {
 
   fs.writeFileSync(
     path.join(docsPath, "meta.json"),
-    JSON.stringify(
-      {
-        title: "Components",
-        defaultOpen: true,
-        pages: sortedDocs.map((docFile) => docFile.files[0]?.baseName),
-      },
-      null,
-      2,
-    ),
+    await formatGeneratedMetadata({
+      title: "Components",
+      defaultOpen: true,
+      pages: sortedDocs.map((docFile) => docFile.files[0]?.baseName),
+    }),
   );
 
-  sortedDocs.forEach((docFolder) => {
-    if (docFolder.files.length <= 1) {
-      return;
-    }
+  for (const docFolder of sortedDocs) {
+    if (docFolder.files.length <= 1) continue;
 
     fs.writeFileSync(
       path.join(docFolder.outputPath, "meta.json"),
-      JSON.stringify(
-        {
-          title: docFolder.name,
-          pages: docFolder.files.map((file) =>
-            path.basename(file.outputPath, ".mdx"),
-          ),
-        },
-        null,
-        2,
-      ),
+      await formatGeneratedMetadata({
+        title: docFolder.name,
+        pages: docFolder.files.map((file) =>
+          path.basename(file.outputPath, ".mdx"),
+        ),
+      }),
     );
-  });
+  }
 
   // Build the card groups
   let snippet = `<Cards>`;
@@ -242,10 +233,8 @@ const process = async () => {
   );
   fs.writeFileSync(
     templatesMetaPath,
-    JSON.stringify(
+    await formatGeneratedMetadata(
       buildTemplateMetadata(templatesBuild, path.dirname(templatesMetaPath)),
-      null,
-      2,
     ),
   );
 
