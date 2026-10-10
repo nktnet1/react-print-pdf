@@ -1,7 +1,7 @@
 import type { CompileOptions } from "#/compile/compile";
+import { formatExampleSource } from "#docgen/exampleSource";
 import { baseCss, renderPreview } from "#docgen/renderPreview";
 import type { EnrichedExample } from "#docgen/types";
-import { formatSnippet } from "#docgen/utils";
 
 export const buildExample = async (
   example: EnrichedExample,
@@ -10,7 +10,7 @@ export const buildExample = async (
 ) => {
   let markdown = ``;
 
-  const snippet = await formatSnippet(example.templateString);
+  const source = await formatExampleSource(example, component);
 
   const paths = await renderPreview(
     example.template,
@@ -30,13 +30,7 @@ export const buildExample = async (
   markdown += `<div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
 \`\`\`jsx
-import { ${component}${
-    example.imports ? `, ${example.imports.join(", ")}` : ""
-  } } from "react-print-pdf";${
-    example.externalImports ? `\n${example.externalImports.join("\n")}` : ""
-  }
-
-${snippet}
+${source}
 \`\`\`
 </CodeBlock>
 <CodeBlock title="styles.css">

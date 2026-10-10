@@ -171,6 +171,7 @@ export const __docConfig: DocConfig = {
         default: {
           description:
             "Show the current running header of level 1 in the page header. All running headers are reset when any of their parent headings are encountered (e.g. a level 2 heading resets the level 3, 4, 5 and 6 headings).",
+          imports: ["PageTop"],
           template: (
             <React.Fragment>
               <PageTop style={{ paddingTop: "1rem" }}>

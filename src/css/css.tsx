@@ -126,6 +126,7 @@ The \`CSS\` component escapes closing \`</style>\` sequences so the stylesheet c
           name: "Layout",
           description:
             "Set the page ratio and margin sizes in px. You can also use the `@page` at-rule in CSS to manage all aspects of printed pages. More on this [here](https://developer.mozilla.org/en-US/docs/Web/CSS/@page).",
+          imports: ["CSS"],
           template: (
             <React.Fragment>
               <CSS>{`body{background-color:lightblue}`}</CSS>

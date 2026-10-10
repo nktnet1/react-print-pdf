@@ -95,6 +95,7 @@ Supported fields:
 | view | View button field |
 | signerAttachment | Signer attachment field |
 | signerAttachmentOptional | Optional signer attachment field |`,
+          imports: ["Tailwind"],
           template: (
             <>
               <Tailwind>

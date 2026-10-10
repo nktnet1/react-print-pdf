@@ -223,6 +223,7 @@ This agreement is signed with <CustomerName />.
           description: `You can use the \`tocRenderer\` prop to render a table of contents from your Markdown content. The headers will be automatically detected and rendered in the order they appear. You need to place the \`<Toc />\` component in your Markdown content to render the table of contents.
 
 Markdown headings receive an automatic id; JSX headings without an explicit \`id\` produce an undefined id in \`tocRenderer\`. Only create a fragment link if an id is present. Headings must appear in the Markdown source or as JSX elements inside native elements/fragments; headings produced inside custom React components are not introspected. The \`tocRenderer\` is rendered as a React component, so it may use hooks.`,
+          imports: ["CSS", "PageBreak", "Tailwind"],
           template: (
             <Tailwind
               config={{

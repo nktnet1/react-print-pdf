@@ -263,8 +263,9 @@ export const __docConfig: DocConfig = {
         default: {
           description: `A simple function to compile a React component to an HTML string with the React Print PDF styles.
           \`\`\`jsx
-          const html = await compile(<Component />);
+          const html = await compile(<Document />);
           \`\`\``,
+          imports: ["Tailwind"],
           template: (
             <Tailwind>
               <div className="bg-red-400">Hello World!</div>
@@ -275,7 +276,7 @@ export const __docConfig: DocConfig = {
           description: `Pass \`{ emotion: true }\` as the second compile option to merge and extract critical CSS using Emotion. Some libraries such as Chakra UI require this option to work correctly.
 
 \`\`\`jsx
-const html = await compile(<Component />, { emotion: true });
+const html = await compile(<Document />, { emotion: true });
 \`\`\``,
           template: (
             <>
