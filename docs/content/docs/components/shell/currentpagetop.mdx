@@ -1,8 +1,6 @@
 ---
-title: CurrentPageTop
-description: "Override the page header content for the current printed page."
-
-
+title: "CurrentPageTop"
+description: "Displays content in the top of the current page."
 ---
 
 Displays content in the top of the current page.
@@ -19,14 +17,17 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/currentpagetop-2643a477/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/currentpagetop-c7b6eeb5/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { CurrentPageTop } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { CurrentPageTop } from "react-print-pdf";
 
-<CurrentPageTop style={{ backgroundColor: "#bfdbfe" }} />;
+export const Document = () => (
+  <CurrentPageTop style={{ backgroundColor: "#bfdbfe" }} />
+);
 
 ```
 </CodeBlock>

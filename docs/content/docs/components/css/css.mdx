@@ -1,8 +1,6 @@
 ---
-title: CSS
-description: "Add custom CSS rules to printable React documents."
-
-
+title: "CSS"
+description: "Use a simple CSS tag to support CSS in your document."
 ---
 
 Support
@@ -17,14 +15,15 @@ Support
 
 Use a simple CSS tag to support CSS in your document.
 
-<Frame background="subtle"><img src="/docs/images/previews/css-fa74d9a5/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/css-f0801c5f/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { CSS } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { CSS } from "react-print-pdf";
 
-<CSS>{`@page { size: a4 landscape; }`}</CSS>;
+export const Document = () => <CSS>{`@page { size: a4 landscape; }`}</CSS>;
 
 ```
 </CodeBlock>

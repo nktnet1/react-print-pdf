@@ -1,8 +1,6 @@
 ---
-title: Markdown
-description: "Render Markdown with custom component overrides and table of contents support."
-
-
+title: "Markdown"
+description: "Render Markdown inside your templates. Provides a simple wrapper around [`markdown-to-jsx`](https://github.com/quantizor/markdown-to-jsx)."
 ---
 
 Support
@@ -17,20 +15,23 @@ Support
 
 Use a simple Markdown tag to support Markdown in your document.
 
-<Frame background="subtle"><img src="/docs/images/previews/markdown-f4432de3/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/markdown-214e1709/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Markdown } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Markdown } from "react-print-pdf";
 
-<Markdown>{`# Hello, world!
+export const Document = () => (
+  <Markdown>{`# Hello, world!
 
 > This is a blockquote
 
 ---
 
-This is a paragraph with a [link](https://google.com)`}</Markdown>;
+This is a paragraph with a [link](https://google.com)`}</Markdown>
+);
 
 ```
 </CodeBlock>
@@ -58,34 +59,38 @@ body {
 
 You can leverage the `overrides` prop to replace Markdown components with your own components. This is useful for custom components or even for dynamic content.
 
-<Frame background="subtle"><img src="/docs/images/previews/markdown-cdc02780/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/markdown-08f10ca6/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Markdown } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Markdown } from "react-print-pdf";
+import type { ReactNode } from "react";
 
-<Markdown
-  options={{
-    overrides: {
-      Title: {
-        component: () => "Non-Disclosure Agreement",
+export const Document = () => (
+  <Markdown
+    options={{
+      overrides: {
+        AgreementTitle: {
+          component: () => "Non-Disclosure Agreement",
+        },
+        CustomerName: {
+          component: () => "John Doe",
+        },
+        KPI: {
+          component: ({ children }: { children: ReactNode }) => (
+            <div style={{ color: "blue", fontSize: "2rem" }}>{children}</div>
+          ),
+        },
       },
-      CustomerName: {
-        component: () => "John Doe",
-      },
-      KPI: {
-        component: ({ children }: { children: React.ReactNode }) => (
-          <div style={{ color: "blue", fontSize: "2rem" }}>{children}</div>
-        ),
-      },
-    },
-  }}
->{`# <Title />
+    }}
+  >{`# <AgreementTitle />
 
 This agreement is signed with <CustomerName />.
 
-<KPI>20/month</KPI>`}</Markdown>;
+<KPI>20/month</KPI>`}</Markdown>
+);
 
 ```
 </CodeBlock>
@@ -111,50 +116,54 @@ body {
 
 You can use the `tocRenderer` prop to render a table of contents from your Markdown content. The headers will be automatically detected and rendered in the order they appear. You need to place the `<Toc />` component in your Markdown content to render the table of contents.
 
-You can also use the `id` attribute in your headers to link to them directly.
+Markdown headings receive an automatic id; JSX headings without an explicit `id` produce an undefined id in `tocRenderer`. Only create a fragment link if an id is present. Headings must appear in the Markdown source or as JSX elements inside native elements/fragments; headings produced inside custom React components are not introspected. The `tocRenderer` is rendered as a React component, so it may use hooks.
 
-<Frame background="subtle"><img src="/docs/images/previews/markdown-344947c9/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/markdown-ac3628ce/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Markdown } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Markdown, CSS, PageBreak, Tailwind } from "react-print-pdf";
 
-<Tailwind
-  config={{
-    corePlugins: {
-      preflight: false,
-    },
-  }}
->
-  <CSS>{`a.-toc-link:after {
+export const Document = () => (
+  <Tailwind
+    config={{
+      corePlugins: {
+        preflight: false,
+      },
+    }}
+  >
+    <CSS>{`a.-toc-link:after {
                 content: target-counter(attr(href), page);
                 float: right;
               }`}</CSS>
-  <Markdown
-    options={{
-      overrides: {
-        PageBreak: {
-          component: PageBreak, // import { PageBreak } from "@fileforge/react-print";
+    <Markdown
+      options={{
+        overrides: {
+          PageBreak: {
+            component: PageBreak, // import { PageBreak } from "react-print-pdf";
+          },
         },
-      },
-    }}
-    tocRenderer={({ level, children, id }) => (
-      <a
-        className="block py-2 border-b -toc-link"
-        style={{
-          paddingLeft: `${(level - 1) * 1}rem`,
-        }}
-        href={`#${id}`}
-      >
-        {children}
-      </a>
-    )}
-  >{`# Table of Contents
+      }}
+      tocRenderer={({ level, children, id }) => (
+        <a
+          className="block py-2 border-b -toc-link"
+          style={{
+            paddingLeft: `${(level - 1) * 1}rem`,
+          }}
+          href={id ? `#${id}` : undefined}
+        >
+          {children}
+        </a>
+      )}
+    >{`# Table of Contents
 
 <Toc />
 
 <PageBreak />
+
+<h2>JSX appendix without an id</h2>
 
 # This is a level 1 header
 
@@ -169,7 +178,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendi
 # This is a level 1 header, bis
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet, adipiscing nec, ultricies sed, dolor. Cras elementum ultrices diam. Maecenas ligula massa, varius a, semper congue, euismod non, mi.`}</Markdown>
-</Tailwind>;
+  </Tailwind>
+);
 
 ```
 </CodeBlock>

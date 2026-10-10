@@ -1,11 +1,7 @@
 ---
-title: FloatBottom
-description: "Position content at the bottom of the current printed page."
-
-
+title: "FloatBottom"
+description: "Learn how to use FloatBottom with React Print PDF."
 ---
-
-Floats the content to the bottom of the page.
 
 Support
 
@@ -17,14 +13,17 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/floatbottom-1c4af231/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/floatbottom-4c6a8f3b/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { FloatBottom } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { FloatBottom } from "react-print-pdf";
 
-<FloatBottom>Here are some floated contents</FloatBottom>;
+export const Document = () => (
+  <FloatBottom>Here are some floated contents</FloatBottom>
+);
 
 ```
 </CodeBlock>

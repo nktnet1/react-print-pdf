@@ -1,8 +1,6 @@
 ---
-title: PageNumber
-description: "Display the current page number in a printed document."
-
-
+title: "PageNumber"
+description: "Returns the current page number."
 ---
 
 Returns the current page number.
@@ -17,14 +15,15 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/pagenumber-fe8490ef/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/pagenumber-4c93d61a/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { PageNumber } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { PageNumber } from "react-print-pdf";
 
-<PageNumber counterStyle="decimal" />;
+export const Document = () => <PageNumber counterStyle="decimal" />;
 
 ```
 </CodeBlock>
@@ -52,14 +51,15 @@ body {
 
 You can use a custom CSS counter-style, by passing a known name or a custom counter style.
 
-<Frame background="subtle"><img src="/docs/images/previews/pagenumber-4d636b47/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/pagenumber-fb09c699/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { PageNumber } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { PageNumber } from "react-print-pdf";
 
-<PageNumber counterStyle="lower-roman" />;
+export const Document = () => <PageNumber counterStyle="lower-roman" />;
 
 ```
 </CodeBlock>

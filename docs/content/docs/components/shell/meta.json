@@ -2,10 +2,10 @@
   "title": "Shell",
   "pages": [
     "currentpagetop",
-    "floatbottom",
-    "nobreak",
+    "pagetop",
     "pagebottom",
+    "floatbottom",
     "pagebreak",
-    "pagetop"
+    "nobreak"
   ]
 }

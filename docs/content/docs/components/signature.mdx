@@ -1,8 +1,6 @@
 ---
-title: Field
-description: "Add fillable and signable PDF form fields to React Print documents."
-
-
+title: "Field"
+description: "Add signature fields to your document. You can specify various types of fields like signature, initials, date, and more."
 ---
 
 Support
@@ -15,7 +13,7 @@ Support
 
 #### Preview
 
-The created fields can be signed as-is in Acrobat Reader or other PDF viewers, using Onedoc's signature API, or through other e-signature services like [DocuSign](https://developers.docusign.com/docs/esign-rest-api/esign101/concepts/tabs/pdf-transform/).
+The created fields can be signed in compatible PDF viewers or used with e-signature services such as [DocuSign](https://developers.docusign.com/docs/esign-rest-api/esign101/concepts/tabs/pdf-transform/).
 
 Supported fields:
 
@@ -47,41 +45,44 @@ Supported fields:
 | signerAttachment | Signer attachment field |
 | signerAttachmentOptional | Optional signer attachment field |
 
-<Frame background="subtle"><img src="/docs/images/previews/field-8e7a7bcb/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/field-165b9676/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Field } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Field, Tailwind } from "react-print-pdf";
 
-<>
-  <Tailwind>
-    <h2 className="text-xl font-bold mb-4">Signature</h2>
-    <div className="p-4 rounded-md border border-gray-200">
-      By
-      <br />
-      <Field
-        type="fullName"
-        signee="sender"
-        defaultValue="John Doe"
-        className="border-b border-b-gray-300"
-      />
-      <br />
-      <Field
-        type="dateSigned"
-        signee="sender"
-        defaultValue="04/18/2024"
-        className="border-b border-b-gray-300"
-      />
-      <br />
-      <Field
-        type="signHere"
-        signee="sender"
-        className="border border-gray-300 h-48"
-      />
-    </div>
-  </Tailwind>
-</>;
+export const Document = () => (
+  <>
+    <Tailwind>
+      <h2 className="text-xl font-bold mb-4">Signature</h2>
+      <div className="p-4 rounded-md border border-gray-200">
+        By
+        <br />
+        <Field
+          type="fullName"
+          signee="sender"
+          defaultValue="John Doe"
+          className="border-b border-b-gray-300"
+        />
+        <br />
+        <Field
+          type="dateSigned"
+          signee="sender"
+          defaultValue="04/18/2024"
+          className="border-b border-b-gray-300"
+        />
+        <br />
+        <Field
+          type="signHere"
+          signee="sender"
+          className="border border-gray-300 h-48"
+        />
+      </div>
+    </Tailwind>
+  </>
+);
 
 ```
 </CodeBlock>

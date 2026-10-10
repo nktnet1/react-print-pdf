@@ -1,24 +1,15 @@
 ---
-title: With charts
-description: "Build a report template with charts and data visualizations using React Print."
-icon: ChartPie
-category: Reports
+title: "With charts"
+description: "Build a report template with charts and data visualizations using React Print PDF."
+icon: "ChartPieIcon"
+category: "Reports"
 ---
 
-<Frame background="subtle"><img src="/docs/images/previews/ui-templates-report-charts-fe27a92e/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/ui-templates-report-charts-1bbefb4b/document.jpg" /></Frame>
 
 ```jsx
-import { Footnote, PageBottom, Tailwind, CSS } from "@fileforge/react-print";
-import {
-  BarChart,
-  XAxis,
-  YAxis,
-  Bar,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import React from "react";
+import { Footnote, PageBottom, Tailwind, CSS } from "react-print-pdf";
 
 export const dailyData = [
   {
@@ -206,8 +197,137 @@ export const synthesisData = [
   },
 ];
 
-<Tailwind>
-  <CSS>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+export const EnergyBars = ({ data }) => {
+  // compile() renders server-side HTML without hydration, so use pure SVG.
+  const width = 730;
+  const height = 250;
+  const left = 54;
+  const top = 14;
+  const bottom = 32;
+  const plotWidth = width - left - 12;
+  const plotHeight = height - top - bottom;
+  const maxTotal = Math.max(
+    1,
+    ...data.map((day) => day.electricity + day.gas + day.oil),
+  );
+  const barWidth = Math.min(15, (plotWidth / data.length) * 0.7);
+  const colors = { electricity: "#fcd656", gas: "#ec6666", oil: "#1479d4" };
+
+  return (
+    <svg
+      role="img"
+      aria-label="Consommation quotidienne par énergie"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      style={{ maxWidth: "100%", height: "auto" }}
+    >
+      <title>Consommation quotidienne par énergie</title>
+      {[0, 0.5, 1].map((fraction) => {
+        const y = top + plotHeight * (1 - fraction);
+        return (
+          <g key={fraction}>
+            <line x1={left} y1={y} x2={width - 12} y2={y} stroke="#cbd5e1" />
+            <text
+              x={left - 8}
+              y={y + 4}
+              textAnchor="end"
+              fontSize="10"
+              fill="#64748b"
+            >
+              {Math.round(maxTotal * fraction).toLocaleString("fr-FR")}
+            </text>
+          </g>
+        );
+      })}
+      {data.map((day, index) => {
+        const x = left + ((index + 0.5) * plotWidth) / data.length;
+        let sum = 0;
+        return (
+          <g
+            key={day.date}
+            data-energy-day={new Date(day.date).toISOString().slice(0, 10)}
+          >
+            {Object.entries(colors).map(([fuel, color]) => {
+              const amount = day[fuel];
+              const rectangleHeight = (amount / maxTotal) * plotHeight;
+              sum += amount;
+              return (
+                <rect
+                  key={fuel}
+                  x={x - barWidth / 2}
+                  y={top + plotHeight - (sum / maxTotal) * plotHeight}
+                  width={barWidth}
+                  height={rectangleHeight}
+                  fill={color}
+                />
+              );
+            })}
+            {index % 7 === 0 ? (
+              <text
+                x={x}
+                y={height - 10}
+                textAnchor="middle"
+                fontSize="10"
+                fill="#64748b"
+              >
+                {new Date(day.date).getUTCDate()}/01
+              </text>
+            ) : null}
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+export const EnergyHalfPie = ({ data }) => {
+  const total = Math.max(
+    1,
+    data.reduce((sum, entry) => sum + entry.value, 0),
+  );
+  const colors = ["#fcd656", "#ec6666", "#1479d4"];
+  const center = { x: 150, y: 140 };
+  const radius = 110;
+  const point = (angle) => ({
+    x: center.x + radius * Math.cos((angle * Math.PI) / 180),
+    y: center.y - radius * Math.sin((angle * Math.PI) / 180),
+  });
+
+  return (
+    <svg
+      role="img"
+      aria-label="Répartition de la consommation énergétique"
+      viewBox="0 0 300 160"
+      width="300"
+      height="160"
+      style={{ maxWidth: "100%", height: "auto" }}
+    >
+      <title>Répartition de la consommation énergétique</title>
+      {data.map((entry, index) => {
+        const before = data
+          .slice(0, index)
+          .reduce((sum, item) => sum + item.value, 0);
+        const start = point(180 * (1 - before / total));
+        const end = point(180 * (1 - (before + entry.value) / total));
+        const largeArc = entry.value / total > 0.5 ? 1 : 0;
+        return (
+          <path
+            key={entry.name}
+            d={`M ${center.x} ${center.y} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y} Z`}
+            fill={colors[index % colors.length]}
+            stroke="white"
+            strokeWidth="1"
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
+export const Document = () => (
+  <Tailwind>
+    <CSS>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
       @page {
         size: a4;
@@ -215,170 +335,60 @@ export const synthesisData = [
       }
       `}</CSS>
 
-  <main className="text-slate-800 font-[inter]">
-    <PageBottom>
-      <div className="text-xs text-slate-400 border-t border-t-slate-300 py-4 mt-4 flex border-b border-b-slate-300">
-        <div>Consommation énergétique - Janvier 2024</div>
-        <div className="flex-grow" />
-        <div>
-          Fourni par{" "}
-          <a
-            href="https://www.enerflow.ai/"
-            target="_blank"
-            className="underline underline-offset-2 "
-          >
-            EnerFlow
-          </a>
+    <main className="text-slate-800 font-[inter]">
+      <PageBottom>
+        <div className="text-xs text-slate-400 border-t border-t-slate-300 py-4 mt-4 flex border-b border-b-slate-300">
+          <div>Consommation énergétique - Janvier 2024</div>
+          <div className="flex-grow" />
+          <div>
+            Fourni par{" "}
+            <a
+              href="https://www.enerflow.ai/"
+              target="_blank"
+              className="underline underline-offset-2 "
+            >
+              EnerFlow
+            </a>
+          </div>
+        </div>
+      </PageBottom>
+      <div className="flex items-center pb-6 mb-6 border-b">
+        <div className="flex-grow">
+          <h1 className="font-bold text-2xl">Rapport de consommation</h1>
+          <p className="text-slate-500 ">
+            1231 Rue des Sources, Montréal, QC H3J 1C6
+          </p>
+        </div>
+        <img
+          src="https://framerusercontent.com/images/UM8IiaGXuEviaIXCXI1zvRJYd2k.svg"
+          className="h-12 block"
+        />
+      </div>
+      <div className="my-6">
+        <h2 className="mb-6">Votre mois de janvier 2024</h2>
+        <EnergyBars data={dailyData} />
+      </div>
+      <div className="flex -mx-4">
+        <div className="basis-0 flex-grow m-4 bg-slate-100 rounded-xl p-6">
+          <h2 className="text-xl font-bold">Consommation combinée</h2>
+          <EnergyHalfPie data={synthesisData} />
+          <p>
+            Ce mois-ci, votre consommation combinée d'électricité, de gaz et de
+            pétrole s'élève à 1000 kWh.
+          </p>
+        </div>
+        <div className="basis-0 flex-grow m-4 bg-slate-100 rounded-xl p-6">
+          <h2 className="text-xl font-bold">Consommation combinée</h2>
+          <EnergyHalfPie data={synthesisData} />
+          <p>
+            Ce mois-ci, votre consommation combinée d'électricité, de gaz et de
+            pétrole s'élève à 1000 kWh.
+          </p>
         </div>
       </div>
-    </PageBottom>
-    <div className="flex items-center pb-6 mb-6 border-b">
-      <div className="flex-grow">
-        <h1 className="font-bold text-2xl">Rapport de consommation</h1>
-        <p className="text-slate-500 ">
-          1231 Rue des Sources, Montréal, QC H3J 1C6
-        </p>
-      </div>
-      <img
-        src="https://framerusercontent.com/images/UM8IiaGXuEviaIXCXI1zvRJYd2k.svg"
-        className="h-12 block"
-      />
-    </div>
-    <div className="my-6">
-      <h2 className="mb-6">Votre mois de janvier 2024</h2>
-      <BarChart
-        width={730}
-        height={250}
-        data={dailyData}
-        margin={{
-          top: 20,
-          left: 10,
-          right: 10,
-        }}
-        style={{
-          width: "100%",
-          height: "auto",
-        }}
-      >
-        <XAxis
-          axisLine={false}
-          dataKey="date"
-          type="number"
-          scale="time"
-          domain={[
-            new Date("2024-01-01").getTime(),
-            new Date("2024-01-14").getTime(),
-          ]}
-          tickFormatter={(date) => new Date(date).toLocaleDateString()}
-          ticks={dailyData
-            .map((d, i) => ((i + 3) % 7 === 0 ? d.date : null))
-            .filter((d) => d !== null)}
-        />
-        <Bar
-          barSize={13}
-          dataKey="electricity"
-          fill="#fcd656"
-          stroke="#fcd656"
-          stackId="1"
-          legendType="line"
-          name="Electricité"
-        />
-        <Bar
-          barSize={13}
-          dataKey="gas"
-          fill="#ec6666"
-          stroke="#ec6666"
-          stackId="1"
-          legendType="line"
-          name="Gaz"
-        />
-        <Bar
-          barSize={13}
-          dataKey="oil"
-          fill="#1479d4"
-          stroke="#1479d4"
-          stackId="1"
-          legendType="line"
-          name="Pétrole"
-        />
-      </BarChart>
-    </div>
-    <div className="flex -mx-4">
-      <div className="basis-0 flex-grow m-4 bg-slate-100 rounded-xl p-6">
-        <h2 className="text-xl font-bold">Consommation combinée</h2>
-        <PieChart
-          width={300}
-          height={160}
-          className="my-6"
-          style={{
-            width: "100%",
-            height: "auto",
-          }}
-        >
-          <Pie
-            cx="50%"
-            cy="100%"
-            outerRadius={115}
-            startAngle={180}
-            endAngle={0}
-            label
-            data={synthesisData}
-            dataKey="value"
-          >
-            {synthesisData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={
-                  index === 0 ? "#fcd656" : index === 1 ? "#ec6666" : "#1479d4"
-                }
-              />
-            ))}
-          </Pie>
-        </PieChart>
-        <p>
-          Ce mois-ci, votre consommation combinée d'électricité, de gaz et de
-          pétrole s'élève à 1000 kWh.
-        </p>
-      </div>
-      <div className="basis-0 flex-grow m-4 bg-slate-100 rounded-xl p-6">
-        <h2 className="text-xl font-bold">Consommation combinée</h2>
-        <PieChart
-          width={300}
-          height={160}
-          className="my-6"
-          style={{
-            width: "100%",
-            height: "auto",
-          }}
-        >
-          <Pie
-            cx="50%"
-            cy="100%"
-            outerRadius={115}
-            startAngle={180}
-            endAngle={0}
-            label
-            data={synthesisData}
-            dataKey="value"
-          >
-            {synthesisData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={
-                  index === 0 ? "#fcd656" : index === 1 ? "#ec6666" : "#1479d4"
-                }
-              />
-            ))}
-          </Pie>
-        </PieChart>
-        <p>
-          Ce mois-ci, votre consommation combinée d'électricité, de gaz et de
-          pétrole s'élève à 1000 kWh.
-        </p>
-      </div>
-    </div>
-  </main>
-</Tailwind>;
+    </main>
+  </Tailwind>
+);
 
 ```
 

@@ -1,9 +1,7 @@
 ---
-title: Tailwind
-description: Use Tailwind CSS v4 utilities and CSS-first configuration in printable React documents.
+title: "Tailwind"
+description: "A simple, drop-in way to use Tailwind CSS v4 in your components."
 ---
-
-`Tailwind` compiles the utility classes used by its children with Tailwind CSS v4. CSS-first configuration is supported through the `stylesheet` prop, while existing JavaScript `config` objects remain supported for backwards compatibility. When rendering on the server, use React Print's async `compile()` helper so Tailwind styles are resolved before the HTML is returned.
 
 Support
 
@@ -17,20 +15,23 @@ Support
 
 Use a simple Tailwind tag to support Tailwind in your document.
 
-<Frame background="subtle"><img src="/docs/images/previews/tailwind-e99fe796/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/tailwind-06135a78/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Tailwind } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Tailwind } from "react-print-pdf";
 
-<Tailwind>
-  <div className="bg-gradient-to-tr from-blue-500 to-blue-700 rounded-2xl p-12"></div>
-  <p className="py-12 text-slate-800">
-    This is a Tailwind component. All children of this component will have
-    access to the Tailwind CSS classes.
-  </p>
-</Tailwind>;
+export const Document = () => (
+  <Tailwind>
+    <div className="rounded-2xl bg-gradient-to-tr from-blue-500 to-blue-700 p-12" />
+    <p className="py-12 text-slate-800">
+      This is a Tailwind component. All children of this component will have
+      access to the Tailwind CSS classes.
+    </p>
+  </Tailwind>
+);
 
 ```
 </CodeBlock>
@@ -56,25 +57,28 @@ body {
 
 #### Tailwind v4 CSS configuration
 
-Use Tailwind v4 directives such as `@theme`, `@utility`, and `@custom-variant` through the `stylesheet` prop.
+Use Tailwind v4 directives such as `@theme`, `@utility`, and `@custom-variant` through the stylesheet prop.
 
-<Frame background="subtle"><img src="/docs/images/previews/tailwind-b7e447a6/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/tailwind-5d7ee90c/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Tailwind } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Tailwind } from "react-print-pdf";
 
-<Tailwind
-  stylesheet={`@theme {
+export const Document = () => (
+  <Tailwind
+    stylesheet={`@theme {
   --color-primary: #6484cf;
 }`}
->
-  <div className="bg-primary p-12 rounded-2xl"></div>
-  <p className="py-12 text-slate-800">
-    This component uses a CSS-first Tailwind v4 theme token.
-  </p>
-</Tailwind>;
+  >
+    <div className="rounded-2xl bg-primary p-12" />
+    <p className="py-12 text-slate-800">
+      This component uses a CSS-first Tailwind v4 theme token.
+    </p>
+  </Tailwind>
+);
 
 ```
 </CodeBlock>
@@ -100,41 +104,70 @@ body {
 
 Existing JavaScript theme configuration remains supported through Tailwind v4's compatibility layer.
 
-```jsx
-import { Tailwind } from "@fileforge/react-print";
-
-<Tailwind
-  config={{
-    theme: {
-      extend: {
-        colors: {
-          primary: "#6484cf",
-        },
-      },
-    },
-  }}
->
-  <div className="bg-primary p-12 rounded-2xl"></div>
-</Tailwind>;
-```
-
-#### Disable Preflight
-
-Set `preflight={false}` to omit Tailwind's Preflight reset while keeping utility classes available.
-
-<Frame background="subtle"><img src="/docs/images/previews/tailwind-1aadcc0c/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/tailwind-75ebb237/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Tailwind } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Tailwind } from "react-print-pdf";
 
-<Tailwind preflight={false}>
-  <h1 className="text-2xl font-bold">Level 1 Header</h1>
-  <p className="text-slate-800">
-    Tailwind utilities remain available without the reset.
-  </p>
-</Tailwind>;
+export const Document = () => (
+  <Tailwind
+    config={{
+      theme: {
+        extend: {
+          colors: {
+            primary: "#6484cf",
+          },
+        },
+      },
+    }}
+  >
+    <div className="rounded-2xl bg-primary p-12" />
+  </Tailwind>
+);
+
+```
+</CodeBlock>
+<CodeBlock title="styles.css">
+```css
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");
+
+html,
+body {
+  font-size: 28px;
+  font-family: "Inter", sans-serif;
+}
+
+@page {
+  size: A4;
+}
+
+```
+</CodeBlock>
+</CodeBlocks></div>
+
+#### Disable Preflight
+
+Set `preflight={false}` to omit Tailwind's Preflight reset.
+
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/tailwind-b289d690/document.jpg" /></Frame>
+
+<div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
+<CodeBlock title="template.tsx">
+```tsx
+import React from "react";
+import { Tailwind } from "react-print-pdf";
+
+export const Document = () => (
+  <Tailwind preflight={false}>
+    <h1 className="text-2xl font-bold">Level 1 Header</h1>
+    <p className="text-slate-800">
+      Tailwind utilities remain available without the reset.
+    </p>
+  </Tailwind>
+);
 
 ```
 </CodeBlock>

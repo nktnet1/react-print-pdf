@@ -1,8 +1,6 @@
 ---
-title: PageBottom
-description: "Repeat footer content at the bottom of printed pages."
-
-
+title: "PageBottom"
+description: "Displays content in the bottom of all the pages."
 ---
 
 Displays content in the bottom of all the pages.
@@ -17,14 +15,17 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/pagebottom-fd5eaff9/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/pagebottom-3a6bad8d/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { PageBottom } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { PageBottom } from "react-print-pdf";
 
-<PageBottom style={{ backgroundColor: "#bfdbfe" }} />;
+export const Document = () => (
+  <PageBottom style={{ backgroundColor: "#bfdbfe" }} />
+);
 
 ```
 </CodeBlock>

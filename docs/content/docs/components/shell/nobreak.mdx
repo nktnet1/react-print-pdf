@@ -1,8 +1,6 @@
 ---
-title: NoBreak
-description: "Keep wrapped content together by preventing page breaks inside it."
-
-
+title: "NoBreak"
+description: "Prevents a page break. Wrap this component around content that should not be broken across pages."
 ---
 
 Prevents a page break. Wrap this component around content that should not be broken across pages.
@@ -17,14 +15,17 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/nobreak-ba337df4/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/nobreak-12e8e711/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { NoBreak } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { NoBreak } from "react-print-pdf";
 
-<NoBreak>This content will not be split between two pages.</NoBreak>;
+export const Document = () => (
+  <NoBreak>This content will not be split between two pages.</NoBreak>
+);
 
 ```
 </CodeBlock>

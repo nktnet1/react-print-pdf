@@ -1,8 +1,6 @@
 ---
-title: Font
+title: "Font"
 description: "Load a Google Font from its URL. This will allow you to use the font in your document."
-
-
 ---
 
 Support
@@ -17,19 +15,22 @@ Support
 
 Load a Google Font from its URL. This will allow you to use the font in your document.
 
-<Frame background="subtle"><img src="/docs/images/previews/font-0d283416/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/font-5a4e7133/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Font } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Font } from "react-print-pdf";
 
-<React.Fragment>
-  <Font url="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" />
-  <p style={{ fontFamily: "Roboto, sans-serif" }}>
-    This text uses the Roboto Light font.
-  </p>
-</React.Fragment>;
+export const Document = () => (
+  <React.Fragment>
+    <Font url="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" />
+    <p style={{ fontFamily: "Roboto, sans-serif" }}>
+      This text uses the Roboto Light font.
+    </p>
+  </React.Fragment>
+);
 
 ```
 </CodeBlock>

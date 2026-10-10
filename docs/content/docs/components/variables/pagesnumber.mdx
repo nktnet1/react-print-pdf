@@ -1,8 +1,6 @@
 ---
-title: PagesNumber
-description: "Display the total number of pages in a printed document."
-
-
+title: "PagesNumber"
+description: "Returns the total number of pages."
 ---
 
 Returns the total number of pages.
@@ -17,18 +15,21 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/pagesnumber-ba7ca0ce/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/pagesnumber-e5a8044f/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { PagesNumber, PageNumber } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { PagesNumber, PageNumber } from "react-print-pdf";
 
-<>
-  <PageNumber counterStyle="decimal" />
-  {" of "}
-  <PagesNumber counterStyle="decimal" />
-</>;
+export const Document = () => (
+  <>
+    <PageNumber counterStyle="decimal" />
+    {" of "}
+    <PagesNumber counterStyle="decimal" />
+  </>
+);
 
 ```
 </CodeBlock>

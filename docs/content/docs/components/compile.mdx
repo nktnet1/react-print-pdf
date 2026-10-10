@@ -1,8 +1,6 @@
 ---
-title: Compile
-description: "Compile React components to HTML with React Print styles and optional Emotion CSS extraction."
-
-
+title: "compile"
+description: "Compile a React component to a string with the React Print PDF styles."
 ---
 
 Support
@@ -15,21 +13,24 @@ Support
 
 #### Preview
 
-A simple function to compile a React component to an HTML string with the Onedoc print styles.
+A simple function to compile a React component to an HTML string with the React Print PDF styles.
           ```jsx
-          const html = await compile(<Component />);
+          const html = await compile(<Document />);
           ```
 
-<Frame background="subtle"><img src="/docs/images/previews/compile-f31067dd/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/compile-b63bda66/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { compile } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { compile, Tailwind } from "react-print-pdf";
 
-<Tailwind>
-  <div className="bg-red-400">Hello World!</div>
-</Tailwind>;
+export const Document = () => (
+  <Tailwind>
+    <div className="bg-red-400">Hello World!</div>
+  </Tailwind>
+);
 
 ```
 </CodeBlock>
@@ -58,22 +59,25 @@ body {
 Pass `{ emotion: true }` as the second compile option to merge and extract critical CSS using Emotion. Some libraries such as Chakra UI require this option to work correctly.
 
 ```jsx
-const html = await compile(<Component />, { emotion: true });
+const html = await compile(<Document />, { emotion: true });
 ```
 
-<Frame background="subtle"><img src="/docs/images/previews/compile-8dbcfb7e/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/compile-2346a9c0/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { compile } from "@fileforge/react-print";
-import { Button, ChakraProvider, extendTheme } from "@chakra-ui/react";
+```tsx
+import React from "react";
+import { compile } from "react-print-pdf";
+import { Button, ChakraProvider, defaultSystem } from "@chakra-ui/react";
 
-<>
-  <ChakraProvider>
-    <Button colorScheme="blue">Hello</Button>
-  </ChakraProvider>
-</>;
+export const Document = () => (
+  <>
+    <ChakraProvider value={defaultSystem}>
+      <Button colorPalette="blue">Hello</Button>
+    </ChakraProvider>
+  </>
+);
 
 ```
 </CodeBlock>

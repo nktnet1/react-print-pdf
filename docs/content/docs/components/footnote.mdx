@@ -1,11 +1,7 @@
 ---
-title: Footnote
-description: "Add automatically numbered footnotes that are placed at the bottom of the page."
-
-
+title: "Footnote"
+description: "Create automatically numbered footnotes. Standard span attributes are supported, and custom classes preserve the print-footnote positioning class."
 ---
-
-Creates an automatically numbered footnote. This will remove the footnote content from the document flow and place it at the bottom of the page.
 
 Support
 
@@ -17,21 +13,24 @@ Support
 
 #### Preview
 
-<Frame background="subtle"><img src="/docs/images/previews/footnote-e49ec577/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/footnote-6c63bc47/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Footnote } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Footnote } from "react-print-pdf";
 
-<div>
-  This is a footnote to explaning what CSS{" "}
-  <Footnote>
-    CSS is the acronym of “Cascading Style Sheets”. CSS is a computer language
-    for laying out and structuring web pages (HTML or XML).
-  </Footnote>{" "}
-  is.
-</div>;
+export const Document = () => (
+  <div>
+    This is a footnote to explaning what CSS{" "}
+    <Footnote>
+      CSS is the acronym of “Cascading Style Sheets”. CSS is a computer language
+      for laying out and structuring web pages (HTML or XML).
+    </Footnote>{" "}
+    is.
+  </div>
+);
 
 ```
 </CodeBlock>

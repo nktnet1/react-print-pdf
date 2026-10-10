@@ -1,8 +1,6 @@
 ---
-title: Margins
-description: "Configure printed page margins and page dimensions for generated PDFs."
-
-
+title: "Margins"
+description: "Set the page ratio and margin sizes in px. You can also use the `@page` at-rule in CSS to manage all aspects of printed pages. More on this [here](https://developer.mozilla.org/en-US/docs/Web/CSS/@page)."
 ---
 
 Support
@@ -17,18 +15,21 @@ Support
 
 Set the page ratio and margin sizes in px. You can also use the `@page` at-rule in CSS to manage all aspects of printed pages. More on this [here](https://developer.mozilla.org/en-US/docs/Web/CSS/@page).
 
-<Frame background="subtle"><img src="/docs/images/previews/margins-35fa1266/document.1.jpg" style={{  width: '100%', height: 'auto', maxHeight: '500px', borderRadius: "0.25rem", overflow: "hidden", border: '1px solid #E5E4E2' }} /></Frame>
+<Frame background="subtle"><PreviewImage src="/docs/images/previews/margins-654550f7/document.jpg" /></Frame>
 
 <div style={{paddingTop: "1rem", paddingBottom: "1rem"}}><CodeBlocks>
 <CodeBlock title="template.tsx">
-```jsx
-import { Margins } from "@fileforge/react-print";
+```tsx
+import React from "react";
+import { Margins, CSS } from "react-print-pdf";
 
-<React.Fragment>
-  <CSS>{`body{background-color:lightblue}`}</CSS>
-  <Margins pageRatio="A4" top="100" right="100" left="100" bottom="100" />
-  <div>Hello world!</div>
-</React.Fragment>;
+export const Document = () => (
+  <React.Fragment>
+    <CSS>{`body{background-color:lightblue}`}</CSS>
+    <Margins pageRatio="A4" top="100" right="100" left="100" bottom="100" />
+    <div>Hello world!</div>
+  </React.Fragment>
+);
 
 ```
 </CodeBlock>
