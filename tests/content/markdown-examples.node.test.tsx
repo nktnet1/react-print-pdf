@@ -30,4 +30,9 @@ test("Markdown table-of-contents documentation example renders links and page br
   expect(html).toContain("This is a level 1 header");
   expect(html).toContain("This is a level 2 header");
   expect(html).toContain('class="react-print-page-break');
+  expect(html).toContain("JSX appendix without an id");
+  expect(html).toMatch(
+    /<a\b(?![^>]*\bhref=)[^>]*>JSX appendix without an id<\/a>/,
+  );
+  expect(html).not.toContain('href="#undefined"');
 });

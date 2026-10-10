@@ -16,6 +16,7 @@ Create a new folder and initialize an npm project, or use an existing React appl
 mkdir react-print-starter
 cd react-print-starter
 npm init -y
+npm pkg set type=module
 ```
 
 ## 2. Install the package
@@ -50,6 +51,7 @@ npm install --save-dev tsx typescript @types/react @types/react-dom
 Create `document/index.tsx`:
 
 ```tsx title="document/index.tsx"
+import React from "react";
 import { PageBreak } from "react-print-pdf";
 
 export const Document = () => (
@@ -68,6 +70,7 @@ export const Document = () => (
 Create `render.tsx` to compile the document:
 
 ```tsx
+import React from "react";
 import { compile } from "react-print-pdf";
 import { Document } from "./document";
 

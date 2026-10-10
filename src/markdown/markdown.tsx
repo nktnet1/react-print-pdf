@@ -260,6 +260,8 @@ Markdown headings receive an automatic id; JSX headings without an explicit \`id
 
 <PageBreak />
 
+<h2>JSX appendix without an id</h2>
+
 # This is a level 1 header
 
 ## This is a level 2 header

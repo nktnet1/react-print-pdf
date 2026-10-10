@@ -38,6 +38,7 @@ Keeping one matching React/React DOM pair avoids rendering errors caused by mult
 ## Example
 
 ```tsx
+import React from "react";
 import { PageBottom, PageBreak, PageTop, compile } from "react-print-pdf";
 
 const Document = () => (
