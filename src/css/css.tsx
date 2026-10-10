@@ -85,9 +85,9 @@ export const Margins = ({
 export const __docConfig: DocConfig = {
   name: "CSS",
   icon: "PaletteIcon",
-  description: `Allows adding CSS to the document while securely parsing and escaping it.
+  description: `Add CSS declarations and at-rules to your document.
 
-NB: While you can add regular CSS with the \`<style>\` tag, it's recommended to use the \`CSS\` component to ensure that the CSS is properly escaped, most notably when using URLs or other potentially unsafe content.`,
+The \`CSS\` component escapes closing \`</style>\` sequences so the stylesheet cannot accidentally terminate its HTML element. It does **not** validate or sanitise arbitrary CSS. Only pass trusted stylesheet content, not raw CSS supplied by users. For font URLs, use the \`Font\` component, which quotes and escapes the URL value.`,
   components: {
     CSS: {
       server: true,

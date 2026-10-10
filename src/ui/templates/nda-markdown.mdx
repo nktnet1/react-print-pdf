@@ -5,7 +5,6 @@ icon: ScrollTextIcon
 category: NDA
 ---
 
-import React from "react";
 import {
   Markdown,
   Tailwind,
@@ -16,11 +15,8 @@ import {
   PageTop,
   RunningH1,
 } from "react-print-pdf";
-import fs from "fs";
-import path from "path";
-
 <Tailwind>
-      <CSS>{`@page {size: A4;margin-top:2cm;margin-right:4cm;margin-left:2cm;margin-bottom:2cm;`}</CSS>
+      <CSS>{`@page {size: A4;margin-top:2cm;margin-right:4cm;margin-left:2cm;margin-bottom:2cm;}`}</CSS>
 
         {/* Set document header */}
         <PageTop>
@@ -48,7 +44,7 @@ import path from "path";
         </PageTop>
 
         {/* Set document footer */}
-        <PageBottom children={null}>
+        <PageBottom>
           <div className="text-right text-sm pt-4 text-gray-950/[.50]">
             <PageNumber counterStyle="decimal" />
             {" of "}

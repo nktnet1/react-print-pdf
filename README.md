@@ -64,6 +64,8 @@ import { PageBreak } from "react-print-pdf/client";
 
 The build extracts these component rules to `dist/index.css`, so the JavaScript entrypoint alone does not load them. `compile()` inlines the same print styles automatically; do not add the stylesheet separately to compiled documents.
 
+The `CSS` component accepts trusted stylesheet strings and escapes closing `</style>` sequences to keep them inside the HTML style element. It does **not** sanitise or validate arbitrary CSS. Do not interpolate untrusted user-provided CSS into a document.
+
 ### Gotenberg
 
 For a self-hosted PDF renderer, React Print PDF includes a Gotenberg integration that compiles the React document and submits the resulting HTML to Gotenberg's Chromium route:
