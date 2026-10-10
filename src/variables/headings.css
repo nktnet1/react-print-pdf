@@ -1,5 +1,7 @@
 h1 {
-  string-set: reactPrintH1Contents content(text);
+  string-set: reactPrintH1Contents content(text) reactPrintH2Contents ""
+    reactPrintH3Contents "" reactPrintH4Contents "" reactPrintH5Contents ""
+    reactPrintH6Contents "";
 }
 
 h2 {
@@ -25,34 +27,29 @@ h6 {
   string-set: reactPrintH6Contents content(text);
 }
 
-.react-print-heading-contents:not(:empty)::before {
-  content: attr(data-before);
-}
-
-.react-print-heading-contents:not(:empty)::after {
-  content: attr(data-after);
-}
-
+/* Running header spans are intentionally empty: their values are CSS strings.
+   Combine the affixes with the string in one pseudo-element rather than using
+   :not(:empty), which can never match these spans. */
 .react-print-h1-contents:before {
-  content: string(reactPrintH1Contents);
+  content: attr(data-before) string(reactPrintH1Contents) attr(data-after);
 }
 
 .react-print-h2-contents:before {
-  content: string(reactPrintH2Contents);
+  content: attr(data-before) string(reactPrintH2Contents) attr(data-after);
 }
 
 .react-print-h3-contents:before {
-  content: string(reactPrintH3Contents);
+  content: attr(data-before) string(reactPrintH3Contents) attr(data-after);
 }
 
 .react-print-h4-contents:before {
-  content: string(reactPrintH4Contents);
+  content: attr(data-before) string(reactPrintH4Contents) attr(data-after);
 }
 
 .react-print-h5-contents:before {
-  content: string(reactPrintH5Contents);
+  content: attr(data-before) string(reactPrintH5Contents) attr(data-after);
 }
 
 .react-print-h6-contents:before {
-  content: string(reactPrintH6Contents);
+  content: attr(data-before) string(reactPrintH6Contents) attr(data-after);
 }
