@@ -12,7 +12,10 @@ import {
   getTemplateContents,
   mergeTemplateInfo,
 } from "#docgen/utils";
-import { writeGeneratedMarkdown } from "#docgen/writeMarkdown";
+import {
+  replaceGeneratedTemplatePages,
+  writeGeneratedMarkdown,
+} from "#docgen/writeMarkdown";
 
 const tmpDir = path.join(import.meta.dirname, "../.tmp");
 const docsPath = path.join(
@@ -214,9 +217,10 @@ const process = async () => {
 
   const templatesBuild = await buildTemplates();
 
-  templatesBuild.forEach((template) => {
-    writeGeneratedMarkdown(template.outputPath, template.markdown);
-  });
+  replaceGeneratedTemplatePages(
+    path.join(import.meta.dirname, "../docs/content/docs/ui"),
+    templatesBuild,
+  );
 
   const templateListingPath = path.join(
     import.meta.dirname,

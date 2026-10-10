@@ -111,6 +111,9 @@ checkout so every PDF/JPEG preview is rendered again. The manual job runs
 site, checks for obsolete `@fileforge/react-print` imports and missing/empty
 preview assets, then compares generated MDX/metadata with `HEAD`. PDF/JPEG
 bytes are deliberately excluded from the freshness comparison.
+The generator removes obsolete template pages before writing replacements, and
+the verifier checks that each maintained UI template has exactly one matching
+generated MDX page (excluding the separate UI landing page).
 
 `docs:verify` **writes generated documentation and preview assets** into its
 working tree. Run it in a disposable checkout when you only want a report. The

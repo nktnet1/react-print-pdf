@@ -82,6 +82,27 @@ export const verifyGeneratedDocs = (
       issues.push(`Missing generated landing page: ${contentRoot}/${filename}`);
   }
 
+  // A removed template must not leave an accessible generated page behind.
+  // The UI landing page is generated separately, not from a source template.
+  const uiSourceRoot = join(root, "src/ui");
+  const uiDocsRoot = join(docsRoot, "ui");
+  const sourceTemplates = new Set(
+    mdxFiles(uiSourceRoot).map((file) => relative(uiSourceRoot, file)),
+  );
+  const generatedTemplates = new Set(
+    mdxFiles(uiDocsRoot)
+      .map((file) => relative(uiDocsRoot, file))
+      .filter((file) => file !== "index.mdx"),
+  );
+  for (const file of generatedTemplates) {
+    if (!sourceTemplates.has(file))
+      issues.push(`${contentRoot}/ui/${file}: no matching maintained template`);
+  }
+  for (const file of sourceTemplates) {
+    if (!generatedTemplates.has(file))
+      issues.push(`src/ui/${file}: missing generated template page`);
+  }
+
   const publicRoot = resolve(root, "docs/public");
   const previewsRoot = resolve(publicRoot, "docs/images/previews");
   const checkedAssets = new Set<string>();

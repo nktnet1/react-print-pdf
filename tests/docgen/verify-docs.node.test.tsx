@@ -26,6 +26,7 @@ const fixture = () => {
     '<PreviewImage src="/docs/images/previews/compile-a/document.1.jpg" />',
   );
   write(root, "docs/content/docs/ui/templates/invoice.mdx", "# Invoice\n");
+  write(root, "src/ui/templates/invoice.mdx", "# Source invoice\n");
   write(root, "docs/content/docs/ui/index.mdx", "# Templates\n");
   write(root, "docs/content/docs/index.mdx", "# Home\n");
   write(
@@ -87,6 +88,35 @@ test("rejects traversal URLs and notices empty generated directories", () => {
       expect.stringContaining("No generated template pages"),
     ]),
   );
+});
+
+test("detects generated template pages without maintained source templates", () => {
+  const root = fixture();
+  rmSync(join(root, "src/ui/templates/invoice.mdx"));
+  const report = verifyGeneratedDocs(root);
+  expect(report.issues).toContain(
+    "docs/content/docs/ui/templates/invoice.mdx: no matching maintained template",
+  );
+});
+
+test("detects maintained templates without generated documentation", () => {
+  const root = fixture();
+  write(root, "src/ui/templates/receipt.mdx", "# Source receipt\n");
+  const report = verifyGeneratedDocs(root);
+  expect(report.issues).toContain(
+    "src/ui/templates/receipt.mdx: missing generated template page",
+  );
+});
+
+test("matches nested maintained and generated template paths", () => {
+  const root = fixture();
+  write(root, "src/ui/templates/reports/annual.mdx", "# Annual source\n");
+  write(
+    root,
+    "docs/content/docs/ui/templates/reports/annual.mdx",
+    "# Annual generated\n",
+  );
+  expect(verifyGeneratedDocs(root).issues).toEqual([]);
 });
 
 test("freshness compares generated MDX/metadata with HEAD, not preview binaries", () => {
