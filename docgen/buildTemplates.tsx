@@ -4,6 +4,7 @@ import frontmatter from "front-matter";
 import { glob } from "glob";
 import { createElement } from "react";
 import { bundleTemplate } from "#docgen/bundleTemplate";
+import { docFrontmatter, mdxStringAttribute } from "#docgen/mdxSerialization";
 import { renderPreview } from "#docgen/renderPreview";
 import { formatTemplateSource } from "#docgen/templateSource";
 import { formatCamelCaseToTitle } from "#docgen/utils";
@@ -52,12 +53,12 @@ export async function buildTemplates() {
         attributes.description ||
         `Example ${name} template built with React Print PDF.`;
 
-      let markdown = `---
-title: ${name}
-description: ${JSON.stringify(description)}
-${attributes.icon ? `icon: ${attributes.icon}` : ""}
-category: ${attributes.category || "Uncategorized"}
----\n\n`;
+      let markdown = docFrontmatter({
+        title: name,
+        description,
+        icon: attributes.icon,
+        category: attributes.category || "Uncategorized",
+      });
 
       markdown += `<Frame background="subtle"><PreviewImage src="${paths.imagePath}" /></Frame>\n\n`;
 
@@ -108,9 +109,9 @@ icon: LayoutGridIcon
     markdown += `## ${category}\n\n<CardGroup>\n`;
 
     templates.forEach((template) => {
-      markdown += ` <Card title="${template.name}" href="/docs/${template.path}">
+      markdown += ` <Card ${mdxStringAttribute("title", template.name)} ${mdxStringAttribute("href", `/docs/${template.path}`)}>
       <div style={{ marginTop: "1rem", borderRadius: "0.25rem", overflow: "hidden" }}>
-        <PreviewImage src="${template.image}"/>
+        <PreviewImage ${mdxStringAttribute("src", template.image)}/>
       </div>
     </Card>\n`;
     });

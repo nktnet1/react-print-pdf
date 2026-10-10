@@ -1,5 +1,6 @@
 import type { ComponentDoc } from "react-docgen-typescript";
 import { buildExample } from "#docgen/buildExample";
+import { docFrontmatter } from "#docgen/mdxSerialization";
 import type {
   ConfigComponentDoc,
   EnrichedExample,
@@ -30,11 +31,11 @@ export const buildFileMarkdown = async (
   componentDocs: ComponentDoc[],
 ) => {
   const description = getFrontmatterDescription(docConfig, componentDocs);
-  let markdown = `---
-title: ${docConfig.name}
-description: ${JSON.stringify(description)}
-${docConfig.icon ? `icon: ${docConfig.icon}` : ""}
----\n\n`;
+  let markdown = docFrontmatter({
+    title: docConfig.name ?? "",
+    description,
+    icon: docConfig.icon,
+  });
 
   const componentKeys = new Set([
     ...componentDocs.map((component) => component.displayName),

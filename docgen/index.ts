@@ -5,6 +5,7 @@ import * as docgen from "react-docgen-typescript";
 import { buildFileMarkdown } from "#docgen/buildFileMarkdown";
 import { buildTemplateList, buildTemplates } from "#docgen/buildTemplates";
 import { buildDocgenComponent } from "#docgen/bundling";
+import { mdxStringAttribute } from "#docgen/mdxSerialization";
 import { replaceInFile } from "#docgen/pageBuilder/buildIntroduction";
 import type { DocConfig, LucideIconName } from "#docgen/types";
 import {
@@ -208,7 +209,7 @@ const process = async () => {
 
     const icon = docFolder.icon ? ` icon={<${docFolder.icon} />}` : "";
 
-    snippet += `<Card title="${docFolder.name}"${icon} href="${componentPath.toLocaleLowerCase()}">
+    snippet += `<Card ${mdxStringAttribute("title", docFolder.name)}${icon} ${mdxStringAttribute("href", componentPath.toLocaleLowerCase())}>
     ${docFolder.description.split(".")[0]}.
   </Card>`;
   });
