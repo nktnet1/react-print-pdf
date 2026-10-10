@@ -2,6 +2,7 @@ import { createElement, type ReactNode } from "react";
 import {
   compile,
   compileWithGotenberg,
+  Footnote,
   GotenbergError,
   type GotenbergRequestOptions,
   Markdown,
@@ -26,3 +27,10 @@ void compileWithGotenberg(tailwind, gotenberg);
 void compileWithPlaywright(tailwind, playwright);
 void new GotenbergError({ status: 400, statusText: "Bad Request" });
 void useMDXComponents;
+
+// Public component types must accept standard span attributes.
+void createElement(
+  Footnote,
+  { className: "source", id: "source-1", style: { color: "navy" } },
+  "Source citation",
+);

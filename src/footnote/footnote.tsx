@@ -5,19 +5,13 @@ import type { DocConfig } from "#/docgen/types";
 /**
  * Creates an automatically numbered footnote. This will remove the footnote content from the document flow and place it at the bottom of the page.
  */
-export const Footnote = ({
-  children,
-  ...props
-}: {
-  /**
-   * The text to display in the footnote. This can be rich text.
-   */
-  children: React.ReactNode;
-}) => {
+type FootnoteProps = React.HTMLAttributes<HTMLSpanElement>;
+
+export const Footnote = ({ children, className, ...props }: FootnoteProps) => {
   return (
     <span
-      className="react-print-footnote text-left text-xs font-normal"
       {...props}
+      className={`react-print-footnote text-left text-xs font-normal${className ? ` ${className}` : ""}`}
     >
       {children}
     </span>
@@ -27,7 +21,8 @@ export const Footnote = ({
 /** @internal */
 export const __docConfig: DocConfig = {
   icon: "InfoIcon",
-  description: "Create automatically numbered footnotes.",
+  description:
+    "Create automatically numbered footnotes. Standard span attributes are supported, and custom classes preserve the print-footnote positioning class.",
   components: {
     Footnote: {
       server: true,
