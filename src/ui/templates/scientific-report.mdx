@@ -36,6 +36,10 @@ export const SectionComponent = ({ title, content, isSection }) => {
             line-height: 1.1;
           }
 
+          .scientific-page-footnote {
+            float: footnote page;
+          }
+
         `}
       </CSS>
 
@@ -71,7 +75,7 @@ export const SectionComponent = ({ title, content, isSection }) => {
             title="A. Sub Section"
             content={
               <p className="text-justify text-xs">
-                Lorem ipsum dolor sit amet [2], consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. <Footnote style={{float:"footnote page"}}>Footnote 1</Footnote>
+                Lorem ipsum dolor sit amet [2], consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. <Footnote className="scientific-page-footnote">Footnote 1</Footnote>
               </p>
             }
             isSection={false}
@@ -266,7 +270,7 @@ isSection={false}
             title="A. Sub section"
             content={
               <p>
-                Lorem ipsum dolor sit amet <Footnote children={undefined} style={{float:"footnote page"}}> <Markdown style={{ color: "blue"}}>{`[The BEST open-source library](https://github.com/nktnet1/react-print-pdf)`}</Markdown> </Footnote>, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                Lorem ipsum dolor sit amet <Footnote className="scientific-page-footnote" style={{ color: "blue" }}> <Markdown>{`[The BEST open-source library](https://github.com/nktnet1/react-print-pdf)`}</Markdown> </Footnote>, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
               </p>
             }
             isSection={false}

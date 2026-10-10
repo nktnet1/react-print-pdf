@@ -98,3 +98,58 @@ test("malformed templates and multiple top-level expressions fail explicitly", a
     formatTemplateSource("<p>First</p>; <p>Second</p>;"),
   ).rejects.toThrow("single top-level JSX element");
 });
+
+test("copyable JSX templates accept the published component props", async () => {
+  const virtualSources = new Map<string, string>();
+  for (const name of readdirSync(templateRoot).filter((file) =>
+    file.endsWith(".mdx"),
+  )) {
+    const body = frontmatter(
+      readFileSync(join(templateRoot, name), "utf8"),
+    ).body;
+    const file = join(templateRoot, "__copyable__", `${name}.jsx`);
+    virtualSources.set(file, await formatTemplateSource(body));
+  }
+
+  // These are deliberately JSX examples, not TSX: ordinary JS callbacks are
+  // unannotated, but TypeScript should still reject invalid public props.
+  const options: ts.CompilerOptions = {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    jsx: ts.JsxEmit.React,
+    allowJs: true,
+    checkJs: true,
+    strict: true,
+    noImplicitAny: false,
+    esModuleInterop: true,
+    skipLibCheck: true,
+    noEmit: true,
+    baseUrl: join(templateRoot, "../../.."),
+    paths: {
+      "#/*": ["src/*"],
+      "#config/*": ["config/*.ts"],
+      "react-print-pdf": ["src/index.ts"],
+    },
+  };
+  const host = ts.createCompilerHost(options);
+  const readFile = host.readFile.bind(host);
+  const fileExists = host.fileExists.bind(host);
+  host.readFile = (file) => virtualSources.get(file) ?? readFile(file);
+  host.fileExists = (file) => virtualSources.has(file) || fileExists(file);
+
+  const program = ts.createProgram([...virtualSources.keys()], options, host);
+  const errors = ts
+    .getPreEmitDiagnostics(program)
+    .filter((diagnostic) =>
+      diagnostic.file ? virtualSources.has(diagnostic.file.fileName) : false,
+    );
+  expect(
+    errors.map((error) => {
+      const position = error.file?.getLineAndCharacterOfPosition(
+        error.start ?? 0,
+      );
+      return `${error.file?.fileName}:${(position?.line ?? 0) + 1}: TS${error.code} ${ts.flattenDiagnosticMessageText(error.messageText, " ")}`;
+    }),
+  ).toEqual([]);
+}, 30_000);

@@ -17,6 +17,10 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
         size: a4;
         margin: .75in .75in 1in .75in;
       }
+
+      .invoice-inline-footnote {
+        footnote-display: inline;
+      }
       `}
 
   </CSS>
@@ -66,7 +70,7 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
           <div className="basis-0 flex-grow"/>
           <div className="text-2xl font-mono font-bold pb-2">
             $1,035.00
-            <Footnote style={{footnoteDisplay: 'inline'}}>
+            <Footnote className="invoice-inline-footnote">
               This amount may be paid in 3 monthly instalments of $345.00. For more information, check out <a href="https://www.kubefinance.com/" target="_blank" className="underline">www.kubefinance.com/#faq</a>.
             </Footnote>
           </div>
@@ -114,7 +118,7 @@ import { ArrowRightIcon } from "@heroicons/react/20/solid";
           <b>$1,035.00</b>
           <br />
           Due by March 1<sup>st</sup>, 2024
-          <Footnote style={{footnoteDisplay: 'inline'}}>
+          <Footnote className="invoice-inline-footnote">
             Late payments are subject to a 5% fee, compounding monthly.
           </Footnote>
           <br />
