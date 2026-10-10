@@ -20,6 +20,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs, styleText } from "node:util";
 import { parseReleaseVersion } from "#scripts/release-policy";
+import { getVerdaccioConsumerDependencies } from "#scripts/verdaccio-consumer-dependencies";
 
 const { values } = parseArgs({
   options: { smoke: { type: "boolean", default: false } },
@@ -414,13 +415,10 @@ const main = async (): Promise<void> => {
     ).version;
     if (!playwrightVersion)
       throw new Error("Missing installed Playwright version");
-    // The fixtures import React and Emotion directly, so install them as
-    // consumer dependencies rather than relying on npm's hoisting layout.
-    const consumerDependencies = ["react", "@emotion/react"].map((name) => {
-      const version = manifest.dependencies[name];
-      if (!version) throw new Error(`Missing ${name} consumer-test version`);
-      return `${name}@${version}`;
-    });
+    // Install the React/React DOM peers explicitly from the versions this
+    // project tests, and Emotion from its runtime dependencies. React must
+    // not be read from dependencies now that it is a peer dependency.
+    const consumerDependencies = getVerdaccioConsumerDependencies(manifest);
     const typecheckDependencies = [
       "typescript",
       "@types/node",
