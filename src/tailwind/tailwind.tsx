@@ -690,15 +690,32 @@ function scopeTailwindStyles(css: string, registrationId: string): string {
   return scoped.toString();
 }
 
+let fallbackCollectorSequence = 0;
+
+const createCollectorId = (): string => {
+  // Web Crypto is not guaranteed to exist in every Node SSR environment.
+  // These IDs isolate CSS regions; they are not authentication tokens.
+  if (typeof globalThis.crypto?.getRandomValues === "function") {
+    return Array.from(
+      globalThis.crypto.getRandomValues(new Uint8Array(16)),
+      (byte) => byte.toString(16).padStart(2, "0"),
+    ).join("");
+  }
+
+  // Include time, a per-process counter, and random bits. The counter keeps
+  // sequential compilations distinct even when time/randomness is stubbed;
+  // time and random bits reduce collisions between separate processes.
+  const counter = (fallbackCollectorSequence++).toString(16);
+  const random = `${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
+  return `${Date.now().toString(16)}-${counter}-${random}`;
+};
+
 export function createTailwindStyleCollector(): TailwindStyleCollector {
   let id = 0;
   // Compiled fragments can be joined later, including fragments rendered by
   // separate servers. Per-collector zero-based IDs would then collide and let
   // the last fragment's theme override styles in earlier fragments.
-  const collectorId = Array.from(
-    globalThis.crypto.getRandomValues(new Uint8Array(16)),
-    (byte) => byte.toString(16).padStart(2, "0"),
-  ).join("");
+  const collectorId = createCollectorId();
   const registrations = new Map<string, TailwindCompileOptions>();
 
   return {
