@@ -3,57 +3,22 @@ import { basename, dirname, join, relative } from "node:path";
 import frontmatter from "front-matter";
 import { glob } from "glob";
 import { createElement } from "react";
-import remarkFrontmatter from "remark-frontmatter";
-import type { TsdownPlugin } from "tsdown";
-import { docgenDependencies } from "#docgen/bundling";
+import { bundleTemplate } from "#docgen/bundleTemplate";
 import { renderPreview } from "#docgen/renderPreview";
 import { formatCamelCaseToTitle, formatSnippet } from "#docgen/utils";
 
-const tmpDir = join(import.meta.dirname, "../.tmp");
-
 export async function buildTemplates() {
-  const [{ default: mdx }, { build }, { default: Raw }] = await Promise.all([
-    import("@mdx-js/rollup"),
-    import("tsdown"),
-    import("unplugin-raw/rolldown"),
-  ]);
-
   const templates = await glob(join(import.meta.dirname, "../src/ui/**/*.mdx"));
 
   return await Promise.all(
     templates.map(async (template) => {
       console.log("Building for template ", template);
-      const outPath = `${join(
-        tmpDir,
-        dirname(relative(join(import.meta.dirname, "../src"), template)),
-        basename(template, ".mdx"),
-      )}.mjs`;
-
       const docLocation = join(
         import.meta.dirname,
-        `../docs/content/docs/${dirname(
-          relative(join(import.meta.dirname, "../src"), template),
-        )}/${basename(template)}`,
+        "../docs/content/docs",
+        relative(join(import.meta.dirname, "../src"), template),
       );
-
-      await build({
-        entry: [template],
-        plugins: [
-          mdx({
-            remarkPlugins: [remarkFrontmatter],
-            providerImportSource: "react-print-pdf/mdx",
-          }) as unknown as TsdownPlugin,
-          Raw(),
-        ],
-        dts: false,
-        outDir: dirname(outPath),
-        format: "esm",
-        platform: "node",
-        sourcemap: false,
-        config: false,
-        clean: false,
-        deps: docgenDependencies,
-      });
+      const outPath = await bundleTemplate(template);
 
       const { default: Component } = await import(outPath);
 
