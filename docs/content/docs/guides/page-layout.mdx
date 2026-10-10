@@ -3,6 +3,8 @@ title: "Page layout"
 description: "Configure page size, orientation, margins, headers, footers, backgrounds, and page-specific layouts."
 ---
 
+These examples use paged-media CSS. **Renderer support varies:** page sizing, margins, and basic page breaks work in Chromium, but the running-element approach used by `PageTop` and `PageBottom`, automatic footnotes, and Prince-specific features require a compatible paged-media engine. Playwright and Gotenberg's Chromium route do not implement those advanced features.
+
 ## Properties
 
 ### Size and Orientation
@@ -162,7 +164,7 @@ You can add edge-to-edge background graphics to your document by adding `backgro
 
 ### Watermarks
 
-You can add watermarks to your document by adding `@prince-overlay` properties to the `@page` rule.
+The following `@prince-overlay` watermark syntax is **Prince-specific** and is not supported by Chromium. Check your renderer's documentation for a compatible watermark approach.
 
 <Tabs>
   <Tab title="Raw CSS">

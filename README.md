@@ -55,6 +55,15 @@ const html = await compile(<Document />);
 
 `compile()` returns HTML and print styles. React Print PDF does not require or bundle a hosted PDF service; pass the HTML to whichever local or remote PDF renderer fits your application.
 
+**Using components directly in a browser:** If you render components such as `PageBreak`, `NoBreak`, or `PageTop` without calling `compile()`, import the packaged print stylesheet in your application's client entrypoint:
+
+```tsx
+import "react-print-pdf/dist/index.css";
+import { PageBreak } from "react-print-pdf/client";
+```
+
+The build extracts these component rules to `dist/index.css`, so the JavaScript entrypoint alone does not load them. `compile()` inlines the same print styles automatically; do not add the stylesheet separately to compiled documents.
+
 ### Gotenberg
 
 For a self-hosted PDF renderer, React Print PDF includes a Gotenberg integration that compiles the React document and submits the resulting HTML to Gotenberg's Chromium route:
@@ -99,6 +108,8 @@ Custom Tailwind `@keyframes` and `@font-face` names are isolated per region.
 Use Tailwind utility classes or CSS theme variables (such as
 `animation: var(--animate-custom)`) to reference them. Hard-coded animation
 names and font-family names in React inline `style` props are not rewritten.
+Tailwind region isolation also relies on CSS `@scope`; make sure your chosen
+PDF renderer supports that at-rule or its utilities may not apply.
 
 ## Components
 
@@ -142,9 +153,10 @@ compatibility checks against the **actual published entrypoints**.
 result once, then runs the published-package tests. Node and Chromium hits are
 merged by Vitest into a single `coverage/combined/` report (HTML, LCOV, and
 JSON summary); build artifacts and vendor runtime code do not count towards
-source coverage. Minimum thresholds are 85% lines/statements, 80% functions,
-and 70% branches (based on the measured source-test baseline). The post-run
-guard rejects empty `src/` coverage. CI uses this command on pull requests and
+source coverage. The post-run guard requires **100% statements, branches,
+functions, and lines** across the measured `src/` files; it also rejects empty
+source coverage. This is an aggregate gate, not a guarantee of compatibility
+with every PDF renderer or React integration. CI uses this command on pull requests and
 pushes to `main` and uploads the report. Export-only entrypoints may show 0%
 coverage because they contain no executable logic; their published imports are
 verified separately by `test:package`.

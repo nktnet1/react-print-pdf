@@ -50,23 +50,17 @@ npm install --save-dev tsx typescript @types/react @types/react-dom
 Create `document/index.tsx`:
 
 ```tsx title="document/index.tsx"
-import { PageBottom, PageBreak, PageTop } from "react-print-pdf";
+import { PageBreak } from "react-print-pdf";
 
-export const Document = () => {
-  return (
-    <div>
-      <PageTop>
-        <span>Hello #1</span>
-      </PageTop>
-      <div>Hello #2</div>
-      <PageBottom>
-        <div>Hello #3</div>
-      </PageBottom>
-      <PageBreak />
-      <span>Hello #4, but on a new page!</span>
-    </div>
-  );
-};
+export const Document = () => (
+  <main>
+    <h1>Quarterly report</h1>
+    <p>This appears on the first page.</p>
+    <PageBreak />
+    <h2>Appendix</h2>
+    <p>This appears on the next page.</p>
+  </main>
+);
 ```
 
 ## 4. Compile the document to HTML
@@ -86,7 +80,18 @@ Run the example with `npx tsx render.tsx`.
 
 ## 5. Render the HTML
 
-`compile()` returns renderer-ready HTML. Save it, send it to a print pipeline, or pass it to a PDF renderer that supports the CSS features your document uses. React Print PDF does not require a hosted rendering service.
+`compile()` returns renderer-ready HTML. Save it, send it to a print pipeline, or pass it to a PDF renderer that supports the CSS features your document uses. React Print PDF does not require a hosted rendering service. Page breaks are widely supported, but advanced running headers, footers, and automatic footnotes depend on the chosen renderer. In particular, Chromium (including the Playwright and Gotenberg integrations) does not support the paged-media CSS features those components use.
+
+## Using components directly in a browser
+
+If you are mounting printable components in a React app **without** using `compile()`, import their extracted print styles once in your browser entrypoint:
+
+```tsx
+import "react-print-pdf/dist/index.css";
+import { PageBreak } from "react-print-pdf/client";
+```
+
+The `compile()` helper already embeds those print styles, so this extra import is only for direct rendering.
 
 ## 6. Next steps
 

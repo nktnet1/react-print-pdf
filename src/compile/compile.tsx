@@ -127,7 +127,7 @@ export const compile = async (
         {Element}
       </TailwindStyleCollectorProvider>,
     );
-    return tailwindCollector.resolve(html);
+    return deduplicateKatexStyles(await tailwindCollector.resolve(html));
   }
 
   const { CacheProvider } = await import("@emotion/react");
@@ -224,7 +224,24 @@ export const compile = async (
     from: undefined,
   });
 
-  return `<style>${result.css}</style>${html}`;
+  return deduplicateKatexStyles(`<style>${result.css}</style>${html}`);
+};
+
+// React 19 hoists styles with precedence/href and deduplicates identical
+// resources. React 18 renders a new inline KaTeX stylesheet for *each* Latex
+// component instead. Keep the first stylesheet in the compiled document so
+// invoices and reports with many formulas do not embed its fonts repeatedly.
+const katexStylesheetTag =
+  /<style(?=\s)(?=[^>]*\s(?:data-href|href)="react-print-pdf-katex")[^>]*>[\s\S]*?<\/style>/g;
+
+/** @internal */
+export const deduplicateKatexStyles = (html: string): string => {
+  let seen = false;
+  return html.replace(katexStylesheetTag, (stylesheet) => {
+    if (seen) return "";
+    seen = true;
+    return stylesheet;
+  });
 };
 
 /** @internal */

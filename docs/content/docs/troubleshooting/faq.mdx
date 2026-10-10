@@ -19,6 +19,8 @@ import { PageBreak } from "react-print-pdf/client";
 
 The package does not include or require a hosted server. `compile()` produces HTML locally in your application.
 
+If you mount the components directly in a browser without `compile()`, also import `react-print-pdf/dist/index.css` in the app's client entrypoint. The build extracts the component CSS into that separate, exported file. Compiled HTML already contains those styles and does not need the additional import.
+
 ## Next.js or Vercel reports a missing Tailwind module
 
 Current React Print PDF releases compile Tailwind from the package bundle. They do not load Tailwind from your application's `node_modules` directory at runtime, so `compile()` can be used from a Next.js Server Component or Route Handler without installing Tailwind separately just for React Print PDF.
@@ -46,3 +48,7 @@ React Print PDF keeps Tailwind's standard flexbox output, including `gap`, `row-
 The built-in [Playwright](/docs/integrations/playwright) and [Gotenberg](/docs/integrations/gotenberg) integrations use Chromium, where these flexbox features are supported. If the same compiled HTML looks correct in a browser but different in a PDF produced by another renderer, check that renderer's support for CSS Box Alignment and flex gaps before replacing the utilities with manual margins.
 
 This matters especially with older paged-media engines, which may accept flexbox while only partially supporting newer alignment and gap features. Upgrading the renderer or using one of the Chromium-backed integrations is preferable to changing the document layout to renderer-specific spacing hacks.
+
+## Tailwind utilities are missing in a non-Chromium PDF renderer
+
+The `Tailwind` component scopes its generated rules with CSS `@scope` to prevent separate theme regions from overriding one another. The compiled HTML therefore requires a renderer that implements CSS `@scope`. If an engine does not support it, those utilities can be ignored even though `compile()` succeeds. Check your renderer's CSS compatibility documentation, or use ordinary unscoped CSS for that document.

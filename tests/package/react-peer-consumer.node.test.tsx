@@ -77,10 +77,14 @@ import { compile, Markdown, Tailwind, Latex } from "react-print-pdf";
 const html = await compile(React.createElement("main", null,
   React.createElement(Markdown, null, "# Consumer invoice"),
   React.createElement(Tailwind, null, React.createElement("p", { className: "text-red-500" }, "Paid")),
-  React.createElement(Latex, null, "x^2")
+  React.createElement(Latex, null, "x^2"),
+  React.createElement(Latex, null, "y^3")
 ));
 if (!html.includes("Consumer invoice") || !html.includes("Paid") || !html.includes('class="katex"')) {
   throw new Error("Consumer document was not compiled correctly");
+}
+if ((html.match(/(?:data-)?href="react-print-pdf-katex"/g) ?? []).length !== 1) {
+  throw new Error("Multiple formulas must share exactly one KaTeX stylesheet");
 }
 console.log(React.version);
 `,

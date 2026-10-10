@@ -53,36 +53,34 @@ We're open to expanding the catalog of components to cover as many use cases as 
 git clone https://github.com/nktnet1/react-print-pdf
 ```
 
-2. Install pip2pic dependencies:
+2. Install Poppler for documentation previews (`pdftoppm`); on macOS:
 
 ```sh
-brew update
-brew install gs graphicsmagick
+brew install poppler
 ```
 
-3. Install pip2pic:
-
-```sh
-npm install pdf2pic
-```
-
-4. Install all dependencies:
+3. Install dependencies:
 
 ```sh
 pnpm install
 ```
 
-5. Run local servers and watch for changes:
+4. Run the local documentation site:
 
 ```sh
 pnpm dev
 ```
 
-6. Add a new folder under `src` and build your component.
+5. Add the component under `src` with examples in its `__docConfig` and add regression tests.
 
-7. Don't forget to add tests.
+6. When updating the committed generated component pages and previews, install Playwright Chromium and regenerate the documentation explicitly:
 
-8. Submit a pull request.
+```sh
+pnpm exec playwright install chromium
+pnpm build-components-commit
+```
+
+7. Run `pnpm typecheck` and `pnpm test:coverage` before submitting a pull request. Documentation previews also require `pdftoppm` from Poppler.
 
 </Accordion>
 

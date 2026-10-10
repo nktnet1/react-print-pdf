@@ -27,15 +27,15 @@ pnpm exec playwright install --with-deps chromium
 
 ```tsx
 import { writeFile } from "node:fs/promises";
-import { PageBottom, PageTop } from "react-print-pdf";
+import { PageBreak } from "react-print-pdf";
 import { compileWithPlaywright } from "react-print-pdf/playwright";
 
 const Document = () => (
   <main>
-    <PageTop>Quarterly report</PageTop>
-    <h1>Results</h1>
+    <h1>Quarterly report</h1>
     <p>Generated with React Print PDF and Playwright.</p>
-    <PageBottom>Confidential</PageBottom>
+    <PageBreak />
+    <h2>Appendix</h2>
   </main>
 );
 
@@ -44,6 +44,10 @@ await writeFile("report.pdf", pdf);
 ```
 
 The helper returns a `Uint8Array`. When it launches Chromium itself, it also closes Chromium before returning.
+
+<Callout intent="warning" title="Chromium paged-media support">
+  Chromium supports page breaks and page sizing, but not the running-element and footnote CSS required by `PageTop`, `PageBottom`, `RunningH1`–`RunningH6`, and `Footnote`. Those components will not produce repeated page headers/footers or automatic bottom-of-page footnotes in this integration. Use Playwright's `pdf.headerTemplate` and `pdf.footerTemplate` options for simple Chromium headers/footers, or a paged-media engine that supports the library's advanced CSS features.
+</Callout>
 
 ## PDF defaults
 

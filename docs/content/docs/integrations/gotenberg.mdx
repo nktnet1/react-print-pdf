@@ -37,33 +37,33 @@ Without basic authentication you can omit the two environment variables and `--a
 
 ```tsx
 import { writeFile } from "node:fs/promises";
-import {
-  PageBottom,
-  PageTop,
-  compileWithGotenberg,
-} from "react-print-pdf";
+import { PageBreak, compileWithGotenberg } from "react-print-pdf";
 
 const Document = () => (
   <main>
-    <PageTop>Quarterly report</PageTop>
-    <h1>Results</h1>
+    <h1>Quarterly report</h1>
     <p>Generated with React Print PDF and Gotenberg.</p>
-    <PageBottom>Confidential</PageBottom>
+    <PageBreak />
+    <h2>Appendix</h2>
   </main>
 );
 
+const username = process.env.GOTENBERG_API_BASIC_AUTH_USERNAME;
+const password = process.env.GOTENBERG_API_BASIC_AUTH_PASSWORD;
+
 const pdf = await compileWithGotenberg(<Document />, {
   baseUrl: process.env.GOTENBERG_BASE_URL ?? "http://localhost:3000",
-  auth: {
-    username: process.env.GOTENBERG_API_BASIC_AUTH_USERNAME!,
-    password: process.env.GOTENBERG_API_BASIC_AUTH_PASSWORD!,
-  },
+  ...(username && password ? { auth: { username, password } } : {}),
 });
 
 await writeFile("report.pdf", pdf);
 ```
 
-The helper returns a `Uint8Array`, which can be written directly with Node.js `writeFile`, returned from most web frameworks, or converted to a `Buffer` with `Buffer.from(pdf)` when needed.
+The helper returns a `Uint8Array`, which can be written directly with Node.js `writeFile`, returned from most web frameworks, or converted to a `Buffer` with `Buffer.from(pdf)` when needed. The example only sends basic-auth credentials when both environment variables are present; configure them when authentication is enabled on the service.
+
+<Callout intent="warning" title="Chromium paged-media support">
+  Gotenberg's Chromium route supports page breaks and page sizing, but not the running-element and footnote CSS required by `PageTop`, `PageBottom`, `RunningH1`–`RunningH6`, or `Footnote`. For repeatable PDF headers and footers, use Gotenberg's supported Chromium header/footer options; for advanced running headings and automatic footnote placement, choose a renderer that implements those CSS features.
+</Callout>
 
 ## Defaults
 
