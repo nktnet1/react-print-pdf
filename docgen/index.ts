@@ -12,6 +12,7 @@ import {
   getTemplateContents,
   mergeTemplateInfo,
 } from "#docgen/utils";
+import { writeGeneratedMarkdown } from "#docgen/writeMarkdown";
 
 const tmpDir = path.join(import.meta.dirname, "../.tmp");
 const docsPath = path.join(
@@ -141,19 +142,8 @@ const process = async () => {
     )
   ).filter(Boolean) as docFolder[];
 
-  // Check if the directory exists, if not, create it
-  function checkDirectorySync(directory: string, remove: boolean = true) {
-    if (!fs.existsSync(directory)) {
-      fs.mkdirSync(directory, { recursive: true });
-    } else {
-      if (remove) {
-        fs.rmSync(directory, { recursive: true });
-      }
-      fs.mkdirSync(directory, { recursive: true });
-    }
-  }
-
-  checkDirectorySync(docsPath);
+  fs.rmSync(docsPath, { recursive: true, force: true });
+  fs.mkdirSync(docsPath, { recursive: true });
 
   const sortedDocs = docs.sort((a, b) => {
     return a.name.localeCompare(b.name);
@@ -161,9 +151,7 @@ const process = async () => {
 
   sortedDocs.forEach((docFile) => {
     docFile.files.forEach((file) => {
-      checkDirectorySync(docFile.outputPath, false);
-
-      fs.writeFileSync(file.outputPath, file.markdown);
+      writeGeneratedMarkdown(file.outputPath, file.markdown);
     });
   });
 
@@ -227,13 +215,7 @@ const process = async () => {
   const templatesBuild = await buildTemplates();
 
   templatesBuild.forEach((template) => {
-    const dirname = path.dirname(template.outputPath);
-
-    if (!fs.existsSync(dirname)) {
-      fs.mkdirSync(dirname, { recursive: true });
-    }
-
-    fs.writeFileSync(template.outputPath, template.markdown);
+    writeGeneratedMarkdown(template.outputPath, template.markdown);
   });
 
   const templateListingPath = path.join(
