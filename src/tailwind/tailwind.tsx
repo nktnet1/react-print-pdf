@@ -377,8 +377,9 @@ const fontShorthandFamilyOffset = (
   let index = sizeIndex + 1;
   while (nodes[index]?.type === "space") index++;
   if (nodes[index]?.type === "div" && nodes[index].value === "/") {
+    // The value parser stores whitespace following `/` on the divider node,
+    // not as a separate space token in the top-level node sequence.
     index++;
-    while (nodes[index]?.type === "space") index++;
     // The token after `/` is the line-height, not a font family.
     if (nodes[index]?.type !== "word" && nodes[index]?.type !== "function") {
       return Number.POSITIVE_INFINITY;

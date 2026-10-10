@@ -77,7 +77,8 @@ const extractEmotionStyleTags = (html: string) => {
     const closing = endTag.exec(html);
     if (!closing) break; // The rest of the document is raw-text content.
 
-    if (tagName === "style" && hasEmotionAttribute(match[3] ?? "")) {
+    // The tag matcher always captures an attribute string, including "".
+    if (tagName === "style" && hasEmotionAttribute(match[3])) {
       cleanedHtml += html.slice(cursor, match.index);
       css += html.slice(match.index + match[0].length, closing.index);
       cursor = endTag.lastIndex;
