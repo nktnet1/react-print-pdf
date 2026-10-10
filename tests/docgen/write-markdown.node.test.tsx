@@ -43,9 +43,13 @@ test("template regeneration prunes removed pages but preserves other docs", () =
     const old = join(directory, "templates/removed.mdx");
     const next = join(directory, "templates/invoice.mdx");
     const landing = join(directory, "index.mdx");
+    const guide = join(directory, "guide.mdx");
+    const nestedGuide = join(directory, "guides/getting-started.mdx");
     writeGeneratedMarkdown(old, "# Removed template\n");
     writeGeneratedMarkdown(join(directory, "templates/meta.json"), "{}");
     writeGeneratedMarkdown(landing, "# All templates\n");
+    writeGeneratedMarkdown(guide, "# Handwritten guide\n");
+    writeGeneratedMarkdown(nestedGuide, "# Handwritten nested guide\n");
 
     replaceGeneratedTemplatePages(directory, [
       { outputPath: next, markdown: "# Current invoice\n" },
@@ -54,11 +58,19 @@ test("template regeneration prunes removed pages but preserves other docs", () =
     expect(existsSync(join(directory, "templates/meta.json"))).toBe(true);
     expect(readFileSync(next, "utf8")).toBe("# Current invoice\n");
     expect(readFileSync(landing, "utf8")).toBe("# All templates\n");
+    expect(readFileSync(guide, "utf8")).toBe("# Handwritten guide\n");
+    expect(readFileSync(nestedGuide, "utf8")).toBe(
+      "# Handwritten nested guide\n",
+    );
 
     replaceGeneratedTemplatePages(directory, []);
     expect(existsSync(next)).toBe(false);
     expect(statSync(directory).isDirectory()).toBe(true);
     expect(readFileSync(landing, "utf8")).toBe("# All templates\n");
+    expect(readFileSync(guide, "utf8")).toBe("# Handwritten guide\n");
+    expect(readFileSync(nestedGuide, "utf8")).toBe(
+      "# Handwritten nested guide\n",
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -74,6 +86,16 @@ test("invalid template destinations cannot wipe existing generated pages", () =>
     expect(() =>
       replaceGeneratedTemplatePages(directory, [
         { outputPath: join(root, "elsewhere.mdx"), markdown: "# Bad\n" },
+      ]),
+    ).toThrow("outside");
+    expect(readFileSync(existing, "utf8")).toBe("# Keep this\n");
+
+    expect(() =>
+      replaceGeneratedTemplatePages(directory, [
+        {
+          outputPath: join(directory, "guides/getting-started.mdx"),
+          markdown: "# Should not overwrite hand-written documentation\n",
+        },
       ]),
     ).toThrow("outside");
     expect(readFileSync(existing, "utf8")).toBe("# Keep this\n");

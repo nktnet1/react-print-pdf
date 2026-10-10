@@ -119,6 +119,15 @@ test("matches nested maintained and generated template paths", () => {
   expect(verifyGeneratedDocs(root).issues).toEqual([]);
 });
 
+test("ignores authored UI pages outside the generated templates subtree", () => {
+  const root = fixture();
+  write(root, "docs/content/docs/ui/guides/intro.mdx", "# Author's guide\n");
+
+  const report = verifyGeneratedDocs(root);
+  expect(report.pages).toBe(5);
+  expect(report.issues).toEqual([]);
+});
+
 test("freshness compares generated MDX/metadata with HEAD, not preview binaries", () => {
   const root = fixture();
   execFileSync("git", ["init", "-q", root]);
