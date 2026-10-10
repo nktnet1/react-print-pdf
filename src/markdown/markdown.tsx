@@ -192,6 +192,7 @@ This is a paragraph with a [link](https://google.com)`}</Markdown>
           name: "Custom Components and Variables",
           description:
             "You can leverage the `overrides` prop to replace Markdown components with your own components. This is useful for custom components or even for dynamic content.",
+          externalImports: ['import type { ReactNode } from "react";'],
           template: (
             <Markdown
               options={{

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "@typescript/typescript6";
 import { describe, expect, test } from "vitest";
@@ -29,6 +30,7 @@ const sources: { filename: string; config: DocConfig }[] = [
 
 const resolveSource = (relativePath: string) =>
   fileURLToPath(new URL(`../../src/${relativePath}`, import.meta.url));
+const projectRoot = fileURLToPath(new URL("../../", import.meta.url));
 
 // Read the maintained public entrypoint rather than duplicating its API in
 // a test constant: a newly added component must also be imported in examples.
@@ -75,6 +77,7 @@ describe("copyable documentation component examples", () => {
 
   test("all maintained examples produce valid TSX with every referenced public import", async () => {
     let examples = 0;
+    const virtualSources = new Map<string, string>();
     for (const { filename, config } of sources) {
       const doc = mergeTemplateInfo(
         config,
@@ -85,6 +88,16 @@ describe("copyable documentation component examples", () => {
           examples++;
           const label = `${filename} ${component}.${name}`;
           const source = await formatExampleSource(example, component);
+          // Typecheck the copyable snippets as independent modules. These
+          // paths are virtual: the test does not write generated documents.
+          virtualSources.set(
+            join(
+              projectRoot,
+              "tests/docgen/__examples__",
+              `${filename.replaceAll("/", "-").replace(".tsx", "")}-${component}-${name}.tsx`,
+            ),
+            source,
+          );
           const ast = ts.createSourceFile(
             "template.tsx",
             source,
@@ -140,7 +153,47 @@ describe("copyable documentation component examples", () => {
       }
     }
     expect(examples).toBeGreaterThan(20);
-  });
+
+    // Parsing TSX cannot detect missing type-only imports, invalid props or
+    // type mismatches in the generated examples. Resolve the real source API
+    // without depending on a previously built dist/ package.
+    const options: ts.CompilerOptions = {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      jsx: ts.JsxEmit.React,
+      strict: true,
+      esModuleInterop: true,
+      skipLibCheck: true,
+      noEmit: true,
+      baseUrl: projectRoot,
+      paths: {
+        "#/*": ["src/*"],
+        "#config/*": ["config/*.ts"],
+        "react-print-pdf": ["src/index.ts"],
+      },
+    };
+    const host = ts.createCompilerHost(options);
+    const readFile = host.readFile.bind(host);
+    const fileExists = host.fileExists.bind(host);
+    host.readFile = (file) => virtualSources.get(file) ?? readFile(file);
+    host.fileExists = (file) => virtualSources.has(file) || fileExists(file);
+
+    const program = ts.createProgram([...virtualSources.keys()], options, host);
+    const errors = ts
+      .getPreEmitDiagnostics(program)
+      .filter((diagnostic) =>
+        diagnostic.file ? virtualSources.has(diagnostic.file.fileName) : false,
+      );
+    expect(
+      errors.map((error) => {
+        const position = error.file?.getLineAndCharacterOfPosition(
+          error.start ?? 0,
+        );
+        return `${error.file?.fileName}:${(position?.line ?? 0) + 1}: TS${error.code} ${ts.flattenDiagnosticMessageText(error.messageText, " ")}`;
+      }),
+    ).toEqual([]);
+  }, 30_000);
 
   test("preserves external imports and deduplicates explicitly listed components", async () => {
     const source = await formatExampleSource(
