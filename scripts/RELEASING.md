@@ -116,11 +116,9 @@ the verifier checks that each maintained UI template has exactly one matching
 generated MDX page (excluding the separate UI landing page).
 
 `docs:verify` **writes generated documentation and preview assets** into its
-working tree. Run it in a disposable checkout when you only want a report. The
-freshness check will fail until the regenerated MDX/metadata changes have been
-reviewed and committed by the maintainer. Do not enable it as a required PR
-status before completing that one-time regeneration; normal CI still checks
-the maintained examples and existing site build.
+working tree. Run it in a disposable checkout when you only want a report. When generation changes MDX or metadata, review and commit those changes
+before requiring the freshness check to pass. Normal CI checks the committed
+pages, preview assets, maintained examples, and documentation site build.
 
 The documentation site has its own `docs/package.json` and
 `docs/pnpm-lock.yaml`. CI installs both the root and site dependencies with

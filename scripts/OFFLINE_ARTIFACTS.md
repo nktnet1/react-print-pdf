@@ -13,7 +13,7 @@ Node.js 24 runs this TypeScript script directly; it does not require a package m
 - `playwright.part-00`, `playwright.part-01`, etc. — a compressed, split archive containing only the Chromium, Chromium Headless Shell, and FFmpeg revisions required by the installed Playwright version. The number of parts depends on the compressed size.
 - `artifacts-manifest.json` — commit SHA, versions, archive sizes, and SHA-256 checksums for verifying uploads and the reconstructed browser archive.
 
-Upload all outputs to the same ChatGPT Project to make them available to new chats. Node.js, pnpm, and Biome can be reused separately until their versions change. Bun, Docker, and Gotenberg aren't included.
+Keep the exported files together when transferring them to an offline test environment. Node.js, pnpm, and Biome must be supplied separately with compatible versions. Bun, Docker, and Gotenberg are not part of the archives.
 
 ## Options
 

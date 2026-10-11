@@ -62,7 +62,7 @@ export type OfflineArtifactManifest = {
   };
 };
 
-const HELP = `Create offline ChatGPT Project test artifacts (Linux x64 only).
+const HELP = `Create portable offline test artifacts (Linux x64 only).
 
 Usage: node scripts/create-offline-artifacts.ts [options]
 
