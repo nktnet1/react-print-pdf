@@ -13,6 +13,14 @@ import {
   Tailwind,
 } from "react-print-pdf";
 import { compile as compileClient } from "react-print-pdf/client";
+import {
+  type CompileOptions as CompilerOptions,
+  compile as compileSeparate,
+} from "react-print-pdf/compiler";
+import {
+  Markdown as SeparateMarkdown,
+  Tailwind as SeparateTailwind,
+} from "react-print-pdf/components";
 import { useMDXComponents } from "react-print-pdf/mdx";
 import {
   compileWithPlaywright,
@@ -27,6 +35,14 @@ const playwright: PlaywrightCompileOptions = { pdf: { format: "A4" } };
 
 void compile(tailwind);
 void compileClient(tailwind);
+void compileSeparate(
+  createElement(
+    SeparateTailwind,
+    null,
+    createElement(SeparateMarkdown, null, "# Compiled"),
+  ),
+  {} satisfies CompilerOptions,
+);
 void compileWithGotenberg(tailwind, gotenberg);
 void compileWithPlaywright(tailwind, playwright);
 void new GotenbergError({ status: 400, statusText: "Bad Request" });

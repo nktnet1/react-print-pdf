@@ -65,6 +65,7 @@ describe("published package entrypoints", () => {
           require: { default: string; types: string };
         }
       >;
+      imports: Record<string, { types: string; default: string }>;
     };
     const packed = JSON.parse(
       execFileSync("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], {
@@ -75,7 +76,14 @@ describe("published package entrypoints", () => {
     ) as { files: { path: string }[] }[];
     const packedFiles = new Set(packed[0]?.files.map((file) => file.path));
 
-    for (const entrypoint of [".", "./client", "./playwright", "./mdx"]) {
+    for (const entrypoint of [
+      ".",
+      "./client",
+      "./components",
+      "./compiler",
+      "./playwright",
+      "./mdx",
+    ]) {
       for (const format of ["import", "require"] as const) {
         for (const field of ["default", "types"] as const) {
           const path = manifest.exports[entrypoint]?.[format][field];
@@ -88,5 +96,9 @@ describe("published package entrypoints", () => {
       }
     }
     expect(packedFiles.has("dist/index.css")).toBe(true);
+    expect(packedFiles.has("compiler.cjs")).toBe(true);
+    for (const path of Object.values(manifest.imports["#compiler-runtime"])) {
+      expect(packedFiles.has(path.replace(/^\.\//, ""))).toBe(true);
+    }
   }, 45_000);
 });

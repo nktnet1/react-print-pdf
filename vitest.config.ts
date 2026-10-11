@@ -19,8 +19,12 @@ export default defineConfig({
         "**/node_modules/**",
         "src/**/*.d.ts",
         "src/docgen/**",
-        // Re-export entrypoints contain no executable lines to cover.
+        // Package entrypoints are exercised against published ESM/CJS builds
+        // in tests/package; source coverage measures renderer implementation.
         "src/client.ts",
+        "src/compiler.ts",
+        "src/compiler-runtime.ts",
+        "src/components.ts",
         "src/index.ts",
         "src/playwright/index.ts",
       ],

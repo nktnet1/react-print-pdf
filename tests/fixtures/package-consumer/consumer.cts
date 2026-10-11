@@ -11,6 +11,14 @@ import {
   Tailwind,
 } from "react-print-pdf";
 import { compile as compileClient } from "react-print-pdf/client";
+import {
+  type CompileOptions as CompilerOptions,
+  compile as compileSeparate,
+} from "react-print-pdf/compiler";
+import {
+  Markdown as SeparateMarkdown,
+  Tailwind as SeparateTailwind,
+} from "react-print-pdf/components";
 import { useMDXComponents } from "react-print-pdf/mdx";
 import { convertHtmlWithPlaywright } from "react-print-pdf/playwright";
 
@@ -19,6 +27,14 @@ const element = createElement(Markdown, null, "## CommonJS");
 
 void compile(element, options);
 void compileClient(element);
+void compileSeparate(
+  createElement(
+    SeparateTailwind,
+    null,
+    createElement(SeparateMarkdown, null, "# Compiled"),
+  ),
+  {} satisfies CompilerOptions,
+);
 void convertHtmlWithPlaywright("<h1>CommonJS</h1>");
 void useMDXComponents;
 

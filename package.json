@@ -27,6 +27,26 @@
         "default": "./dist/client/index.cjs"
       }
     },
+    "./compiler": {
+      "import": {
+        "types": "./dist/compiler/index.d.ts",
+        "default": "./dist/compiler/index.js"
+      },
+      "require": {
+        "types": "./dist/compiler/index.d.cts",
+        "default": "./compiler.cjs"
+      }
+    },
+    "./components": {
+      "import": {
+        "types": "./dist/components/index.d.ts",
+        "default": "./dist/components/index.js"
+      },
+      "require": {
+        "types": "./dist/components/index.d.cts",
+        "default": "./dist/components/index.cjs"
+      }
+    },
     "./playwright": {
       "import": {
         "types": "./dist/playwright/index.d.ts",
@@ -132,6 +152,7 @@
   },
   "packageManager": "pnpm@12.10.1",
   "files": [
+    "compiler.cjs",
     "dist",
     "README.md",
     "LICENSE.md"
@@ -141,6 +162,10 @@
     "url": "https://github.com/nktnet1/react-print-pdf.git"
   },
   "imports": {
+    "#compiler-runtime": {
+      "types": "./dist/compiler/runtime.d.ts",
+      "default": "./dist/compiler/runtime.js"
+    },
     "#/*": "./src/*",
     "#docgen/*": "./docgen/*",
     "#scripts/*": "./scripts/*",

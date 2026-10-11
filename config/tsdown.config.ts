@@ -15,6 +15,9 @@ export default defineConfig({
     index: "src/index.ts",
     mdx: "src/mdx.ts",
     "client/index": "src/client.ts",
+    "components/index": "src/components.ts",
+    "compiler/index": "src/compiler.ts",
+    "compiler/runtime": "src/compiler-runtime.ts",
     "playwright/index": "src/playwright/index.ts",
   },
   format: ["esm", "cjs"],
@@ -45,6 +48,7 @@ export default defineConfig({
     neverBundle: [
       "react",
       "react-dom",
+      "#compiler-runtime",
       "playwright",
       "@emotion/cache",
       "@emotion/react",

@@ -4,6 +4,8 @@ import { Global, jsx } from "@emotion/react";
 import { createElement } from "react";
 import * as root from "react-print-pdf";
 import * as client from "react-print-pdf/client";
+import * as compiler from "react-print-pdf/compiler";
+import * as components from "react-print-pdf/components";
 import * as mdx from "react-print-pdf/mdx";
 import * as playwright from "react-print-pdf/playwright";
 import compilation from "./assert-compilation.cjs";
@@ -11,6 +13,8 @@ import compilation from "./assert-compilation.cjs";
 const entrypoints = [
   ["react-print-pdf", root, "compile", "index"],
   ["react-print-pdf/client", client, "compile", "client/index"],
+  ["react-print-pdf/compiler", compiler, "compile", "compiler/index"],
+  ["react-print-pdf/components", components, "Tailwind", "components/index"],
   [
     "react-print-pdf/playwright",
     playwright,

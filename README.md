@@ -54,6 +54,30 @@ const html = await compile(<Document />);
 
 `compile()` returns HTML and print styles. React Print PDF does not require or bundle a hosted PDF service. Pass the HTML to whichever local or remote PDF renderer fits your application.
 
+### Separate compiler and component entry points
+
+For applications that need independent server and UI dependencies, prefer the
+separate entry points rather than the backwards-compatible mixed root export:
+
+```tsx
+import { compile } from "react-print-pdf/compiler";
+import { Markdown } from "react-print-pdf/components";
+
+const html = await compile(<Markdown># Quarterly report</Markdown>);
+```
+
+`react-print-pdf/components` exports only document components; it does not load
+`react-dom/server`. `react-print-pdf/compiler` exports `compile()` and its
+options type, deferring the actual renderer and Tailwind compiler until the
+function is called. The older `react-print-pdf` and `react-print-pdf/client`
+entry points remain available for existing consumers.
+
+Importing the compiler is safe without executing a React context provider, but
+**calling `compile()` still requires standard React DOM server rendering**, not
+the React Server Components (`react-server`) runtime. Next.js route handlers
+that bundle the renderer into their RSC graph may still need to externalize
+`react-print-pdf` using `serverExternalPackages` for server-side compilation.
+
 **Using components directly in a browser:** If you render components such as `PageBreak`, `NoBreak`, or `PageTop` without calling `compile()`, import the packaged print stylesheet in your application's client entrypoint:
 
 ```tsx

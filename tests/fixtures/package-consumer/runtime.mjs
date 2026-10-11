@@ -3,12 +3,16 @@ import { createRequire } from "node:module";
 import { createElement } from "react";
 import * as esmRoot from "react-print-pdf";
 import * as esmClient from "react-print-pdf/client";
+import * as esmCompiler from "react-print-pdf/compiler";
+import * as esmComponents from "react-print-pdf/components";
 import * as esmMdx from "react-print-pdf/mdx";
 import * as esmPlaywright from "react-print-pdf/playwright";
 
 const require = createRequire(import.meta.url);
 const cjsRoot = require("react-print-pdf");
 const cjsClient = require("react-print-pdf/client");
+const cjsComponents = require("react-print-pdf/components");
+const cjsCompiler = require("react-print-pdf/compiler");
 const cjsPlaywright = require("react-print-pdf/playwright");
 const cjsMdx = require("react-print-pdf/mdx");
 
@@ -20,6 +24,15 @@ for (const root of [esmRoot, cjsRoot]) {
 }
 for (const client of [esmClient, cjsClient]) {
   assert.equal(typeof client.compile, "function");
+}
+for (const components of [esmComponents, cjsComponents]) {
+  assert.equal(typeof components.Markdown, "function");
+  assert.equal(typeof components.Tailwind, "function");
+  assert.equal(components.compile, undefined);
+}
+for (const compiler of [esmCompiler, cjsCompiler]) {
+  assert.equal(typeof compiler.compile, "function");
+  assert.equal(compiler.Tailwind, undefined);
 }
 for (const playwright of [esmPlaywright, cjsPlaywright]) {
   assert.equal(typeof playwright.convertHtmlWithPlaywright, "function");
@@ -35,5 +48,14 @@ const cjsHtml = await cjsRoot.compile(
   createElement("h1", null, "Packaged CJS"),
 );
 assert.match(cjsHtml, /Packaged CJS/);
+
+const separatedHtml = await esmCompiler.compile(
+  createElement(esmComponents.Markdown, null, "# Separated ESM"),
+);
+assert.match(separatedHtml, /Separated ESM/);
+const separatedCjsHtml = await cjsCompiler.compile(
+  createElement(cjsComponents.Markdown, null, "# Separated CJS"),
+);
+assert.match(separatedCjsHtml, /Separated CJS/);
 
 console.log("package-exports-ok");

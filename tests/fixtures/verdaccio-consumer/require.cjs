@@ -5,15 +5,21 @@ const { createElement } = require("react");
 const { verifyConsumerCompilation } = require("./assert-compilation.cjs");
 
 const entrypoints = [
-  ["react-print-pdf", "compile", "index"],
-  ["react-print-pdf/client", "compile", "client/index"],
-  ["react-print-pdf/playwright", "compileWithPlaywright", "playwright/index"],
-  ["react-print-pdf/mdx", "useMDXComponents", "mdx"],
+  ["react-print-pdf", "compile", "dist/index.cjs"],
+  ["react-print-pdf/client", "compile", "dist/client/index.cjs"],
+  ["react-print-pdf/compiler", "compile", "compiler.cjs"],
+  ["react-print-pdf/components", "Tailwind", "dist/components/index.cjs"],
+  [
+    "react-print-pdf/playwright",
+    "compileWithPlaywright",
+    "dist/playwright/index.cjs",
+  ],
+  ["react-print-pdf/mdx", "useMDXComponents", "dist/mdx.cjs"],
 ];
 
 for (const [name, exportName, entry] of entrypoints) {
   const resolved = require.resolve(name).replaceAll("\\", "/");
-  assert.ok(resolved.endsWith(`/dist/${entry}.cjs`), resolved);
+  assert.ok(resolved.endsWith(`/${entry}`), resolved);
   assert.equal(typeof require(name)[exportName], "function", name);
 }
 

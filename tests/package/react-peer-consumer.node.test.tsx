@@ -61,6 +61,7 @@ const smoke = (version: "18" | "19") => {
       recursive: true,
     });
     cpSync(join(root, "package.json"), join(packageDir, "package.json"));
+    cpSync(join(root, "compiler.cjs"), join(packageDir, "compiler.cjs"));
     writeFileSync(join(temporary, "package.json"), '{"type":"module"}\n');
 
     for (const name of Object.keys(manifest.dependencies)) {
@@ -74,6 +75,14 @@ const smoke = (version: "18" | "19") => {
       join(temporary, "consumer.mjs"),
       `import React from "react";
 import { compile, Markdown, Tailwind, Latex } from "react-print-pdf";
+import { compile as compileSeparate } from "react-print-pdf/compiler";
+import { Markdown as SeparateMarkdown } from "react-print-pdf/components";
+import { createRequire } from "node:module";
+const { compile: compileCommonJs } = createRequire(import.meta.url)("react-print-pdf/compiler");
+for (const compileDocument of [compileSeparate, compileCommonJs]) {
+  const html = await compileDocument(React.createElement(SeparateMarkdown, null, "# Separate entrypoints"));
+  if (!html.includes("Separate entrypoints")) throw new Error("Separate compiler failed");
+}
 const html = await compile(React.createElement("main", null,
   React.createElement(Markdown, null, "# Consumer invoice"),
   React.createElement(Tailwind, null, React.createElement("p", { className: "text-red-500" }, "Paid")),

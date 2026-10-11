@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
+      "#compiler-runtime": ["./src/compiler-runtime.ts"],
       "#/*": ["./src/*"],
       "#docgen/*": ["./docgen/*"],
       "#scripts/*": ["./scripts/*"],
