@@ -125,7 +125,7 @@ The library includes utilities for:
 - signature and form fields
 - reusable document templates
 
-See the [documentation](https://github.com/nktnet1/react-print-pdf/tree/main/docs/content/docs) for the setup guide, components, templates, and rendering integrations.
+See the [documentation](https://nktnet1.github.io/react-print-pdf/) for the setup guide, components, templates, and rendering integrations.
 
 ## Contributing
 
