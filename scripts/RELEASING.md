@@ -4,7 +4,7 @@ Only tagged commits can publish to npm. The `Pipeline` workflow runs checks on
 pushes to `main` and pull requests targeting `main`. A `v*` tag starts the
 separate `Release` workflow, which requires a successful **main push** Pipeline
 run for the exact tagged commit before npm publishing is allowed. Passing a
-pull request alone is not enough. Release never increments `package.json`; it
+pull request alone is not enough. Release never increments `package.json`. It
 publishes exactly the version committed in Git.
 
 ## Bootstrap npm trusted publishing
@@ -24,7 +24,7 @@ pnpm bootstrap:package --publish
 The first command is a non-mutating check. With `--publish`, the script checks
 for the exact `react-print-pdf@0.0.0-bootstrap.0` version and publishes it under
 the `bootstrap` dist-tag when that version is missing. It does this even when
-other versions of `react-print-pdf` already exist; package-name existence alone
+other versions of `react-print-pdf` already exist. Package-name existence alone
 is not enough to prove that the bootstrap step was completed. The temporary
 bootstrap package has no lifecycle scripts and does not modify the committed
 `package.json`.
@@ -45,7 +45,7 @@ The OIDC setup requires npm 11.15.0 or newer, package write access, and npm
 account 2FA. Run `npm login --auth-type=web` first if `npm whoami` does not
 succeed. `npm trust` does not accept a bypass-2FA granular token by itself. The
 setup therefore performs an interactive `npm trust list` before its
-machine-readable checks; complete the browser challenge and enable npm's
+machine-readable checks. Complete the browser challenge and enable npm's
 **skip 2FA for the next 5 minutes** option so the remaining trust operations can
 finish. TOTP users can instead provide `NPM_CONFIG_OTP`.
 
@@ -91,8 +91,8 @@ The release workflow validates that the tag is exactly `v${package.version}`
 and publishes stable versions with the `latest` npm dist-tag. Both stable and
 beta tags must point to a commit reachable from `main` with a successful
 Pipeline run for that **exact SHA** triggered by a push to `main`. When the tag
-is pushed before that Pipeline run finishes, Release waits for the result;
-failed, cancelled, missing, or timed-out runs cannot publish. The Release job
+is pushed before that Pipeline run finishes, Release waits for the result.
+Failed, cancelled, missing, or timed-out runs cannot publish. The Release job
 has npm OIDC access only after this gate passes.
 
 Direct `npm publish` from a local checkout is blocked by `prepublishOnly`.

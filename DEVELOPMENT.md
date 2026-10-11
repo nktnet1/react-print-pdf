@@ -23,8 +23,8 @@ pnpm dev
 
 The development server serves the documentation site at `http://localhost:3000`.
 Add library components under `src/` and their tests under `tests/`. Documentation
-examples for components are maintained alongside the source in `__docConfig`;
-reusable document templates live under `src/ui/templates/`.
+examples for components are maintained alongside the source in `__docConfig`.
+Reusable document templates live under `src/ui/templates/`.
 
 ## Building and testing
 
@@ -72,7 +72,7 @@ pnpm docs:build
 Review and commit the resulting MDX, navigation metadata, and referenced preview
 images/PDFs together. The generator requires Playwright Chromium and Poppler.
 `pnpm docs:verify` regenerates documentation, builds the docs site, and checks
-that generated text matches committed files; run it in a disposable checkout
+that generated text matches committed files. Run it in a disposable checkout
 when you only want a report. Normal documentation CI also checks the committed
 pages and preview references without regenerating all PDFs.
 
@@ -81,7 +81,7 @@ pages and preview references without regenerating all PDFs.
 Open an issue before starting a large or breaking change. For a pull request,
 include tests covering the changed behaviour and any corresponding maintained
 documentation. Run `pnpm check`, `pnpm typecheck`, and the relevant test suites.
-Avoid editing generated documentation by hand; regenerate it from its source.
+Avoid editing generated documentation by hand. Regenerate it from its source.
 
 ## Release and maintenance
 

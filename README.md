@@ -25,7 +25,7 @@ yarn add react-print-pdf
 pnpm add react-print-pdf
 ```
 
-React Print PDF uses the **React and React DOM versions supplied by your application**. Both packages are peer dependencies; React 18.3.1+ and React 19 are supported. If you are starting a standalone Node.js document generator rather than using an existing React application, install them explicitly:
+React Print PDF uses the **React and React DOM versions supplied by your application**. Both packages are peer dependencies. React 18.3.1+ and React 19 are supported. If you are starting a standalone Node.js document generator rather than using an existing React application, install them explicitly:
 
 ```sh
 npm install react-print-pdf react@^19 react-dom@^19
@@ -52,7 +52,7 @@ const Document = () => (
 const html = await compile(<Document />);
 ```
 
-`compile()` returns HTML and print styles. React Print PDF does not require or bundle a hosted PDF service; pass the HTML to whichever local or remote PDF renderer fits your application.
+`compile()` returns HTML and print styles. React Print PDF does not require or bundle a hosted PDF service. Pass the HTML to whichever local or remote PDF renderer fits your application.
 
 **Using components directly in a browser:** If you render components such as `PageBreak`, `NoBreak`, or `PageTop` without calling `compile()`, import the packaged print stylesheet in your application's client entrypoint:
 
@@ -61,7 +61,7 @@ import "react-print-pdf/dist/index.css";
 import { PageBreak } from "react-print-pdf/client";
 ```
 
-The build extracts these component rules to `dist/index.css`, so the JavaScript entrypoint alone does not load them. `compile()` inlines the same print styles automatically; do not add the stylesheet separately to compiled documents.
+The build extracts these component rules to `dist/index.css`, so the JavaScript entrypoint alone does not load them. `compile()` inlines the same print styles automatically. Do not add the stylesheet separately to compiled documents.
 
 The `CSS` component accepts trusted stylesheet strings and escapes closing `</style>` sequences to keep them inside the HTML style element. It does **not** sanitise or validate arbitrary CSS. Do not interpolate untrusted user-provided CSS into a document.
 
@@ -77,7 +77,7 @@ const pdf = await compileWithGotenberg(<Document />, {
 });
 ```
 
-The helper returns a `Uint8Array`. It defaults to CSS page sizing, printed backgrounds, and PDF document outlines; all Gotenberg form fields can be overridden through `formFields`. See the [Gotenberg integration guide](https://github.com/nktnet1/react-print-pdf/blob/main/docs/content/docs/integrations/gotenberg.mdx) for Docker and authentication examples.
+The helper returns a `Uint8Array`. It defaults to CSS page sizing, printed backgrounds, and PDF document outlines. All Gotenberg form fields can be overridden through `formFields`. See the [Gotenberg integration guide](https://github.com/nktnet1/react-print-pdf/blob/main/docs/content/docs/integrations/gotenberg.mdx) for Docker and authentication examples.
 
 ### Playwright
 
@@ -109,21 +109,21 @@ Custom Tailwind `@keyframes` and `@font-face` names are isolated per region.
 Use Tailwind utility classes or CSS theme variables (such as
 `animation: var(--animate-custom)`) to reference them. Hard-coded animation
 names and font-family names in React inline `style` props are not rewritten.
-Tailwind region isolation also relies on CSS `@scope`; make sure your chosen
+Tailwind region isolation also relies on CSS `@scope`. Make sure your chosen
 PDF renderer supports that at-rule or its utilities may not apply.
 
 ## Components
 
 The library includes utilities for:
 
-- document compilation and custom CSS;
-- page headers, footers, breaks, and no-break regions;
-- page numbers and running headings;
-- footnotes;
-- Markdown and LaTeX;
-- Tailwind CSS;
-- signature/form fields; and
-- reusable document templates.
+- document compilation and custom CSS
+- page headers, footers, breaks, and no-break regions
+- page numbers and running headings
+- footnotes
+- Markdown and LaTeX
+- Tailwind CSS
+- signature and form fields
+- reusable document templates
 
 See the [documentation](https://github.com/nktnet1/react-print-pdf/tree/main/docs/content/docs) for the setup guide, components, templates, and rendering integrations.
 
