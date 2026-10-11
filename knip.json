@@ -6,5 +6,17 @@
       "entry": ["src/ui/templates/**/*.mdx"]
     },
     "docs": {}
-  }
+  },
+  "ignoreFiles": [
+    "tests/fixtures/package-consumer/consumer.{cts,mts}",
+    "tests/fixtures/verdaccio-consumer/*.{cjs,mjs}",
+    "tests/fixtures/verdaccio-consumer/vite/main.js"
+  ],
+  "ignoreBinaries": [
+    "pdffonts",
+    "pdfimages",
+    "pdfinfo",
+    "pdftoppm",
+    "pdftotext"
+  ]
 }

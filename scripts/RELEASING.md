@@ -79,21 +79,39 @@ and publishes using the `beta` npm dist-tag. `--publish` requires a clean local
 
 ## Stable releases
 
-Stable releases are tag-driven. Set `package.json` to the exact stable version,
-commit it, then create and push a matching annotated tag:
+From a clean, up-to-date `main` checkout, use `pnpm version patch` to graduate
+an existing beta to stable. For example, when `package.json` is at
+`0.1.151-beta.2`, `pnpm version patch` produces `0.1.151` (not `0.1.152`).
+First commit all other changes and synchronize `pnpm-lock.yaml` with the
+manifest, since CI installs with `--frozen-lockfile`. Confirm that the target
+stable version is not already published to npm: npm versions are immutable.
 
 ```sh
-git tag -a v0.2.0 -m v0.2.0
-git push origin v0.2.0
+git switch main
+git pull --ff-only
+git status --short # Must be empty
+npm view react-print-pdf@0.1.151 version # Expect not found
+pnpm version patch
+git push origin main
+# Wait for the main Pipeline to pass for the version commit.
+git push origin v0.1.151
 ```
+
+`pnpm version patch` creates both the version commit and its annotated
+`vX.Y.Z` tag locally by default; do **not** create an extra commit or tag.
+Only push the tag after the Pipeline passes for that exact commit. After
+Release succeeds, verify `npm view react-print-pdf dist-tags --json` reports
+the published version under `latest`. For later stable patch releases (when
+`package.json` is already stable), the same command advances the patch number,
+e.g. `0.1.151` to `0.1.152`. Update the tag in the example to match the
+actual version.
 
 The release workflow validates that the tag is exactly `v${package.version}`
 and publishes stable versions with the `latest` npm dist-tag. Both stable and
 beta tags must point to a commit reachable from `main` with a successful
-Pipeline run for that **exact SHA** triggered by a push to `main`. When the tag
-is pushed before that Pipeline run finishes, Release waits for the result.
-Failed, cancelled, missing, or timed-out runs cannot publish. The Release job
-has npm OIDC access only after this gate passes.
+Pipeline run for that **exact SHA** triggered by a push to `main`. Failed,
+cancelled, missing, or timed-out runs cannot publish. The Release job has npm
+OIDC access only after this gate passes.
 
 Direct `npm publish` from a local checkout is blocked by `prepublishOnly`.
 

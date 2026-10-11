@@ -89,7 +89,6 @@ export const FloatBottom = (props: React.HTMLProps<HTMLDivElement>) => {
   );
 };
 
-/** @internal */
 export const __docConfig: DocConfig = {
   name: "Shell",
   icon: "PanelsTopLeftIcon",

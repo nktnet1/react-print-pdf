@@ -18,7 +18,6 @@ export const Footnote = ({ children, className, ...props }: FootnoteProps) => {
   );
 };
 
-/** @internal */
 export const __docConfig: DocConfig = {
   icon: "InfoIcon",
   description:
