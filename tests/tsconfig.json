@@ -4,11 +4,14 @@
     "noEmit": true,
     "rootDir": "..",
     "paths": {
+      "#compiler-runtime": ["../src/compiler-runtime.ts"],
       "#/*": ["../src/*"],
       "#docgen/*": ["../docgen/*"],
       "#scripts/*": ["../scripts/*"],
       "react-print-pdf": ["../src/index.ts"],
       "react-print-pdf/client": ["../src/client.ts"],
+      "react-print-pdf/compiler": ["../src/compiler.ts"],
+      "react-print-pdf/components": ["../src/components.ts"],
       "react-print-pdf/playwright": ["../src/playwright/index.ts"],
       "#config/*": ["../config/*"],
       "react-print-pdf/mdx": ["../src/mdx.ts"]
