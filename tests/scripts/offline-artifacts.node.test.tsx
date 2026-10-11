@@ -21,6 +21,11 @@ import {
 } from "../../scripts/create-offline-artifacts";
 
 const tempRoots: string[] = [];
+// Only Linux x64 can create a truthful Linux dependency archive. The remaining
+// safety, CLI, and publication tests still run on macOS and other hosts.
+const linuxTest = test.runIf(
+  process.platform === "linux" && process.arch === "x64",
+);
 
 afterEach(() => {
   for (const root of tempRoots.splice(0)) {
@@ -133,84 +138,87 @@ test("offline artifact CLI parses paths and rejects invalid part sizes", () => {
   ).toThrow("--playwright-cache");
 });
 
-test("exports a verified Git bundle, pnpm symlinks, and only matching Chromium browser parts", async () => {
-  const { repoRoot, cache, out, commit } = fixture();
-  const options = {
-    repoRoot,
-    outputDir: out,
-    playwrightCache: cache,
-    partSizeMiB: 1,
-  };
-  const manifest = await createOfflineArtifacts(options);
-  expect(manifest).toMatchObject({
-    commit,
-    dirtyWorktree: false,
-    playwrightVersion: "1.64.0",
-    chromiumRevision: "1248",
-    partSizeMiB: 1,
-  });
-  expect(manifest.artifacts.playwrightParts.length).toBeGreaterThan(1);
-  expect(manifest.artifacts.playwrightParts.map((part) => part.file)).toEqual(
-    manifest.artifacts.playwrightParts.map(
-      (_, index) => `playwright.part-${String(index).padStart(2, "0")}`,
-    ),
-  );
-  for (const artifact of [
-    manifest.artifacts.bundle,
-    manifest.artifacts.dependencies,
-    ...manifest.artifacts.playwrightParts,
-  ]) {
-    expect(artifact.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(artifact.bytes).toBeGreaterThan(0);
-    expect(existsSync(join(out, artifact.file))).toBe(true);
-  }
-  const expectedManifest = JSON.parse(
-    readFileSync(join(out, "artifacts-manifest.json"), "utf8"),
-  );
-  expect(expectedManifest).toEqual(manifest);
-  expect(archiveEntries(join(out, "node_modules-linux-x64.tar.zst"))).toContain(
-    "node_modules/sample",
-  );
-  expect(
-    execFileSync(
-      "tar",
-      ["-I", "zstd", "-tvf", join(out, "node_modules-linux-x64.tar.zst")],
-      {
-        encoding: "utf8",
-      },
-    ),
-  ).toContain("node_modules/sample -> .pnpm/sample");
+linuxTest(
+  "exports a verified Git bundle, pnpm symlinks, and only matching Chromium browser parts",
+  async () => {
+    const { repoRoot, cache, out, commit } = fixture();
+    const options = {
+      repoRoot,
+      outputDir: out,
+      playwrightCache: cache,
+      partSizeMiB: 1,
+    };
+    const manifest = await createOfflineArtifacts(options);
+    expect(manifest).toMatchObject({
+      commit,
+      dirtyWorktree: false,
+      playwrightVersion: "1.64.0",
+      chromiumRevision: "1248",
+      partSizeMiB: 1,
+    });
+    expect(manifest.artifacts.playwrightParts.length).toBeGreaterThan(1);
+    expect(manifest.artifacts.playwrightParts.map((part) => part.file)).toEqual(
+      manifest.artifacts.playwrightParts.map(
+        (_, index) => `playwright.part-${String(index).padStart(2, "0")}`,
+      ),
+    );
+    for (const artifact of [
+      manifest.artifacts.bundle,
+      manifest.artifacts.dependencies,
+      ...manifest.artifacts.playwrightParts,
+    ]) {
+      expect(artifact.sha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(artifact.bytes).toBeGreaterThan(0);
+      expect(existsSync(join(out, artifact.file))).toBe(true);
+    }
+    const expectedManifest = JSON.parse(
+      readFileSync(join(out, "artifacts-manifest.json"), "utf8"),
+    );
+    expect(expectedManifest).toEqual(manifest);
+    expect(
+      archiveEntries(join(out, "node_modules-linux-x64.tar.zst")),
+    ).toContain("node_modules/sample");
+    expect(
+      execFileSync(
+        "tar",
+        ["-I", "zstd", "-tvf", join(out, "node_modules-linux-x64.tar.zst")],
+        {
+          encoding: "utf8",
+        },
+      ),
+    ).toContain("node_modules/sample -> .pnpm/sample");
 
-  const combined = Buffer.concat(
-    manifest.artifacts.playwrightParts.map((part) =>
-      readFileSync(join(out, part.file)),
-    ),
-  );
-  expect(createHash("sha256").update(combined).digest("hex")).toBe(
-    manifest.artifacts.playwrightArchive.sha256,
-  );
-  const combinedPath = join(out, "rebuilt-playwright.tar.zst");
-  writeFileSync(combinedPath, combined);
-  const entries = archiveEntries(combinedPath).join("\n");
-  expect(entries).toContain("chromium-1248/chrome");
-  expect(entries).toContain(
-    "chromium_headless_shell-1248/INSTALLATION_COMPLETE",
-  );
-  expect(entries).toContain("ffmpeg-1013/INSTALLATION_COMPLETE");
-  expect(entries).not.toContain("firefox-1555");
+    const combined = Buffer.concat(
+      manifest.artifacts.playwrightParts.map((part) =>
+        readFileSync(join(out, part.file)),
+      ),
+    );
+    expect(createHash("sha256").update(combined).digest("hex")).toBe(
+      manifest.artifacts.playwrightArchive.sha256,
+    );
+    const combinedPath = join(out, "rebuilt-playwright.tar.zst");
+    writeFileSync(combinedPath, combined);
+    const entries = archiveEntries(combinedPath).join("\n");
+    expect(entries).toContain("chromium-1248/chrome");
+    expect(entries).toContain(
+      "chromium_headless_shell-1248/INSTALLATION_COMPLETE",
+    );
+    expect(entries).toContain("ffmpeg-1013/INSTALLATION_COMPLETE");
+    expect(entries).not.toContain("firefox-1555");
 
-  // Regeneration drops obsolete parts but leaves unrelated files alone.
-  writeFileSync(join(out, "playwright.part-99"), "obsolete");
-  writeFileSync(join(out, "keep.txt"), "untouched");
-  await createOfflineArtifacts(options);
-  expect(readdirSync(out)).not.toContain("playwright.part-99");
-  expect(readFileSync(join(out, "keep.txt"), "utf8")).toBe("untouched");
-  expect(
-    readdirSync(out).some((file) =>
-      file.startsWith(".offline-artifacts-backup-"),
-    ),
-  ).toBe(false);
-});
+    // Regeneration drops obsolete parts but leaves unrelated files alone.
+    writeFileSync(join(out, "playwright.part-99"), "obsolete");
+    writeFileSync(join(out, "keep.txt"), "untouched");
+    await createOfflineArtifacts(options);
+    expect(readdirSync(out)).not.toContain("playwright.part-99");
+    expect(readFileSync(join(out, "keep.txt"), "utf8")).toBe("untouched");
+    expect(
+      readdirSync(out).some((file) =>
+        file.startsWith(".offline-artifacts-backup-"),
+      ),
+    ).toBe(false);
+  },
+);
 
 test("refuses to silently omit uncommitted changes from the Git bundle", async () => {
   const { repoRoot, cache, out } = fixture();
@@ -220,25 +228,64 @@ test("refuses to silently omit uncommitted changes from the Git bundle", async (
     "Working tree has uncommitted changes",
   );
   expect(existsSync(out)).toBe(false);
+});
 
+linuxTest("allows dirty Git worktrees when explicitly requested", async () => {
+  const { repoRoot, cache, out } = fixture();
+  writeFileSync(join(repoRoot, "README.md"), "Not committed\n");
   const manifest = await createOfflineArtifacts({
-    ...options,
+    repoRoot,
+    outputDir: out,
+    playwrightCache: cache,
     allowDirty: true,
   });
   expect(manifest.dirtyWorktree).toBe(true);
 });
 
-test("rejects missing browser revisions without replacing existing exports", async () => {
+linuxTest(
+  "rejects missing browser revisions without replacing existing exports",
+  async () => {
+    const { repoRoot, cache, out } = fixture();
+    const options = { repoRoot, outputDir: out, playwrightCache: cache };
+    const manifest = await createOfflineArtifacts(options);
+    rmSync(join(cache, "ffmpeg-1013"), { recursive: true });
+    await expect(createOfflineArtifacts(options)).rejects.toThrow(
+      "Missing Playwright browser directory",
+    );
+    expect(readFileSync(join(out, "artifacts-manifest.json"), "utf8")).toEqual(
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+  },
+);
+
+test.each([
+  ["darwin", "x64"],
+  ["linux", "arm64"],
+])("refuses artifact creation on %s/%s", async (platform, arch) => {
   const { repoRoot, cache, out } = fixture();
-  const options = { repoRoot, outputDir: out, playwrightCache: cache };
-  const manifest = await createOfflineArtifacts(options);
-  rmSync(join(cache, "ffmpeg-1013"), { recursive: true });
-  await expect(createOfflineArtifacts(options)).rejects.toThrow(
-    "Missing Playwright browser directory",
-  );
-  expect(readFileSync(join(out, "artifacts-manifest.json"), "utf8")).toEqual(
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  );
+  const oldPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+  const oldArch = Object.getOwnPropertyDescriptor(process, "arch");
+  if (!oldPlatform || !oldArch)
+    throw new Error("Missing host platform metadata");
+
+  Object.defineProperty(process, "platform", {
+    configurable: true,
+    value: platform,
+  });
+  Object.defineProperty(process, "arch", { configurable: true, value: arch });
+  try {
+    await expect(
+      createOfflineArtifacts({
+        repoRoot,
+        outputDir: out,
+        playwrightCache: cache,
+      }),
+    ).rejects.toThrow("Offline artifacts must be created on Linux x64");
+    expect(existsSync(out)).toBe(false);
+  } finally {
+    Object.defineProperty(process, "platform", oldPlatform);
+    Object.defineProperty(process, "arch", oldArch);
+  }
 });
 
 test("rejects outputs nested under inputs to avoid self-archiving", async () => {
@@ -281,26 +328,29 @@ test.each(["browser cache", "node_modules"])(
   },
 );
 
-test("invalid existing artifact does not delete any earlier exports", async () => {
-  const { repoRoot, cache, out } = fixture();
-  const options = { repoRoot, outputDir: out, playwrightCache: cache };
-  const manifest = await createOfflineArtifacts(options);
-  const existingManifest = readFileSync(
-    join(out, "artifacts-manifest.json"),
-    "utf8",
-  );
-  const existingBundle = readFileSync(join(out, "project.bundle"));
-  symlinkSync("unrelated.txt", join(out, "playwright.part-99"));
+linuxTest(
+  "invalid existing artifact does not delete any earlier exports",
+  async () => {
+    const { repoRoot, cache, out } = fixture();
+    const options = { repoRoot, outputDir: out, playwrightCache: cache };
+    const manifest = await createOfflineArtifacts(options);
+    const existingManifest = readFileSync(
+      join(out, "artifacts-manifest.json"),
+      "utf8",
+    );
+    const existingBundle = readFileSync(join(out, "project.bundle"));
+    symlinkSync("unrelated.txt", join(out, "playwright.part-99"));
 
-  await expect(createOfflineArtifacts(options)).rejects.toThrow(
-    "Refusing to replace non-file artifact",
-  );
-  expect(readFileSync(join(out, "artifacts-manifest.json"), "utf8")).toBe(
-    existingManifest,
-  );
-  expect(readFileSync(join(out, "project.bundle"))).toEqual(existingBundle);
-  expect(manifest.commit).toBeDefined();
-});
+    await expect(createOfflineArtifacts(options)).rejects.toThrow(
+      "Refusing to replace non-file artifact",
+    );
+    expect(readFileSync(join(out, "artifacts-manifest.json"), "utf8")).toBe(
+      existingManifest,
+    );
+    expect(readFileSync(join(out, "project.bundle"))).toEqual(existingBundle);
+    expect(manifest.commit).toBeDefined();
+  },
+);
 
 test("recovers all existing artifacts when publication fails midway", () => {
   const root = mkdtempSync(join(tmpdir(), "print-pdf-publish-test-"));

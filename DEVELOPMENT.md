@@ -40,20 +40,38 @@ pnpm test:coverage
 - `check` runs Biome formatting and lint checks without rewriting files.
 - `typecheck` validates the library, documentation generator, tests, scripts, and tooling configurations.
 - `build` produces ESM, CommonJS, declarations, and extracted print styles in `dist/`.
-- `test:source` runs Node and browser tests against the source without first building a package.
+- `test:source` runs both groups in one Vitest invocation without first building a package.
 - `test:package` builds the package and tests its published entrypoints and consumer compatibility.
 - `test:coverage` combines Node and browser source coverage, enforces 100% statements, branches, functions, and lines for the configured source files, and runs package tests.
 
-Browser and PDF integration tests require Playwright Chromium:
+The Node source tests cover offline artifact safety checks on all platforms.
+The archive-producing integration tests run only on Linux x64, where they can
+verify genuine Linux artifacts; run the suite on a Linux x64 machine or CI to
+exercise them. macOS and other platforms do not generate Linux archives using
+platform-specific installed dependencies.
+
+Browser and PDF integration tests require the Playwright-managed Chromium
+revision. Installing or extracting `node_modules` does **not** install the
+Playwright browser binary:
 
 ```sh
 pnpm exec playwright install chromium
 ```
 
-PDF inspection and documentation previews require Poppler (`pdfinfo`, `pdftotext`,
-`pdftoppm`). On macOS, install it with `brew install poppler`. The CI pipeline
-installs the required tools on Linux. For the optional Gotenberg integration
-suite, see `pnpm test:gotenberg` and its Docker prerequisites.
+PDF inspection and documentation previews also require Poppler (`pdfinfo`,
+`pdftotext`, `pdfimages`, `pdffonts`, and `pdftoppm`). On macOS, install it
+with `brew install poppler`. The CI pipeline installs Chromium and Poppler
+on Linux. A system Chromium executable is not necessarily an equivalent
+replacement for Playwright's pinned browser: use the matching Playwright
+browser before treating Chromium-specific failures as source regressions.
+
+If pnpm reports `ERR_PNPM_OUTDATED_LOCKFILE` after dependencies change,
+regenerate and commit `pnpm-lock.yaml` alongside the manifest changes
+before running frozen installs or CI. Offline `node_modules` archives do not
+resolve a manifest/lockfile mismatch.
+
+For the optional Gotenberg integration suite, see `pnpm test:gotenberg` and
+its Docker prerequisites.
 
 ## Updating documentation
 

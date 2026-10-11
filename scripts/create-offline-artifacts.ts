@@ -310,9 +310,6 @@ export function publishStagedArtifacts(
 export async function createOfflineArtifacts(
   options: OfflineArtifactOptions,
 ): Promise<OfflineArtifactManifest> {
-  if (process.platform !== "linux" || process.arch !== "x64") {
-    throw new Error("Offline artifacts must be created on Linux x64");
-  }
   const repoRoot = resolve(options.repoRoot);
   const outputDir = resolve(options.outputDir);
   const playwrightCache = resolve(options.playwrightCache);
@@ -362,6 +359,13 @@ export async function createOfflineArtifacts(
     console.warn(
       `${styleText("yellow", "Warning")}: uncommitted edits are not included in project.bundle`,
     );
+  }
+
+  // Safety and source-state checks are platform-independent. Only the actual
+  // archive creation requires Linux x64, to avoid exporting macOS dependencies
+  // under a Linux filename.
+  if (process.platform !== "linux" || process.arch !== "x64") {
+    throw new Error("Offline artifacts must be created on Linux x64");
   }
 
   const playwright = getPlaywrightInstall(repoRoot);
