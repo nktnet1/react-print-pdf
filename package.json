@@ -1,6 +1,6 @@
 {
   "name": "react-print-pdf",
-  "version": "0.1.151-beta.7",
+  "version": "0.4.0",
   "type": "module",
   "description": "Open-source React components and utilities for building printable PDF documents",
   "main": "./dist/index.cjs",
@@ -172,9 +172,9 @@
     "#config/*": "./config/*.ts"
   },
   "peerDependencies": {
+    "playwright": ">=1.42.0",
     "react": "^18.3.1 || ^19.0.0",
-    "react-dom": "^18.3.1 || ^19.0.0",
-    "playwright": ">=1.42.0"
+    "react-dom": "^18.3.1 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "playwright": {
