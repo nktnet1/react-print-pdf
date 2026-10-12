@@ -4,7 +4,10 @@ import postcss from "postcss";
 import type React from "react";
 import { CSS } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
-import { moveCompiledStylesIntoDocument } from "#/html/html-document";
+import {
+  moveCompiledStylesIntoDocument,
+  toHtmlDocument,
+} from "#/html/html-document";
 import {
   createTailwindStyleCollector,
   Tailwind,
@@ -101,6 +104,18 @@ export interface CompileOptions {
   emotion?: boolean;
 }
 
+// Tailwind scopes use sibling template markers. For HTML fragments, the
+// browser parser places the leading marker in <head> and the closing marker
+// in <body>, leaving none of the generated utilities in scope. Wrap only
+// scoped fragments in a real document; preserve plain fragments and explicit
+// <html> roots for backwards compatibility.
+const finalizeCompiledHtml = (html: string): string => {
+  const output = moveCompiledStylesIntoDocument(deduplicateKatexStyles(html));
+  return output.includes("<template data-react-print-tailwind-start=")
+    ? toHtmlDocument(output)
+    : output;
+};
+
 export const compile = async (
   node: React.ReactElement,
   options?: CompileOptions,
@@ -129,9 +144,7 @@ export const compile = async (
     const html = withTailwindStyleCollector(tailwindCollector, () =>
       renderToString(Element),
     );
-    return moveCompiledStylesIntoDocument(
-      deduplicateKatexStyles(await tailwindCollector.resolve(html)),
-    );
+    return finalizeCompiledHtml(await tailwindCollector.resolve(html));
   }
 
   const { CacheProvider } = await import("@emotion/react");
@@ -228,9 +241,7 @@ export const compile = async (
     from: undefined,
   });
 
-  return moveCompiledStylesIntoDocument(
-    deduplicateKatexStyles(`<style>${result.css}</style>${html}`),
-  );
+  return finalizeCompiledHtml(`<style>${result.css}</style>${html}`);
 };
 
 // React 19 hoists styles with precedence/href and deduplicates identical

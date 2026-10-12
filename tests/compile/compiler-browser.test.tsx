@@ -273,6 +273,51 @@ test("direct Tailwind rendering replaces its stylesheet when configuration chang
   expect(host.querySelectorAll("style")).toHaveLength(0);
 }, 30_000);
 
+test("compiled Tailwind fragments apply styles in a standalone browser document", async () => {
+  const html = await compile(
+    <Tailwind preflight={false}>
+      <section data-standalone-tailwind className="relative h-[230px]">
+        <span className="absolute top-0">Cover overlay</span>
+      </section>
+    </Tailwind>,
+  );
+
+  const iframe = document.createElement("iframe");
+  const loaded = new Promise<void>((resolve, reject) => {
+    iframe.addEventListener("load", () => resolve(), { once: true });
+    iframe.addEventListener(
+      "error",
+      () => reject(new Error("Unable to load compiled HTML")),
+      {
+        once: true,
+      },
+    );
+  });
+  iframe.srcdoc = html;
+  document.body.append(iframe);
+
+  try {
+    await loaded;
+    const doc = iframe.contentDocument;
+    const win = iframe.contentWindow;
+    const section = doc?.querySelector<HTMLElement>(
+      "[data-standalone-tailwind]",
+    );
+    const overlay = section?.querySelector<HTMLElement>("span");
+    expect(section).not.toBeNull();
+    expect(overlay).not.toBeNull();
+    expect(win?.getComputedStyle(section as HTMLElement).position).toBe(
+      "relative",
+    );
+    expect(win?.getComputedStyle(section as HTMLElement).height).toBe("230px");
+    expect(win?.getComputedStyle(overlay as HTMLElement).position).toBe(
+      "absolute",
+    );
+  } finally {
+    iframe.remove();
+  }
+}, 15_000);
+
 test("browser Emotion compilation emits usable CSS without leaking styles into the app", async () => {
   const originalEmotionStyleCount = document.head.querySelectorAll(
     "style[data-emotion]",

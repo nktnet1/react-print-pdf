@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import { compile } from "#/compile/compile";
+import { Margins } from "#/css/css";
 import {
   moveCompiledStylesIntoDocument,
   toHtmlDocument,
 } from "#/html/html-document";
+import { Tailwind } from "#/tailwind/tailwind";
 
 test("moves React 18's leading print styles inside an existing document head", () => {
   const compiled =
@@ -73,6 +75,36 @@ test("Emotion compilation also keeps a complete document root", async () => {
   );
   expect(result.startsWith('<html lang="en">')).toBe(true);
   expect(result).toContain("<main>Ready to print</main>");
+});
+
+test("Tailwind fragments keep their CSS scope boundaries inside the document body", async () => {
+  const result = await compile(
+    <Tailwind>
+      <Margins pageRatio="A4" top="4mm" right="4mm" bottom="4mm" left="4mm" />
+      <main className="relative h-[230px]">
+        <footer className="hidden print:flex">Print footer</footer>
+      </main>
+    </Tailwind>,
+  );
+
+  expect(result).toMatch(/^<!doctype html><html><head>/);
+  const bodyStart = result.indexOf("<body>");
+  const bodyEnd = result.indexOf("</body>");
+  const scopeStart = result.indexOf(
+    "<template data-react-print-tailwind-start=",
+  );
+  const scopeEnd = result.indexOf("<template data-react-print-tailwind-end=");
+  expect(scopeStart).toBeGreaterThan(bodyStart);
+  expect(scopeEnd).toBeGreaterThan(scopeStart);
+  expect(scopeEnd).toBeLessThan(bodyEnd);
+  expect(result).toContain("margin-top:4mm");
+  expect(result).toContain(".print\\:flex");
+});
+
+test("plain fragments retain the existing compiler output", async () => {
+  const result = await compile(<main>Plain fragment</main>);
+  expect(result).toContain("<main>Plain fragment</main>");
+  expect(result).not.toContain("<body>");
 });
 
 test("ordinary HTML fragments still get a complete document wrapper", () => {
