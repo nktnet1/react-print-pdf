@@ -1,6 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { type Browser, chromium } from "playwright";
-import { CSS, Latex, Margins, NoBreak, PageBreak } from "react-print-pdf";
+import {
+  CSS,
+  Latex,
+  Margins,
+  NoBreak,
+  PageBreak,
+  Tailwind,
+} from "react-print-pdf";
 import {
   compileWithPlaywright,
   convertHtmlWithPlaywright,
@@ -118,6 +125,49 @@ describe("Playwright PDF integration", () => {
 
     expect(pdfFonts(pdf)).toContain("KaTeX_Main-Regular");
     expect(pdfFonts(pdf)).toContain("KaTeX_Math-Italic");
+    expect(browser.contexts()).toHaveLength(0);
+  }, 30_000);
+
+  test("prints legacy speaker names as searchable text with light borders", async () => {
+    const pdf = await compileWithPlaywright(
+      <Tailwind>
+        <div className="border" data-legacy-border>
+          <p className="font-semibold brightness-70" data-speaker>
+            Liz Stephens
+          </p>
+          <p className="font-semibold brightness-75" data-supported-filter>
+            V3 supported filter
+          </p>
+        </div>
+      </Tailwind>,
+      {
+        browser,
+        onPageReady: async (page) => {
+          const styles = await page.evaluate(() => {
+            const border = document.querySelector("[data-legacy-border]");
+            const speaker = document.querySelector("[data-speaker]");
+            const filtered = document.querySelector("[data-supported-filter]");
+            if (!border || !speaker || !filtered) {
+              throw new Error("Missing print regression elements");
+            }
+            return {
+              borderColor: getComputedStyle(border).borderColor,
+              speakerFilter: getComputedStyle(speaker).filter,
+              supportedFilter: getComputedStyle(filtered).filter,
+            };
+          });
+          expect(styles).toEqual({
+            borderColor: "rgb(229, 231, 235)",
+            speakerFilter: "none",
+            supportedFilter: "brightness(0.75)",
+          });
+        },
+      },
+    );
+
+    // CSS filter effects cause Chromium to flatten text into an image in the
+    // PDF; preserving the v3 no-op on brightness-70 retains text selection.
+    expect(pdfText(pdf)).toContain("Liz Stephens");
     expect(browser.contexts()).toHaveLength(0);
   }, 30_000);
 

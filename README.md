@@ -89,6 +89,26 @@ The build extracts these component rules to `dist/index.css`, so the JavaScript 
 
 The `CSS` component accepts trusted stylesheet strings and escapes closing `</style>` sequences to keep them inside the HTML style element. It does **not** sanitise or validate arbitrary CSS. Do not interpolate untrusted user-provided CSS into a document.
 
+### Legacy print styling
+
+For backwards compatibility with Fileforge/Tailwind v3 PDF templates,
+`<Tailwind>` keeps the old `gray-200` colour for borders without an explicit
+colour. It also ignores numeric brightness utilities that did not exist in
+Tailwind v3's default scale (for example, `brightness-70`). Tailwind v4 would
+otherwise apply `filter: brightness(70%)`, causing Chromium to rasterize text
+and making speaker names unsearchable in exported PDFs.
+
+To use Tailwind v4's native border and brightness defaults instead:
+
+```tsx
+<Tailwind legacyPrintStyles={false}>{children}</Tailwind>
+```
+
+Explicit border colours, supported brightness utilities such as `brightness-75`,
+and arbitrary-value utilities such as `brightness-[.7]` remain available in
+both modes. This is a targeted compatibility setting, not a full Tailwind v3
+compiler or a guarantee of pixel-identical output across Chromium versions.
+
 ### Gotenberg
 
 For a self-hosted PDF renderer, React Print PDF includes a Gotenberg integration that compiles the React document and submits the resulting HTML to Gotenberg's Chromium route:

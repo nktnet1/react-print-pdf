@@ -58,6 +58,17 @@ export type TailwindProps = {
    * supports.
    */
   preflight?: boolean;
+  /**
+   * Preserve the legacy Fileforge/Tailwind v3 print defaults when using the
+   * Tailwind v4 compiler. Enabled by default for existing PDF templates:
+   * borders without an explicit colour use gray-200, and numeric brightness
+   * utilities outside v3's default scale are not emitted (such as
+   * `brightness-70`, which can rasterize text in Chromium PDFs).
+   *
+   * Set to false to use Tailwind v4's native styling defaults and full
+   * numeric brightness scale.
+   */
+  legacyPrintStyles?: boolean;
 };
 
 type TailwindCompileOptions = Omit<TailwindProps, "children">;
@@ -267,12 +278,43 @@ function getLegacyConfig(config: TailwindConfig | undefined): Config | null {
   return Object.keys(legacyConfig).length > 0 ? legacyConfig : null;
 }
 
+// Tailwind v3 did not emit these classes unless the consumer extended its
+// theme. In v4, `brightness-70` unexpectedly becomes a real CSS filter, which
+// makes Chromium flatten text into images in printed PDFs. Keep the v3 scale
+// for legacy templates without suppressing arbitrary-value utilities.
+const legacyBrightnessScale = new Set([
+  "0",
+  "50",
+  "75",
+  "90",
+  "95",
+  "100",
+  "105",
+  "110",
+  "125",
+  "150",
+  "200",
+]);
+
+const isModernNumericBrightness = (candidate: string): boolean => {
+  const match = /(?:^|:)brightness-(\d+)$/.exec(candidate);
+  return Boolean(match && !legacyBrightnessScale.has(match[1]));
+};
+
 async function buildTailwindStyles(
   classNames: string[],
-  { config, stylesheet, preflight }: TailwindCompileOptions,
+  {
+    config,
+    stylesheet,
+    preflight,
+    legacyPrintStyles = true,
+  }: TailwindCompileOptions,
 ) {
   const legacyConfig = getLegacyConfig(config);
   const includePreflight = shouldIncludePreflight(config, preflight);
+  const candidates = legacyPrintStyles
+    ? classNames.filter((className) => !isModernNumericBrightness(className))
+    : classNames;
 
   const input = [
     "@layer theme, base, components, utilities;",
@@ -282,10 +324,15 @@ async function buildTailwindStyles(
     includePreflight
       ? `@layer base {\n${__REACT_PRINT_TAILWIND_PREFLIGHT_CSS__}\n}`
       : "",
+    // Tailwind v4 changed bare borders from gray-200 to currentColor. Keep
+    // the Fileforge preflight default unless v4 styling was requested.
+    includePreflight && legacyPrintStyles
+      ? "@layer base { *, ::before, ::after, ::backdrop { border-color: #e5e7eb; } }"
+      : "",
     "@tailwind utilities;",
     // Explicitly register rendered classes in the compiler input. This also
     // works when the bundled Tailwind runtime cannot discover source files.
-    ...classNames.map(
+    ...candidates.map(
       (className) => `@source inline(${JSON.stringify(className)});`,
     ),
     legacyConfig ? `@config "${VIRTUAL_CONFIG_ID}";` : "",
@@ -317,7 +364,7 @@ async function buildTailwindStyles(
   const result = await postcss([
     isPseudoClass(),
     postcssColorFunctionalNotation(),
-  ]).process(compiler.build(classNames), {
+  ]).process(compiler.build(candidates), {
     from: undefined,
   });
 
@@ -791,8 +838,14 @@ const CollectedTailwind = ({
   config,
   stylesheet,
   preflight,
+  legacyPrintStyles,
 }: TailwindProps & { collector: TailwindStyleCollector }) => {
-  const registrationId = collector.register({ config, stylesheet, preflight });
+  const registrationId = collector.register({
+    config,
+    stylesheet,
+    preflight,
+    legacyPrintStyles,
+  });
   return (
     <>
       <template data-react-print-tailwind-start={registrationId} />
@@ -824,10 +877,11 @@ const StandaloneTailwind = ({
   config,
   stylesheet,
   preflight,
+  legacyPrintStyles,
 }: TailwindProps) => {
   const options = React.useMemo(
-    () => ({ config, stylesheet, preflight }),
-    [config, stylesheet, preflight],
+    () => ({ config, stylesheet, preflight, legacyPrintStyles }),
+    [config, stylesheet, preflight, legacyPrintStyles],
   );
 
   const scopeId = React.useId();
