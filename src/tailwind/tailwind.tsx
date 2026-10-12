@@ -802,6 +802,23 @@ const CollectedTailwind = ({
   );
 };
 
+// Observe the parent rather than the start marker so sibling class changes
+// within the region are tracked. An unmounted marker has no parent to observe.
+export function observeTailwindRegion(
+  observer: Pick<MutationObserver, "observe">,
+  startMarker: Pick<HTMLTemplateElement, "parentNode"> | null,
+) {
+  const parent = startMarker?.parentNode;
+  if (parent) {
+    observer.observe(parent, {
+      attributes: true,
+      attributeFilter: ["class"],
+      childList: true,
+      subtree: true,
+    });
+  }
+}
+
 const StandaloneTailwind = ({
   children,
   config,
@@ -875,15 +892,7 @@ const StandaloneTailwind = ({
     // too. Observe the parent to catch changes among multiple root siblings;
     // the collector still limits candidates to the two template boundaries.
     const observer = new MutationObserver(rebuildForMountedClasses);
-    const boundaryParent = startRef.current?.parentNode;
-    if (boundaryParent) {
-      observer.observe(boundaryParent, {
-        attributes: true,
-        attributeFilter: ["class"],
-        childList: true,
-        subtree: true,
-      });
-    }
+    observeTailwindRegion(observer, startRef.current);
     rebuildForMountedClasses();
 
     return () => {

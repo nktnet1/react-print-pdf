@@ -114,7 +114,7 @@ export const compile = async (
 
   // Load the renderer only when compilation is requested. Importing the
   // document components must not import React DOM's server renderer.
-  const { renderToString } = await import("react-dom/server");
+  const { renderToString } = await import("#/compile/react-dom-server");
 
   let Element = (
     <>
