@@ -1,3 +1,10 @@
+> [!NOTE]  
+> This project was forked from
+> [OneDocLabs/react-print-pdf](https://github.com/OnedocLabs/react-print-pdf).
+> The original project is no longer maintained after Fileforge has sunsetted.
+> For more details, see
+> [here](https://github.com/OnedocLabs/react-print-pdf/issues/53#issuecomment-4459007791).
+
 # React Print PDF
 
 Open-source React and TypeScript components for building printable documents and renderer-ready HTML.
