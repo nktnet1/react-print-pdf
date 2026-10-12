@@ -130,6 +130,66 @@ test("Margins produces a complete @page rule with every margin", () => {
   expect(html).toContain("margin-left:40px;");
 });
 
+test("Margins preserves explicit print units without adding px", () => {
+  const html = renderToStaticMarkup(
+    <Margins
+      pageRatio="A4"
+      top=" 4mm "
+      right="0.5cm"
+      bottom="1in"
+      left="-12pt"
+    />,
+  );
+
+  expect(html).toContain("margin-top:4mm;");
+  expect(html).toContain("margin-right:0.5cm;");
+  expect(html).toContain("margin-bottom:1in;");
+  expect(html).toContain("margin-left:-12pt;");
+  expect(html).not.toContain("mmpx");
+});
+
+test("compile preserves millimetre page margins", async () => {
+  const html = await compile(
+    <Margins pageRatio="A4" top="4mm" right="4mm" bottom="4mm" left="4mm" />,
+  );
+
+  for (const side of ["top", "right", "bottom", "left"]) {
+    expect(html).toContain(`margin-${side}:4mm;`);
+  }
+  expect(html).not.toContain("4mmpx");
+});
+
+test("Margins supports other CSS absolute lengths and explicit pixels", () => {
+  const html = renderToStaticMarkup(
+    <Margins
+      pageRatio="A4"
+      top="2.5px"
+      right="1pc"
+      bottom="8Q"
+      left="+.25mm"
+    />,
+  );
+
+  expect(html).toContain("margin-top:2.5px;");
+  expect(html).toContain("margin-right:1pc;");
+  expect(html).toContain("margin-bottom:8Q;");
+  expect(html).toContain("margin-left:+.25mm;");
+});
+
+test.each([
+  "4mmpx",
+  "var(--margin)",
+  "calc(4mm + 1px)",
+  "4mm; color:red",
+  "4mm !important",
+])("Margins rejects malformed or unsafe CSS length %s", (top) => {
+  expect(() =>
+    renderToStaticMarkup(
+      <Margins pageRatio="A4" top={top} right="0" bottom="0" left="0" />,
+    ),
+  ).toThrow(/Margins top must be a numeric CSS length/);
+});
+
 test("Margins rejects CSS rule injection through size and pixel fields", () => {
   const valid = {
     pageRatio: "210mm 297mm",

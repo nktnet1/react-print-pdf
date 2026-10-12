@@ -53,12 +53,18 @@ const validatePageSize = (value: string): string => {
   return size;
 };
 
-const validatePixelMargin = (name: string, value: string): string => {
-  const pixels = value.trim();
-  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(pixels)) {
-    throw new Error(`Margins ${name} must be a numeric pixel value`);
+// Bare numbers retain the existing pixel shorthand. Explicit absolute CSS
+// lengths are useful for print layouts (e.g. 4mm) and must not gain an extra
+// "px" suffix. Keep the input restricted to one length to prevent CSS injection.
+const validateMarginLength = (name: string, value: string): string => {
+  const length = value.trim();
+  const match = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(px|mm|cm|in|pt|pc|q)?$/i.exec(
+    length,
+  );
+  if (!match) {
+    throw new Error(`Margins ${name} must be a numeric CSS length`);
   }
-  return pixels;
+  return `${match[1]}${match[2] ?? "px"}`;
 };
 
 export const Margins = ({
@@ -70,14 +76,14 @@ export const Margins = ({
 }: MarginsProps) => {
   const size = validatePageSize(pageRatio);
   const margins = {
-    top: validatePixelMargin("top", top),
-    right: validatePixelMargin("right", right),
-    left: validatePixelMargin("left", left),
-    bottom: validatePixelMargin("bottom", bottom),
+    top: validateMarginLength("top", top),
+    right: validateMarginLength("right", right),
+    left: validateMarginLength("left", left),
+    bottom: validateMarginLength("bottom", bottom),
   };
 
   return (
-    <CSS>{`@page {size: ${size};margin-top:${margins.top}px;margin-right:${margins.right}px;margin-left:${margins.left}px;margin-bottom:${margins.bottom}px;}`}</CSS>
+    <CSS>{`@page {size: ${size};margin-top:${margins.top};margin-right:${margins.right};margin-left:${margins.left};margin-bottom:${margins.bottom};}`}</CSS>
   );
 };
 
@@ -124,7 +130,7 @@ The \`CSS\` component escapes closing \`</style>\` sequences so the stylesheet c
         default: {
           name: "Layout",
           description:
-            "Set the page ratio and margin sizes in px. You can also use the `@page` at-rule in CSS to manage all aspects of printed pages. More on this [here](https://developer.mozilla.org/en-US/docs/Web/CSS/@page).",
+            "Set the page size and margins. Bare numbers are interpreted as pixels; explicit CSS lengths such as `4mm`, `1cm`, or `12pt` are also supported. You can also use the `@page` at-rule in CSS to manage all aspects of printed pages. More on this [here](https://developer.mozilla.org/en-US/docs/Web/CSS/@page).",
           imports: ["CSS"],
           template: (
             <React.Fragment>
