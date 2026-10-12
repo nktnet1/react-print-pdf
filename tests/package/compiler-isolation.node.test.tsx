@@ -43,6 +43,42 @@ describe("published compiler/component dependency boundary", () => {
     ).toContain("compiler-required");
   });
 
+  test.each(["react-print-pdf", "react-print-pdf/client"])(
+    "React Server Components can import the legacy %s entry without evaluating hooks",
+    (entry) => {
+      expect(
+        runWithReactServerCondition(`
+          import { Tailwind, compile } from ${JSON.stringify(entry)};
+          if (typeof Tailwind !== "function" || typeof compile !== "function") {
+            throw new Error("legacy exports missing");
+          }
+          console.log("entry-imported");
+        `),
+      ).toContain("entry-imported");
+    },
+  );
+
+  test.each(["import", "require"] as const)(
+    "React Server Components can load the %s document components without evaluating hooks",
+    (format) => {
+      const script =
+        format === "import"
+          ? `import { Tailwind, Markdown } from "react-print-pdf/components";
+             if (typeof Tailwind !== "function" || typeof Markdown !== "function") {
+               throw new Error("component exports missing");
+             }
+             console.log("components-imported");`
+          : `const { Tailwind, Markdown } = require("react-print-pdf/components");
+             if (typeof Tailwind !== "function" || typeof Markdown !== "function") {
+               throw new Error("component exports missing");
+             }
+             console.log("components-imported");`;
+      expect(
+        runWithReactServerCondition(script, format === "require"),
+      ).toContain("components-imported");
+    },
+  );
+
   test("components do not load the server renderer", () => {
     const components = require("react-print-pdf/components");
     expect(typeof components.Markdown).toBe("function");

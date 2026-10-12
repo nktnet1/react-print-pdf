@@ -56,18 +56,18 @@ test("standalone docgen previews receive the package's KaTeX and Tailwind CSS", 
     await buildDocgenComponent(tailwindSource, tailwindEntry);
     const {
       createTailwindStyleCollector,
-      TailwindStyleCollectorProvider,
+      withTailwindStyleCollector,
       Tailwind,
     } = await import(pathToFileURL(tailwindEntry).href);
     const collector = createTailwindStyleCollector();
     const template = (
-      <TailwindStyleCollectorProvider collector={collector}>
-        <Tailwind preflight={false}>
-          <p className="text-red-500">Document preview</p>
-        </Tailwind>
-      </TailwindStyleCollectorProvider>
+      <Tailwind preflight={false}>
+        <p className="text-red-500">Document preview</p>
+      </Tailwind>
     );
-    const markup = await collector.resolve(renderToString(template));
+    const markup = await collector.resolve(
+      withTailwindStyleCollector(collector, () => renderToString(template)),
+    );
     expect(markup).toContain("Document preview");
     expect(markup).toMatch(/\.text-red-500\s*\{[^}]*color:/);
   } finally {

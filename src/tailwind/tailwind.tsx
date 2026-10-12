@@ -13,16 +13,7 @@ import postcss from "postcss";
 import postcssColorFunctionalNotation from "postcss-color-functional-notation";
 import selectorParser from "postcss-selector-parser";
 import parseCssValue from "postcss-value-parser";
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { type ReactNode } from "react";
 import { type Config, compile as compileTailwind } from "tailwindcss";
 import { CSS, escapeCss } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
@@ -76,8 +67,23 @@ type TailwindStyleCollector = {
   resolve(html: string): Promise<string>;
 };
 
-const TailwindStyleCollectorContext =
-  createContext<TailwindStyleCollector | null>(null);
+// renderToString is synchronous, so the collector only needs to be active
+// while React renders the tree. This avoids creating a React Context in the
+// document-component graph and keeps concurrent async CSS builds isolated.
+let activeTailwindCollector: TailwindStyleCollector | null = null;
+
+export function withTailwindStyleCollector<T>(
+  collector: TailwindStyleCollector,
+  render: () => T,
+): T {
+  const previous = activeTailwindCollector;
+  activeTailwindCollector = collector;
+  try {
+    return render();
+  } finally {
+    activeTailwindCollector = previous;
+  }
+}
 
 const VIRTUAL_CONFIG_ID = "react-print-tailwind-config";
 
@@ -776,47 +782,49 @@ export function createTailwindStyleCollector(): TailwindStyleCollector {
   };
 }
 
-export const TailwindStyleCollectorProvider = ({
+// A compiled PDF never mounts or hydrates this component. Keep its render
+// path hook-free; browser rendering uses a separate component whose hooks are
+// called unconditionally.
+const CollectedTailwind = ({
   collector,
   children,
-}: {
-  collector: TailwindStyleCollector;
-  children: ReactNode;
-}) => (
-  <TailwindStyleCollectorContext.Provider value={collector}>
-    {children}
-  </TailwindStyleCollectorContext.Provider>
-);
+  config,
+  stylesheet,
+  preflight,
+}: TailwindProps & { collector: TailwindStyleCollector }) => {
+  const registrationId = collector.register({ config, stylesheet, preflight });
+  return (
+    <>
+      <template data-react-print-tailwind-start={registrationId} />
+      {children}
+      <template data-react-print-tailwind-end={registrationId} />
+    </>
+  );
+};
 
-export const Tailwind = ({
+const StandaloneTailwind = ({
   children,
   config,
   stylesheet,
   preflight,
 }: TailwindProps) => {
-  const collector = useContext(TailwindStyleCollectorContext);
-  const options = useMemo(
+  const options = React.useMemo(
     () => ({ config, stylesheet, preflight }),
     [config, stylesheet, preflight],
   );
 
-  const scopeId = useId();
-  const startRef = useRef<HTMLTemplateElement>(null);
-  const endRef = useRef<HTMLTemplateElement>(null);
-  const [directRenderCss, setDirectRenderCss] = useState("");
-  const [directRenderError, setDirectRenderError] = useState<Error | null>(
-    null,
-  );
+  const scopeId = React.useId();
+  const startRef = React.useRef<HTMLTemplateElement>(null);
+  const endRef = React.useRef<HTMLTemplateElement>(null);
+  const [directRenderCss, setDirectRenderCss] = React.useState("");
+  const [directRenderError, setDirectRenderError] =
+    React.useState<Error | null>(null);
 
   // The DOM observer detects changes from both parent-provided children and
   // child-local state. Recreating this effect for every new children element
   // would compile the same new class set twice: once from the observer and
   // once from the new effect. Only compiler option changes need a new effect.
-  useEffect(() => {
-    if (collector) {
-      return;
-    }
-
+  React.useEffect(() => {
     let active = true;
     let generation = 0;
     let previousCandidates: string | undefined;
@@ -882,21 +890,10 @@ export const Tailwind = ({
       active = false;
       observer.disconnect();
     };
-  }, [collector, options, scopeId]);
+  }, [options, scopeId]);
 
   if (directRenderError) {
     throw directRenderError;
-  }
-
-  if (collector) {
-    const registrationId = collector.register(options);
-    return (
-      <>
-        <template data-react-print-tailwind-start={registrationId} />
-        {children}
-        <template data-react-print-tailwind-end={registrationId} />
-      </>
-    );
   }
 
   return (
@@ -906,6 +903,15 @@ export const Tailwind = ({
       {children}
       <template ref={endRef} data-react-print-tailwind-end={scopeId} />
     </>
+  );
+};
+
+export const Tailwind = (props: TailwindProps) => {
+  const collector = activeTailwindCollector;
+  return collector ? (
+    <CollectedTailwind {...props} collector={collector} />
+  ) : (
+    <StandaloneTailwind {...props} />
   );
 };
 

@@ -1,6 +1,10 @@
 import { renderToString } from "react-dom/server";
 import { expect, test } from "vitest";
-import { createTailwindStyleCollector, Tailwind } from "#/tailwind/tailwind";
+import {
+  createTailwindStyleCollector,
+  Tailwind,
+  withTailwindStyleCollector,
+} from "#/tailwind/tailwind";
 
 test.each([
   {
@@ -325,3 +329,38 @@ test.each([
     );
   },
 );
+
+test("collector scopes restore the parent after nesting and errors", async () => {
+  const outer = createTailwindStyleCollector();
+  const inner = createTailwindStyleCollector();
+  const view = (className: string) =>
+    renderToString(
+      <Tailwind preflight={false}>
+        <span className={className}>Scoped</span>
+      </Tailwind>,
+    );
+
+  const outerHtml = withTailwindStyleCollector(outer, () => {
+    const before = view("text-[#123456]");
+    const innerHtml = withTailwindStyleCollector(inner, () =>
+      view("text-[#abcdef]"),
+    );
+    expect(innerHtml).toContain("react-print-tailwind-");
+    expect(() =>
+      withTailwindStyleCollector(inner, () => {
+        throw new Error("Render failed");
+      }),
+    ).toThrow("Render failed");
+    return `${before}${view("text-[#654321]")}`;
+  });
+
+  const compiled = await outer.resolve(outerHtml);
+  expect(compiled).toContain("#123456");
+  expect(compiled).toContain("#654321");
+  expect(compiled).not.toContain("#abcdef");
+
+  // Outside compile, Tailwind still uses its normal standalone renderer.
+  expect(view("font-bold")).not.toContain(
+    'data-react-print-tailwind-start="react-print-tailwind-',
+  );
+});

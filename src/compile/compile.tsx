@@ -2,14 +2,13 @@ import { Button, ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import isPseudoClass from "@csstools/postcss-is-pseudo-class";
 import postcss from "postcss";
 import type React from "react";
-import { renderToString } from "react-dom/server";
 import { CSS } from "#/css/css";
 import type { DocConfig } from "#/docgen/types";
 import { moveCompiledStylesIntoDocument } from "#/html/html-document";
 import {
   createTailwindStyleCollector,
   Tailwind,
-  TailwindStyleCollectorProvider,
+  withTailwindStyleCollector,
 } from "#/tailwind/tailwind";
 import footnoteStyles from "../footnote/footnote.css?raw";
 import genericStyles from "../generic.css?raw";
@@ -113,6 +112,10 @@ export const compile = async (
     options || {},
   );
 
+  // Load the renderer only when compilation is requested. Importing the
+  // document components must not import React DOM's server renderer.
+  const { renderToString } = await import("react-dom/server");
+
   let Element = (
     <>
       <CSS>{printStyles}</CSS>
@@ -123,10 +126,8 @@ export const compile = async (
   const tailwindCollector = createTailwindStyleCollector();
 
   if (!emotion) {
-    const html = renderToString(
-      <TailwindStyleCollectorProvider collector={tailwindCollector}>
-        {Element}
-      </TailwindStyleCollectorProvider>,
+    const html = withTailwindStyleCollector(tailwindCollector, () =>
+      renderToString(Element),
     );
     return moveCompiledStylesIntoDocument(
       deduplicateKatexStyles(await tailwindCollector.resolve(html)),
@@ -154,11 +155,7 @@ export const compile = async (
   // requiring @emotion/server to recover them later.
   cache.compat = true;
 
-  Element = (
-    <TailwindStyleCollectorProvider collector={tailwindCollector}>
-      <CacheProvider value={cache}>{Element}</CacheProvider>
-    </TailwindStyleCollectorProvider>
-  );
+  Element = <CacheProvider value={cache}>{Element}</CacheProvider>;
 
   let renderedHtml: string;
   let cachedEmotionCss: string;
@@ -185,7 +182,9 @@ export const compile = async (
     });
 
     try {
-      flushSync(() => root.render(Element));
+      withTailwindStyleCollector(tailwindCollector, () =>
+        flushSync(() => root.render(Element)),
+      );
       if (hasUncaughtError) {
         throw uncaughtError;
       }
@@ -202,7 +201,9 @@ export const compile = async (
       flushSync(() => root.unmount());
     }
   } else {
-    renderedHtml = renderToString(Element);
+    renderedHtml = withTailwindStyleCollector(tailwindCollector, () =>
+      renderToString(Element),
+    );
     cachedEmotionCss = Object.values(cache.inserted)
       .filter((value): value is string => typeof value === "string")
       .join("");
